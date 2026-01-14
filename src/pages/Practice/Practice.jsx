@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
 import RepeatSentenceSession from './RepeatSentenceSession';
 import DescribeImageModule from './DescribeImageModule';
 import { useSelector } from 'react-redux';
+import ShortAnswer from './ShortAnswer';
 
 function Practice() {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ function Practice() {
     const [readAloudQuestions, setReadAloudQuestions] = useState([]);
     const [repeatSentenceQuestions, setRepeatSentenceQuestions] = useState([]);
     const [imageQuestions, setImageQuestions] = useState([])
+    const [shortAnswerQuestion, setShortAnswerQuestion] = useState([])
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [activeSpeechQuestion, setActiveSpeechQuestion] = useState(false);
@@ -61,6 +63,8 @@ function Practice() {
       return repeatSentenceQuestions;
     case 'Describe Image':
         return imageQuestions;
+    case 'Answer Short Question':
+        return shortAnswerQuestion;
     default:
       return []; // or mockQuestions for other tabs
   }
@@ -112,6 +116,22 @@ const fetchImageSentences = async () => {
     }
 };
 
+const fetchShortAnswerQuestion = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+        const response = await fetch(`/api/short-anwer/get/${user._id}`);
+        const data = await response.json();
+            setShortAnswerQuestion(data?.data);
+    } catch (err) {
+        setError('Error connecting to server');
+        console.error('Fetch error:', err);
+    } finally {
+        setLoading(false);
+    }
+};
+
+
     // Suppose you have this inside your component
 const subTabs = [
   {
@@ -131,7 +151,10 @@ const subTabs = [
     },
  },
   { id: 'Re-tell Lecture', isAi: true, onClick: () => console.log('Re-tell Lecture clicked') },
-  { id: 'Answer Short Question', isAi: true, onClick: () => console.log('Answer Short Question clicked') },
+  { id: 'Answer Short Question', isAi: true,  onClick: ()  => {
+      if (shortAnswerQuestion.length === 0) fetchShortAnswerQuestion();
+    },
+ },
 ];
 
 
@@ -281,6 +304,10 @@ const subTabs = [
                                         setActiveSpeechQuestion(true);
                                         setSpeechQuestion(q);
                                     }
+                                    else if (activeSubTab === "Answer Short Question"){
+                                        setActiveSpeechQuestion(true);
+                                        setSpeechQuestion(q);
+                                    }
                                     else  {
                                         navigate(`/practice/${q._id}`);
                                     }
@@ -325,10 +352,19 @@ const subTabs = [
                     mode={'practiceMode'}
                 />
             ) : (
-                <DescribeImageModule
+                activeSubTab === "Answer Short Question"?(
+                    <ShortAnswer
+                        question={speechQuestion} 
+                    setActiveSpeechQuestion={setActiveSpeechQuestion} 
+                    activeTab={activeSubTab} 
+                    mode={'practiceMode'}
+                />
+                ):(
+                    <DescribeImageModule
                     question={speechQuestion} 
                     setActiveSpeechQuestion={setActiveSpeechQuestion} 
                 />
+                )
             )
         )
         }
