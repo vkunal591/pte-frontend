@@ -84,6 +84,28 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
         }
     };
 
+       const getAISuggestion = (score) => {
+                if (score >= 11) {
+                    return {
+                        text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                        color: "text-green-700 bg-green-50 border-green-100",
+                        icon: <CheckCircle className="w-5 h-5 text-green-600" />
+                    };
+                } else if (score >= 7) {
+                    return {
+                        text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
+                        color: "text-amber-700 bg-amber-50 border-amber-100",
+                        icon: <Target className="w-5 h-5 text-amber-600" />
+                    };
+                } else {
+                    return {
+                        text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                        color: "text-red-700 bg-red-50 border-red-100",
+                        icon: <Info className="w-5 h-5 text-red-600" />
+                    };
+                }
+            };
+
     return (
         <div className="max-w-6xl mx-auto space-y-4 px-4 pb-10">
             {/* Header */}
@@ -158,6 +180,18 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
                 ) : (
                     /* RESULT MODE (Matched to your Controller Data) */
                     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 bg-white">
+                          {(() => {
+                                const suggestion = getAISuggestion(result.score);
+                                return (
+                                    <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
+                                        <div className="flex-shrink-0">{suggestion.icon}</div>
+                                        <div className="flex-1">
+                                            <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 opacity-70 italic">AI Analysis</span>
+                                            <p className="font-medium text-sm leading-relaxed">{suggestion.text}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         <div className="grid grid-cols-12 gap-6">
                             {/* Score Gauge - Calculating out of 16 as per your controller */}
                             <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center shadow-sm">

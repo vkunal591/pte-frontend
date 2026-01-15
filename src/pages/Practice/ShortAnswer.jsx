@@ -91,6 +91,30 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion }) => {
         }
     };
 
+
+    // HELPER: Generate AI feedback based on score
+    const getAISuggestion = (score) => {
+        if (score >= 11) {
+            return {
+                text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                color: "text-green-700 bg-green-50 border-green-100",
+                icon: <CheckCircle className="w-5 h-5 text-green-600" />
+            };
+        } else if (score >= 7) {
+            return {
+                text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
+                color: "text-amber-700 bg-amber-50 border-amber-100",
+                icon: <Target className="w-5 h-5 text-amber-600" />
+            };
+        } else {
+            return {
+                text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                color: "text-red-700 bg-red-50 border-red-100",
+                icon: <Info className="w-5 h-5 text-red-600" />
+            };
+        }
+    };
+
     const stopRecording = () => {
         SpeechRecognition.stopListening();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
@@ -156,7 +180,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion }) => {
                         <ArrowLeft size={20} />
                     </button>
                     <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        Repeat Sentence <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
+                        Answer Short Question <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
                     </h1>
                 </div>
             </div>
@@ -252,13 +276,18 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion }) => {
                     {status === 'result' && result && (
                         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             {/* Alert Banner */}
-                            {result.score < 1 && (
-                                <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2 text-sm">
-                                    <Info size={16} />
-                                    Low score detected. Try to speak more clearly and fluently.
-                                </div>
-                            )}
-                            
+                             {(() => {
+                                const suggestion = getAISuggestion(result.score);
+                                return (
+                                    <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
+                                        <div className="flex-shrink-0">{suggestion.icon}</div>
+                                        <div className="flex-1">
+                                            <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 opacity-70 italic">AI Analysis</span>
+                                            <p className="font-medium text-sm leading-relaxed">{suggestion.text}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             {/* SCORE GAUGE AND PARAMETERS */}
                             <div className="grid grid-cols-12 gap-6">
                                 <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border-4 border-purple-50 p-6 shadow-sm relative overflow-hidden">
@@ -286,7 +315,14 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion }) => {
                                     </div>
                                 </div>
 
-                                <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
+                                    {/* AUDIO PLAYERS */}
+                            <div className="grid grid-rows-2 gap-6 col-span-12 md:col-span-8">
+                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
+                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
+                            </div>
+
+
+                                {/* <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="flex items-center gap-2 font-bold text-slate-700">Scoring Parameters</h3>
                                     </div>
@@ -295,15 +331,10 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion }) => {
                                         <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} />
                                         <ParameterCard label="Oral Fluency" score={result.fluency} max={5} />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
-                            {/* AUDIO PLAYERS */}
-                            <div className="grid grid-cols-2 gap-6">
-                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
-                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
-                            </div>
-
+                        
                             {/* TRANSCRIPT AREA */}
                             <div className="bg-white rounded-3xl border border-slate-100 p-8">
                                 <h3 className="font-bold text-slate-700 mb-4">Transcript Analysis</h3>

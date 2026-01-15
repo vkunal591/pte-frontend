@@ -5,6 +5,7 @@ import RepeatSentenceSession from './RepeatSentenceSession';
 import DescribeImageModule from './DescribeImageModule';
 import { useSelector } from 'react-redux';
 import ShortAnswer from './ShortAnswer';
+import SummarizeGroup from './SummarizeGroup';
 
 function Practice() {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Practice() {
     const [repeatSentenceQuestions, setRepeatSentenceQuestions] = useState([]);
     const [imageQuestions, setImageQuestions] = useState([])
     const [shortAnswerQuestion, setShortAnswerQuestion] = useState([])
+    const [summarizeGroupQuestion, setSummarizeGroupQuestion] = useState([])
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [activeSpeechQuestion, setActiveSpeechQuestion] = useState(false);
@@ -65,6 +67,8 @@ function Practice() {
         return imageQuestions;
     case 'Answer Short Question':
         return shortAnswerQuestion;
+    case 'Summarize Group Discussion':
+        return summarizeGroupQuestion;
     default:
       return []; // or mockQuestions for other tabs
   }
@@ -120,7 +124,7 @@ const fetchShortAnswerQuestion = async () => {
     setLoading(true);
     setError(null);
     try {
-        const response = await fetch(`/api/short-anwer/get/${user._id}`);
+        const response = await fetch(`/api/short-answer/get/${user._id}`);
         const data = await response.json();
             setShortAnswerQuestion(data?.data);
     } catch (err) {
@@ -131,6 +135,21 @@ const fetchShortAnswerQuestion = async () => {
     }
 };
 
+const fetchSummarizeGroupQuestion = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+        const response = await fetch(`/api/summarize-group/get/${user._id}`);
+        const data = await response.json();
+        console.log("Summarize Group Data:", data?.data);
+            setSummarizeGroupQuestion(data?.data);
+    } catch (err) {
+        setError('Error connecting to server');
+        console.error('Fetch error:', err);
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Suppose you have this inside your component
 const subTabs = [
@@ -155,6 +174,10 @@ const subTabs = [
       if (shortAnswerQuestion.length === 0) fetchShortAnswerQuestion();
     },
  },
+  { id: 'Summarize Group Discussion', isAi: true,  onClick: ()  => {
+      if (summarizeGroupQuestion.length === 0) fetchSummarizeGroupQuestion();
+    },
+ }
 ];
 
 
@@ -193,7 +216,7 @@ const subTabs = [
                     <button className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
                     </button>
-{/* 
+                  {/* 
                     {subTabs.map((sub) => (
                         <button
                             key={sub.id}
@@ -297,14 +320,7 @@ const subTabs = [
                             displayQuestions.map((q) => (
                                 <div key={q.id || q._id} 
                                 onClick={() => {
-                                    if (activeSubTab === "Repeat Sentence") {
-                                        setActiveSpeechQuestion(true);
-                                        setSpeechQuestion(q);
-                                    } else if (activeSubTab === "Describe Image"){
-                                        setActiveSpeechQuestion(true);
-                                        setSpeechQuestion(q);
-                                    }
-                                    else if (activeSubTab === "Answer Short Question"){
+                                    if (activeSubTab === "Repeat Sentence" || activeSubTab === "Summarize Group Discussion" || activeSubTab === "Describe Image" || activeSubTab === "Answer Short Question") {
                                         setActiveSpeechQuestion(true);
                                         setSpeechQuestion(q);
                                     }
@@ -360,11 +376,20 @@ const subTabs = [
                     mode={'practiceMode'}
                 />
                 ):(
+                activeSubTab === "Summarize Group Discussion"?(
+                    <SummarizeGroup
+                        question={speechQuestion} 
+                    setActiveSpeechQuestion={setActiveSpeechQuestion} 
+                    activeTab={activeSubTab} 
+                    mode={'practiceMode'}
+                />
+                ):(
                     <DescribeImageModule
                     question={speechQuestion} 
                     setActiveSpeechQuestion={setActiveSpeechQuestion} 
                 />
                 )
+            )
             )
         )
         }

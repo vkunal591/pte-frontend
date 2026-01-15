@@ -5,6 +5,28 @@ const ImageAttemptHistory = ({ question, onSelectAttempt }) => {
   const [activeTab, setActiveTab] = useState("my_answer");
   const attempts = question?.lastAttempts || [];
 
+    const getAISuggestion = (score) => {
+              if (score >= 11) {
+                  return {
+                      text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                      color: "text-green-700 bg-green-50 border-green-100",
+                      icon: <CheckCircle className="w-5 h-5 text-green-600" />
+                  };
+              } else if (score >= 7) {
+                  return {
+                      text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
+                      color: "text-amber-700 bg-amber-50 border-amber-100",
+                      icon: <Target className="w-5 h-5 text-amber-600" />
+                  };
+              } else {
+                  return {
+                      text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                      color: "text-red-700 bg-red-50 border-red-100",
+                      icon: <Info className="w-5 h-5 text-red-600" />
+                  };
+              }
+          };
+
   /* ---------------- EMPTY STATE ---------------- */
   if (!attempts.length) {
     return (
