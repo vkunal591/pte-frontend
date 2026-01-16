@@ -136,24 +136,93 @@ function Practice() {
         finally { setLoading(false); }
     };
 
+    const fetchSummarizeSpokenText = () => {
+  console.log("Summarize Spoken Text clicked");
+};
+
+const fetchListeningMCQMultiple = () => {
+  console.log("Listening MCQ Multiple clicked");
+};
+
+const fetchListeningFillBlanks = () => {
+  console.log("Listening Fill in the Blanks clicked");
+};
+
+const fetchHighlightSummary = () => {
+  console.log("Highlight Correct Summary clicked");
+};
+
+const fetchListeningMCQSingle = () => {
+  console.log("Listening MCQ Single clicked");
+};
     // --- CONFIGURATION ---
-    const subTabsConfig = {
-        Speaking: [
-            { id: 'Read Aloud', isAi: true, onClick: fetchReadAloud },
-            { id: 'Repeat Sentence', isAi: true, onClick: fetchRepeatSentences },
-            { id: 'Describe Image', isAi: true, onClick: fetchImageSentences },
-            { id: 'Re-tell Lecture', isAi: true, onClick: fetchReTellQuestion },
-            { id: 'Answer Short Question', isAi: true, onClick: fetchShortAnswerQuestion },
-            { id: 'Summarize Group Discussion', isAi: true, onClick: fetchSummarizeGroupQuestion },
-            { id: 'Respond to a Situation', isAi: true, onClick: fetchRespondSituationQuestion }
-        ],
-        Writing: [
-            { id: 'Summarize Written Text', isAi: true, onClick: fetchSummarizeWrittenText },
-            { id: 'Write Essay', isAi: true, onClick: fetchEssayQuestions }
-        ],
-        Reading: [],
-        Listening: []
-    };
+  const subTabsConfig = {
+  Speaking: [
+    { id: 'Read Aloud', isAi: true, onClick: fetchReadAloud },
+    { id: 'Repeat Sentence', isAi: true, onClick: fetchRepeatSentences },
+    { id: 'Describe Image', isAi: true, onClick: fetchImageSentences },
+    { id: 'Re-tell Lecture', isAi: true, onClick: fetchReTellQuestion },
+    { id: 'Answer Short Question', isAi: true, onClick: fetchShortAnswerQuestion },
+    { id: 'Summarize Group Discussion', isAi: true, onClick: fetchSummarizeGroupQuestion },
+    { id: 'Respond to a Situation', isAi: true, onClick: fetchRespondSituationQuestion }
+  ],
+
+  Writing: [
+    { id: 'Summarize Written Text', isAi: true, onClick: fetchSummarizeWrittenText },
+    { id: 'Write Essay', isAi: true, onClick: fetchEssayQuestions }
+  ],
+
+  Reading: [
+    // you can add reading later
+  ],
+
+  Listening: [
+    { id: 'Summarize Spoken Text', isAi: true, onClick: fetchSummarizeSpokenText },
+
+    {
+      id: 'Listening: Multiple Choice, Choose Multiple Answer',
+      isAi: false,
+      onClick: fetchListeningMCQMultiple
+    },
+
+    {
+      id: 'Fill in the Blanks (Type In)',
+      isAi: false,
+      onClick: fetchListeningFillBlanks
+    },
+
+    {
+      id: 'Highlight Correct Summary',
+      isAi: false,
+      onClick: fetchHighlightSummary
+    },
+
+    {
+      id: 'Listening: Multiple Choice, Choose Single Answer',
+      isAi: false,
+      onClick: fetchListeningMCQSingle
+    },
+
+    {
+      id: 'Select Missing Words',
+      isAi: false,
+      onClick: fetchListeningMCQSingle
+    },
+
+    {
+      id: 'Highlight Incorrect Words',
+      isAi: false,
+      onClick: fetchListeningMCQSingle
+    },
+
+    {
+      id: 'Write from Dictation',
+      isAi: false,
+      onClick: fetchListeningMCQSingle
+    }
+  ]
+};
+
 
     // --- EFFECTS ---
 
