@@ -6,13 +6,14 @@ import {
 } from 'lucide-react';
 import { submitDescribeImageAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
+import { useSelector } from 'react-redux';
 
-const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
+const DescribeImageModule = ({ question, setActiveSpeechQuestion , nextButton, previousButton, shuffleButton}) => {
     const [status, setStatus] = useState('idle'); 
     const [timeLeft, setTimeLeft] = useState(25);
     const [maxTime, setMaxTime] = useState(25);
     const [result, setResult] = useState(null);
-
+     const {user} = useSelector((state)=>state.auth)
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
     const { transcript, resetTranscript } = useSpeechRecognition();
@@ -70,7 +71,7 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
                     formData.append('audio', audioBlob, 'recording.webm');
                     formData.append('questionId', question._id);
                     formData.append('transcript', transcript || '');
-                    formData.append("userId", "6965e4f3e96a5eed795a1265"); // Target User ID
+                    formData.append("userId", user?._id); // Target User ID
 
                     const response = await submitDescribeImageAttempt(formData);
                     setResult(response.data); 
@@ -82,6 +83,28 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
             };
         }
     };
+
+       const getAISuggestion = (score) => {
+                if (score >= 11) {
+                    return {
+                        text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                        color: "text-green-700 bg-green-50 border-green-100",
+                        icon: <CheckCircle className="w-5 h-5 text-green-600" />
+                    };
+                } else if (score >= 7) {
+                    return {
+                        text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
+                        color: "text-amber-700 bg-amber-50 border-amber-100",
+                        icon: <Target className="w-5 h-5 text-amber-600" />
+                    };
+                } else {
+                    return {
+                        text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                        color: "text-red-700 bg-red-50 border-red-100",
+                        icon: <Info className="w-5 h-5 text-red-600" />
+                    };
+                }
+            };
 
     return (
         <div className="max-w-6xl mx-auto space-y-4 px-4 pb-10">
@@ -157,6 +180,18 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
                 ) : (
                     /* RESULT MODE (Matched to your Controller Data) */
                     <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 bg-white">
+                          {(() => {
+                                const suggestion = getAISuggestion(result.score);
+                                return (
+                                    <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
+                                        <div className="flex-shrink-0">{suggestion.icon}</div>
+                                        <div className="flex-1">
+                                            <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 opacity-70 italic">AI Analysis</span>
+                                            <p className="font-medium text-sm leading-relaxed">{suggestion.text}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         <div className="grid grid-cols-12 gap-6">
                             {/* Score Gauge - Calculating out of 16 as per your controller */}
                             <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center shadow-sm">
@@ -211,13 +246,13 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion }) => {
             {/* Bottom Controls */}
             <div className="flex items-center justify-between bg-white px-8 py-5 rounded-2xl border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-8">
-                    <ControlBtn icon={<ChevronLeft size={20}/>} label="Previous" />
+                    <ControlBtn icon={<ChevronLeft size={20}/>} label="Previous" onClick={previousButton} />
                     <ControlBtn icon={<RefreshCw size={18}/>} label="Redo" onClick={() => { setStatus('idle'); setResult(null); }} />
                     <button className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all">
                         <CheckCircle size={24} />
                     </button>
-                    <ControlBtn icon={<Shuffle size={18}/>} label="Shuffle" />
-                    <ControlBtn icon={<ChevronRight size={20}/>} label="Next" />
+                    <ControlBtn icon={<Shuffle size={18}/>} label="Shuffle" onClick={shuffleButton} />
+                    <ControlBtn icon={<ChevronRight size={20}/>} label="Next" onClick={nextButton} />
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400 font-bold uppercase">Go to</span>

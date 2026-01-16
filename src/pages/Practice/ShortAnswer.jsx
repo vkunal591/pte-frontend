@@ -4,11 +4,11 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import {
     ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Square, Mic, Info, BarChart2, CheckCircle, Volume2, PlayCircle, History, Eye
 } from 'lucide-react';
-import { submitRepeatAttempt } from '../../services/api';
+import { submitRepeatAttempt, submitShortAnswerAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
 
-const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
+const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const navigate = useNavigate();
     const transcriptRef = useRef("");
      const {user} = useSelector((state)=>state.auth)
@@ -76,8 +76,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
-        setTimeLeft(15);
-        setMaxTime(15);
+        setTimeLeft(10);
+        setMaxTime(10);
         SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -88,6 +88,24 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
             recorder.start();
         } catch (err) {
             console.error("Microphone access denied", err);
+        }
+    };
+
+
+    // HELPER: Generate AI feedback based on score
+    const getAISuggestion = (score) => {
+        if (score >= 1) {
+            return {
+                text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                color: "text-green-700 bg-green-50 border-green-100",
+                icon: <CheckCircle className="w-5 h-5 text-green-600" />
+            };
+        } else {
+            return {
+                text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                color: "text-red-700 bg-red-50 border-red-100",
+                icon: <Info className="w-5 h-5 text-red-600" />
+            };
         }
     };
 
@@ -111,7 +129,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         formData.append("audio", audioBlob);
         formData.append("userId", user?._id);
         try {
-            const response = await submitRepeatAttempt(formData);
+            const response = await submitShortAnswerAttempt(formData);
             setResult(response.data);
             setStatus("result");
         } catch (err) {
@@ -119,28 +137,6 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
             setStatus("idle");
         }
     };
-
-       const getAISuggestion = (score) => {
-            if (score >= 11) {
-                return {
-                    text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
-                    color: "text-green-700 bg-green-50 border-green-100",
-                    icon: <CheckCircle className="w-5 h-5 text-green-600" />
-                };
-            } else if (score >= 7) {
-                return {
-                    text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
-                    color: "text-amber-700 bg-amber-50 border-amber-100",
-                    icon: <Target className="w-5 h-5 text-amber-600" />
-                };
-            } else {
-                return {
-                    text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
-                    color: "text-red-700 bg-red-50 border-red-100",
-                    icon: <Info className="w-5 h-5 text-red-600" />
-                };
-            }
-        };
 
     // Function to view history
     const handleViewHistory = (attempt) => {
@@ -178,7 +174,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                         <ArrowLeft size={20} />
                     </button>
                     <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        Repeat Sentence <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
+                        Answer Short Question <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
                     </h1>
                 </div>
             </div>
@@ -274,7 +270,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                     {status === 'result' && result && (
                         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             {/* Alert Banner */}
-                              {(() => {
+                             {(() => {
                                 const suggestion = getAISuggestion(result.score);
                                 return (
                                     <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
@@ -286,7 +282,6 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                                     </div>
                                 );
                             })()}
-                            
                             {/* SCORE GAUGE AND PARAMETERS */}
                             <div className="grid grid-cols-12 gap-6">
                                 <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border-4 border-purple-50 p-6 shadow-sm relative overflow-hidden">
@@ -294,7 +289,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                                     <div className="relative flex justify-center items-center h-32">
                                         <svg className="w-48 h-24">
                                             <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
-                                            <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="url(#purpleGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="267" strokeDashoffset={267 - (267 * (result.score / 13))} className="transition-all duration-1000 ease-out" />
+                                            <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="url(#purpleGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="267" strokeDashoffset={267 - (267 * (result.score / 1))} className="transition-all duration-1000 ease-out" />
                                             <defs>
                                                 <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                                     <stop offset="0%" stopColor="#8b5cf6" />
@@ -314,7 +309,14 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                                     </div>
                                 </div>
 
-                                <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
+                                    {/* AUDIO PLAYERS */}
+                            <div className="grid grid-rows-2 gap-6 col-span-12 md:col-span-8">
+                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
+                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
+                            </div>
+
+
+                                {/* <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="flex items-center gap-2 font-bold text-slate-700">Scoring Parameters</h3>
                                     </div>
@@ -323,15 +325,10 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                                         <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} />
                                         <ParameterCard label="Oral Fluency" score={result.fluency} max={5} />
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
 
-                            {/* AUDIO PLAYERS */}
-                            <div className="grid grid-cols-2 gap-6">
-                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
-                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
-                            </div>
-
+                        
                             {/* TRANSCRIPT AREA */}
                             <div className="bg-white rounded-3xl border border-slate-100 p-8">
                                 <h3 className="font-bold text-slate-700 mb-4">Transcript Analysis</h3>
@@ -350,18 +347,19 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-center gap-6 pb-10">
-                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton} />
+                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton}/>
                 <ControlBtn icon={<RefreshCw size={18} />} label="Redo" onClick={resetSession} />
                 <button className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
                     <CheckCircle size={24} />
                 </button>
-                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton} />
-                <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton} />
+                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton}/>
+                <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton}/>
             </div>
             {question.lastAttempts && question.lastAttempts.length > 0 && (
                         <ImageAttemptHistory 
             question={question} 
             onSelectAttempt={handleSelectAttempt} 
+            module={"short-answer"}
           />
          )}
         </div>
@@ -412,4 +410,4 @@ const AudioPlayerCard = ({ label, url, duration, isAnswer }) => (
     </div>
 );
 
-export default RepeatSentenceSession;
+export default ShortAnswer;
