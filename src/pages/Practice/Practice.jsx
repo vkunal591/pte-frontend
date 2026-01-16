@@ -12,10 +12,11 @@ import ShortAnswer from './ShortAnswer';
 import SummarizeGroup from './SummarizeGroup';
 import ReTell from './Retell';
 import Respond from './RespondSituation';
+import ReadingFIBDropdown from './ReadingFIBDropdown';
 
 // Writing Components (Create these if not already existing)
 // For now, I am assuming standard naming based on your imports.
-import SummarizeWrittenText from '../writing/SummarizeText'; 
+import SummarizeWrittenText from '../writing/SummarizeText';
 import WriteEssay from '../writing/WriteEssay';
 
 function Practice() {
@@ -24,10 +25,11 @@ function Practice() {
 
     // --- STATE ---
     const [activeTab, setActiveTab] = useState('Speaking');
+
     const [activeSubTab, setActiveSubTab] = useState('Read Aloud');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     // Module Data States
     const [readAloudQuestions, setReadAloudQuestions] = useState([]);
     const [repeatSentenceQuestions, setRepeatSentenceQuestions] = useState([]);
@@ -36,6 +38,7 @@ function Practice() {
     const [summarizeGroupQuestion, setSummarizeGroupQuestion] = useState([]);
     const [retellQuestions, setRetellQuestions] = useState([]);
     const [respondSituationQuestions, setRespondSituationQuestions] = useState([]);
+    const [readingFIBDropdownQuestions, setReadingFIBDropdownQuestions] = useState([]);
     const [summarizeTextQuestions, setSummarizeTextQuestions] = useState([]);
     const [essayQuestions, setEssayQuestions] = useState([]);
 
@@ -104,12 +107,23 @@ function Practice() {
         finally { setLoading(false); }
     };
 
+
     const fetchReTellQuestion = async () => {
         setLoading(true);
         try {
             const response = await fetch(`/api/retell-lecture/get/${user._id}`);
             const data = await response.json();
             setRetellQuestions(data?.data || []);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+    const fetchReadingFIBDropdown = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/reading-fib-dropdown/get/${user._id}`);
+            const data = await response.json();
+            setReadingFIBDropdownQuestions(data?.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -149,7 +163,9 @@ function Practice() {
             { id: 'Summarize Written Text', isAi: true, onClick: fetchSummarizeWrittenText },
             { id: 'Write Essay', isAi: true, onClick: fetchEssayQuestions }
         ],
-        Reading: [],
+        Reading: [
+            { id: 'Fill in the Blanks (Dropdown)', isAi: true, onClick: fetchReadingFIBDropdown }
+        ],
         Listening: []
     };
 
@@ -160,7 +176,7 @@ function Practice() {
         const firstSubTab = subTabsConfig[activeTab]?.[0];
         if (firstSubTab) {
             setActiveSubTab(firstSubTab.id);
-            firstSubTab.onClick(); 
+            firstSubTab.onClick();
         } else {
             setActiveSubTab(null);
         }
@@ -176,6 +192,7 @@ function Practice() {
             case 'Summarize Group Discussion': return summarizeGroupQuestion;
             case 'Re-tell Lecture': return retellQuestions;
             case 'Respond to a Situation': return respondSituationQuestions;
+            case 'Fill in the Blanks (Dropdown)': return readingFIBDropdownQuestions;
             case 'Summarize Written Text': return summarizeTextQuestions;
             case 'Write Essay': return essayQuestions;
             default: return [];
@@ -220,6 +237,7 @@ function Practice() {
             case "Describe Image": return <DescribeImageModule {...props} />;
             case "Summarize Written Text": return <SummarizeWrittenText {...props} />;
             case "Write Essay": return <WriteEssay {...props} />;
+            case "Fill in the Blanks (Dropdown)": return <ReadingFIBDropdown {...props} />;
             default: return <div>Component not found</div>;
         }
     };
@@ -243,9 +261,8 @@ function Practice() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                                    activeTab === tab.id ? 'bg-primary-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
-                                }`}
+                                className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? 'bg-primary-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
+                                    }`}
                             >
                                 {tab.id}
                             </button>
@@ -261,9 +278,8 @@ function Practice() {
                                     setActiveSubTab(sub.id);
                                     sub.onClick();
                                 }}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                                    activeSubTab === sub.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeSubTab === sub.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
                             >
                                 {sub.id}
                                 {sub.isAi && <span className={`text-[10px] px-1 rounded font-bold ${activeSubTab === sub.id ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'}`}>Ai+</span>}
@@ -286,8 +302,8 @@ function Practice() {
                                 <div className="p-8 text-center text-slate-500">No questions found for {activeSubTab}.</div>
                             ) : (
                                 displayQuestions.map((q) => (
-                                    <div 
-                                        key={q._id} 
+                                    <div
+                                        key={q._id}
                                         onClick={() => {
                                             // Special logic for Read Aloud (Navigate) or Session (Open Component)
                                             if (activeSubTab === "Read Aloud") {
@@ -304,9 +320,8 @@ function Practice() {
                                             <span className="text-slate-500 text-sm">({q.name || q.title})</span>
                                         </div>
                                         <div className="col-span-2 flex justify-center">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                q.difficulty === 'Hard' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'
-                                            }`}>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${q.difficulty === 'Hard' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'
+                                                }`}>
                                                 {q.difficulty || 'Medium'}
                                             </span>
                                         </div>

@@ -20,57 +20,57 @@ export const submitRepeatAttempt = async (attemptData) => {
 };
 
 export const submitSummarizeGroupAttempt = async (attemptData) => {
-    // attemptData should be a FormData object
-    try {
-        const response = await axios.post(
-            `${API_BASE_URL}/summarize-group/submit`, 
-            attemptData,
-            { 
-                headers: { "Content-Type": "multipart/form-data" } 
-            }
-        );
-     
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  // attemptData should be a FormData object
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/summarize-group/submit`,
+      attemptData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 
 export const submitReTellAttempt = async (attemptData) => {
-    // attemptData should be a FormData object
-    try {
-        const response = await axios.post(
-            `${API_BASE_URL}/retell-lecture/submit`, 
-            attemptData,
-            { 
-                headers: { "Content-Type": "multipart/form-data" } 
-            }
-        );
-     
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  // attemptData should be a FormData object
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/retell-lecture/submit`,
+      attemptData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 
 
 export const submitShortAnswerAttempt = async (attemptData) => {
-    // attemptData should be a FormData object
-    try {
-        const response = await axios.post(
-            `${API_BASE_URL}/short-answer/submit`, 
-            attemptData,
-            { 
-                headers: { "Content-Type": "multipart/form-data" } 
-            }
-        );
-     
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  // attemptData should be a FormData object
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/short-answer/submit`,
+      attemptData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 
@@ -98,14 +98,14 @@ export const submitRespondSituationAttempt = async (formData) => {
       }
     }
   );
-     console.log("response", res?.data)
+  console.log("response", res?.data)
   return res.data;
 };
 
 export const submitSummarizeWrittenAttempt = async (data) => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/summarize-text/submit`, 
+      `${API_BASE_URL}/summarize-text/submit`,
       data
     );
     console.log("submitSummarizeWrittenAttempt response:", response.data);
@@ -118,7 +118,7 @@ export const submitSummarizeWrittenAttempt = async (data) => {
 export const submitEssayAttempt = async (data) => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/essay/submit`, 
+      `${API_BASE_URL}/essay/submit`,
       data
     );
     console.log("submitEssayAttempt response:", response.data);
@@ -129,4 +129,29 @@ export const submitEssayAttempt = async (data) => {
 }
 
 
-// You can add other services here like fetchQuestions, etc.
+
+export const submitReadingFIBDropdownAttempt = async (data) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/reading-fib-dropdown/submit`,
+      data
+    );
+    console.log("submitReadingFIBDropdownAttempt response:", response.data);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+}
+
+
+export const getReadingFIBDropdownAttempts = async (questionId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/reading-fib-dropdown/attempts/${questionId}`, {
+      withCredentials: true
+    });
+    console.log("All previous attempts of FIB:",response.data)
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
