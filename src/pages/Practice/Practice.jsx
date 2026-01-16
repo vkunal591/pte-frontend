@@ -120,6 +120,7 @@ function Practice() {
             const response = await fetch(`/api/summarize-text/get/${user._id}`);
             const data = await response.json();
             setSummarizeTextQuestions(data?.data || []);
+            console.log("Fetched Summarize Text Questions:", data);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -130,6 +131,7 @@ function Practice() {
             const response = await fetch(`/api/essay/get/${user._id}`);
             const data = await response.json();
             setEssayQuestions(data?.data || []);
+          
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -312,7 +314,7 @@ function Practice() {
                                         </div>
                                         <div className="col-span-2 flex justify-end">
                                             <button className="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-lg text-xs font-bold">
-                                                {q.status || 'Not Practiced'}
+                                                {q.status || q.attemptCount || 'Not Practiced'}
                                             </button>
                                         </div>
                                     </div>
