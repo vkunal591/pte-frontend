@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, Clock } from "lucide-react";
 import { useSelector } from "react-redux";
 import { submitSummarizeWrittenAttempt } from "../../services/api";
+import WrittenAttemptHistory from "./History"; // import history component
 
 const MAX_TIME = 600; // 10 minutes
 const MIN_WORDS = 5;
@@ -9,7 +10,8 @@ const MAX_WORDS = 75;
 
 const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
   const { user } = useSelector((state) => state.auth);
-  
+
+
   const [started, setStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(MAX_TIME);
   const [answer, setAnswer] = useState("");
@@ -53,6 +55,11 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
   setStatus("result");
 };
 
+  /* ---------------- SELECT LAST ATTEMPT ---------------- */
+  const handleSelectAttempt = (attempt) => {
+    setResult(attempt);
+    setStatus("result");
+  };
 
   /* ---------------- UI ---------------- */
   return (
@@ -158,81 +165,89 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
           </p>
         )}
 
-        {/* RESULT */}
-    
-         {status === "result" && result && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-3xl w-[900px] p-8 space-y-6">
+        {/* RESULT MODAL */}
+        {status === "result" && result && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-3xl w-[900px] p-8 space-y-6">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h2 className="font-bold text-lg">
-          {question.code} ({question.title})
-          <span className="ml-2 text-purple-600 font-bold">AI+</span>
-        </h2>
-        <button onClick={() => setStatus("idle")}>✕</button>
+              {/* HEADER */}
+              <div className="flex justify-between items-center">
+                <h2 className="font-bold text-lg">
+                  {question.code} ({question.title})
+                  <span className="ml-2 text-purple-600 font-bold">AI+</span>
+                </h2>
+                <button onClick={() => setStatus("idle")}>✕</button>
+              </div>
+
+              <div className="grid grid-cols-12 gap-6">
+
+                {/* SCORE GAUGE */}
+                <div className="col-span-4 bg-purple-50 rounded-2xl p-6 text-center">
+                  <p className="font-semibold mb-3">Your Score</p>
+                  <div className="text-5xl font-black text-purple-700">
+                    {result.score}
+                  </div>
+                  <div className="flex justify-between mt-4 text-sm">
+                    <span>Reading</span>
+                    <span className="bg-green-100 px-2 rounded">
+                      {result.readingScore.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Writing</span>
+                    <span className="bg-yellow-100 px-2 rounded">
+                      {result.writingScore.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* PARAMETERS */}
+                <div className="col-span-8 bg-slate-50 rounded-2xl p-6">
+                  <h3 className="font-bold mb-4">Scoring Parameters</h3>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <ScoreBox label="Content" value={`${result.content}/4`} />
+                    <ScoreBox label="Grammar" value={`${result.grammar}/2`} />
+                    <ScoreBox label="Vocabulary" value={`${result.vocabulary}/2`} />
+                    <ScoreBox label="Form" value={`${result.form}/1`} />
+                  </div>
+                </div>
+              </div>
+
+              {/* MY ANSWER */}
+              <div className="border-t pt-4">
+                <h4 className="font-bold mb-2">My Answer</h4>
+                <p className="italic text-slate-600">
+                  {result.summaryText}
+                </p>
+
+                <div className="flex gap-4 mt-3 text-sm">
+                  <span>Total Words: {result.wordCount}</span>
+                  <span>Grammar: {result.structureErrors}</span>
+                  <span>Style: {result.styleIssues}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-
-        {/* SCORE GAUGE */}
-        <div className="col-span-4 bg-purple-50 rounded-2xl p-6 text-center">
-          <p className="font-semibold mb-3">Your Score</p>
-          <div className="text-5xl font-black text-purple-700">
-            {result.score}
-          </div>
-          <div className="flex justify-between mt-4 text-sm">
-            <span>Reading</span>
-            <span className="bg-green-100 px-2 rounded">
-              {result.readingScore.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span>Writing</span>
-            <span className="bg-yellow-100 px-2 rounded">
-              {result.writingScore.toFixed(2)}
-            </span>
-          </div>
+      {/* ---------------- LAST ATTEMPTS HISTORY ---------------- */}
+      {question.lastAttempts && question.lastAttempts.length > 0 && (
+        <div className="mt-12">
+          <h3 className="font-bold text-lg mb-4">Previous Attempts</h3>
+          <WrittenAttemptHistory
+            question={question}
+            module="summarize"
+            onSelectAttempt={handleSelectAttempt}
+          />
         </div>
-
-        {/* PARAMETERS */}
-        <div className="col-span-8 bg-slate-50 rounded-2xl p-6">
-          <h3 className="font-bold mb-4">Scoring Parameters</h3>
-
-          <div className="grid grid-cols-4 gap-4">
-            <ScoreBox label="Content" value={`${result.content}/4`} />
-            <ScoreBox label="Grammar" value={`${result.grammar}/2`} />
-            <ScoreBox label="Vocabulary" value={`${result.vocabulary}/2`} />
-            <ScoreBox label="Form" value={`${result.form}/1`} />
-          </div>
-        </div>
-      </div>
-
-      {/* MY ANSWER */}
-      <div className="border-t pt-4">
-        <h4 className="font-bold mb-2">My Answer</h4>
-        <p className="italic text-slate-600">
-          {result.summaryText}
-        </p>
-
-        <div className="flex gap-4 mt-3 text-sm">
-          <span>Total Words: {result.wordCount}</span>
-          <span>Grammar: {result.structureErrors}</span>
-          <span>Style: {result.styleIssues}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-        
-      </div>
+      )}
     </div>
   );
 };
 
 export default SummarizeWrittenText;
-
 
 const ScoreBox = ({ label, value }) => (
   <div className="bg-white rounded-xl p-4 border text-center">

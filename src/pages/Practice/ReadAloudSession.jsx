@@ -568,24 +568,14 @@ const ReadAloudSession = () => {
                   </button>
                 </div>
               )}
+              
             </div>
+            
           </div>
+          
         </div>
-
-        {/* Attempt History Section */}
-        {question && (
-          <AttemptHistory
-            questionId={question._id || question.id}
-            currentAttemptId={result?._id}
-            onSelectAttempt={(attempt) => {
-              setSelectedAttempt(attempt);
-              setIsResultOpen(true);
-              setStatus('result'); // keep consistent
-            }}
-          />
-        )}
-
-        {/* Footer Controls */}
+        <div>
+                 {/* Footer Controls */}
         <div className="flex items-center justify-center gap-6 pb-12">
           <button onClick={() => navigate(-1)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
             <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
@@ -619,6 +609,22 @@ const ReadAloudSession = () => {
             <span className="text-xs font-medium">Next</span>
           </button>
         </div>
+              </div>
+
+        {/* Attempt History Section */}
+        {question && (
+          <AttemptHistory
+            questionId={question._id || question.id}
+            currentAttemptId={result?._id}
+            onSelectAttempt={(attempt) => {
+              setSelectedAttempt(attempt);
+              setIsResultOpen(true);
+              setStatus('result'); // keep consistent
+            }}
+          />
+        )}
+
+       
 
         {/* =========================
             RESULT MODAL (works for previous attempts too)
@@ -844,3 +850,5 @@ const ReadAloudSession = () => {
 };
 
 export default ReadAloudSession;
+
+
