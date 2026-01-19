@@ -9,6 +9,7 @@ import SelectProduct from './pages/SelectProduct/SelectProduct';
 import ReadAloudSession from './pages/Practice/ReadAloudSession';
 
 function App() {
+  console.log('App: Rendering App component');
   return (
     <BrowserRouter>
       <Routes>

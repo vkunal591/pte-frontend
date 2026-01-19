@@ -5,10 +5,14 @@ import App from './App.jsx'
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 
-createRoot(document.getElementById('root')).render(
+console.log('Main: Starting execution');
+const rootElement = document.getElementById('root');
+console.log('Main: Root element found:', !!rootElement);
+
+createRoot(rootElement).render(
   <StrictMode>
-      <Provider store={store}>
-    <App />
+    <Provider store={store}>
+      <App />
     </Provider>
   </StrictMode>,
 )

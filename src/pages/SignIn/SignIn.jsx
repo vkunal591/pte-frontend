@@ -21,6 +21,7 @@ const MailIcon = () => (
 );
 
 const SignIn = () => {
+  console.log('SignIn: Rendering SignIn component');
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
