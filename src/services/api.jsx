@@ -253,3 +253,33 @@ export const getReadingReorderAttempts = async (questionId) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+
+export const submitSummarizeSpokenAttempt = async (attemptData) => {
+  // attemptData should be a FormData object
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/sst/submit`,
+      attemptData,
+      {
+        headers: { "Content-Type": "multipart/form-data" }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const submitHighlightAttempt = async (attemptData) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/hsc/submit`,
+      attemptData
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

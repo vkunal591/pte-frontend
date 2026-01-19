@@ -24,6 +24,9 @@ import ReadingReorder from './ReadingReorder';
 // For now, I am assuming standard naming based on your imports.
 import SummarizeWrittenText from '../writing/SummarizeText';
 import WriteEssay from '../writing/WriteEssay';
+import SST from '../listening/SST';
+import HCS from '../listening/HCS';
+import ChooseSingleAnswer from '../listening/ChooseSingleAnswer';
 
 function Practice() {
     const navigate = useNavigate();
@@ -51,12 +54,14 @@ function Practice() {
     const [readingReorderQuestions, setReadingReorderQuestions] = useState([]);
 
 
+
     const [summarizeTextQuestions, setSummarizeTextQuestions] = useState([]);
     const [essayQuestions, setEssayQuestions] = useState([]);
 
 
     const [sstQuestions, setSSTQuestions] = useState([]);
     const [hcsQuestions, setHCSQuestions] = useState([]);
+    const [listeningMCQSingleQuestions, setListeningMCQSingleQuestions] = useState([]);
     // Session State
     const [activeSpeechQuestion, setActiveSpeechQuestion] = useState(false);
     const [speechQuestion, setSpeechQuestion] = useState(null);
@@ -230,7 +235,7 @@ const fetchListeningFillBlanks = () => {
 const fetchHighlightSummary = async() => {
      setLoading(true);
         try {
-            const response = await fetch(`/api/hcs/attempts/${user._id}`);
+            const response = await fetch(`/api/hsc/attempts/${user._id}`);
             const data = await response.json();
             setHCSQuestions(data?.data || []);
           
@@ -310,6 +315,7 @@ const fetchListeningMCQSingle = () => {
             case 'Write Essay': return essayQuestions;
             case 'Summarize Spoken Text': return sstQuestions;
             case 'Highlight Correct Summary': return hcsQuestions;
+            case 'Listen: Multiple Choice, choose Single Answer': return listeningMCQSingleQuestions;
             default: return [];
         }
     })();
@@ -357,6 +363,9 @@ const fetchListeningMCQSingle = () => {
             case "Multiple Choice, Choose Single Answer": return <ReadingMultiChoiceSingleAnswer {...props} />;
             case "Fill in the Blanks (Drag and Drop)": return <ReadingFIBDragDrop {...props} />;
             case "Re-order Paragraph": return <ReadingReorder {...props} />;
+            case "Summarize Spoken Text": return <SST {...props} />;
+            case "Highlight Correct Summary": return <HCS {...props} />;
+            case "Listen: Multiple Choice, choose Single Answer": return <ChooseSingleAnswer {...props} />;
 
             default: return <div>Component not found</div>;
         }
