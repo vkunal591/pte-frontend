@@ -359,6 +359,14 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                                                   <audio src={result.studentAudio?.url} controls className="flex-1 h-10" />
                                               </div>
                       
+                                             <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                                  <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
+                                                  <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                                      {question.answer}
+                                                  </p>
+                                              </div>
+
+
                                               {/* Transcript Display */}
                                               <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
                                                   <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Transcript Analysis</h3>
@@ -393,14 +401,20 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
 };
 
 // Sub-components
-const ControlBtn = ({ icon, label, onClick }) => (
-    <button onClick={onClick} className="flex flex-col items-center gap-1 text-slate-400 hover:text-primary-600 transition-colors">
-        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
-            {icon}
-        </div>
-        <span className="text-[10px] font-bold uppercase">{label}</span>
+const ControlBtn = ({ icon, label, onClick, className = "" }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl 
+      bg-slate-100 text-slate-700 font-semibold shadow-sm 
+      hover:bg-slate-800 hover:text-white transition-all ${className}`}
+    >
+      {icon}
+      <span className="font-bold">{label}</span>
     </button>
-);
+  );
+};
+
 
 const ParameterCard = ({ label, score, max }) => (
     <div className={`rounded-2xl border p-4 transition-all border-slate-100`}>

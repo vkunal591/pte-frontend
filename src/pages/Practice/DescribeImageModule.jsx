@@ -232,6 +232,14 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion , nextButton, p
                             <audio src={result.studentAudio?.url} controls className="flex-1 h-10" />
                         </div>
 
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                            <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
+                            <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                {question.modelAnswer}
+                            </p>
+                        </div>
+
+
                         {/* Transcript Display */}
                         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
                             <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Transcript Analysis</h3>
@@ -245,15 +253,40 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion , nextButton, p
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-between bg-white px-8 py-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-8">
-                    <ControlBtn icon={<ChevronLeft size={20}/>} label="Previous" onClick={previousButton} />
-                    <ControlBtn icon={<RefreshCw size={18}/>} label="Redo" onClick={() => { setStatus('idle'); setResult(null); }} />
-                    <button className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:bg-green-600 hover:text-white transition-all">
-                        <CheckCircle size={24} />
-                    </button>
-                    <ControlBtn icon={<Shuffle size={18}/>} label="Shuffle" onClick={shuffleButton} />
-                    <ControlBtn icon={<ChevronRight size={20}/>} label="Next" onClick={nextButton} />
-                </div>
+               <div className="flex items-center gap-8">
+  <ControlBtn
+    icon={<ChevronLeft size={22} />}
+    label="Previous"
+    onClick={previousButton}
+    className="font-semibold"
+  />
+
+  <ControlBtn
+    icon={<RefreshCw size={20} />}
+    label="Redo"
+    onClick={() => { setStatus('idle'); setResult(null); }}
+    className="font-semibold"
+  />
+
+  <button className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-700 font-bold shadow-md hover:bg-green-600 hover:text-white hover:shadow-lg active:scale-95 transition-all">
+    <CheckCircle size={26} />
+  </button>
+
+  <ControlBtn
+    icon={<Shuffle size={20} />}
+    label="Shuffle"
+    onClick={shuffleButton}
+    className="font-semibold"
+  />
+
+  <ControlBtn
+    icon={<ChevronRight size={22} />}
+    label="Next"
+    onClick={nextButton}
+    className="font-semibold"
+  />
+</div>
+
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400 font-bold uppercase">Go to</span>
                     <input type="text" className="w-10 h-8 bg-slate-800 text-white text-center rounded text-sm font-bold" defaultValue="1" />
@@ -294,11 +327,18 @@ const ParameterCard = ({ label, score, max, color }) => (
     </div>
 );
 
-const ControlBtn = ({ icon, label, onClick }) => (
-    <button onClick={onClick} className="flex flex-col items-center gap-1 group">
-        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">{icon}</div>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{label}</span>
+const ControlBtn = ({ icon, label, onClick, className = "" }) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-xl 
+      bg-slate-100 text-slate-700 font-semibold shadow-sm 
+      hover:bg-slate-800 hover:text-white transition-all ${className}`}
+    >
+      {icon}
+      <span className="font-bold">{label}</span>
     </button>
-);
+  );
+};
 
 export default DescribeImageModule;

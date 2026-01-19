@@ -54,6 +54,9 @@ function Practice() {
     const [summarizeTextQuestions, setSummarizeTextQuestions] = useState([]);
     const [essayQuestions, setEssayQuestions] = useState([]);
 
+
+    const [sstQuestions, setSSTQuestions] = useState([]);
+    const [hcsQuestions, setHCSQuestions] = useState([]);
     // Session State
     const [activeSpeechQuestion, setActiveSpeechQuestion] = useState(false);
     const [speechQuestion, setSpeechQuestion] = useState(null);
@@ -204,6 +207,41 @@ function Practice() {
         finally { setLoading(false); }
     };
 
+
+    const fetchSummarizeSpokenText = async() => {
+        setLoading(true);
+        try {
+            const response = await fetch(`/api/sst/questions/${user._id}`);
+            const data = await response.json();
+            setSSTQuestions(data?.data || []);
+          
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
+const fetchListeningMCQMultiple = () => {
+  console.log("Listening MCQ Multiple clicked");
+};
+
+const fetchListeningFillBlanks = () => {
+  console.log("Listening Fill in the Blanks clicked");
+};
+
+const fetchHighlightSummary = async() => {
+     setLoading(true);
+        try {
+            const response = await fetch(`/api/hcs/attempts/${user._id}`);
+            const data = await response.json();
+            setHCSQuestions(data?.data || []);
+          
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+};
+
+const fetchListeningMCQSingle = () => {
+  console.log("Listening MCQ Single clicked");
+};
+
     // --- CONFIGURATION ---
     const subTabsConfig = {
         Speaking: [
@@ -229,7 +267,14 @@ function Practice() {
 
         ],
 
-        Listening: []
+        Listening: [
+             { id: 'Summarize Spoken Text', isAi: true, onClick: fetchSummarizeSpokenText },
+            { id: 'Listening Multiple, Choose Multiple Answer', isAi: true, onClick: fetchListeningMCQMultiple },
+            { id: 'Fill in the blanks (Type In)', isAi: true, onClick: fetchListeningFillBlanks },
+            { id: 'Highlight Correct Summary', isAi: true, onClick: fetchHighlightSummary },
+            { id: 'Listen: Multiple Choice, choose Single Answer', isAi: true, onClick: fetchListeningMCQSingle }
+
+        ]
     };
 
     // --- EFFECTS ---
@@ -263,6 +308,8 @@ function Practice() {
 
             case 'Summarize Written Text': return summarizeTextQuestions;
             case 'Write Essay': return essayQuestions;
+            case 'Summarize Spoken Text': return sstQuestions;
+            case 'Highlight Correct Summary': return hcsQuestions;
             default: return [];
         }
     })();
