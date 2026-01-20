@@ -31,6 +31,8 @@ import SelectMissingWord from '../listening/SelectMissingWord';
 import HighlightIncorrectWords from '../listening/HighLightIncorrectWords';
 import ListeningFIB from '../listening/ListeningFIB';
 import ListeningMultiChoiceMultiAnswer from '../listening/ListeningMultiChoiceMultiAnswer';
+import WriteFromDictation from '../listening/WriteFromDictation';
+import { getWriteFromDictationQuestions } from '../../services/api';
 
 
 function Practice() {
@@ -72,6 +74,7 @@ function Practice() {
     const [highlightIncorrectWordsQuestions, setHighlightIncorrectWordsQuestions] = useState([]);
     const [listeningFIBQuestions, setListeningFIBQuestions] = useState([]);
     const [listeningMCQMultipleQuestions, setListeningMCQMultipleQuestions] = useState([]);
+    const [writeFromDictationQuestions, setWriteFromDictationQuestions] = useState([]);
     // Session State
     const [activeSpeechQuestion, setActiveSpeechQuestion] = useState(false);
     const [speechQuestion, setSpeechQuestion] = useState(null);
@@ -254,6 +257,15 @@ function Practice() {
         finally { setLoading(false); }
     };
 
+    const fetchWriteFromDictation = async () => {
+        setLoading(true);
+        try {
+            const data = await getWriteFromDictationQuestions(user._id);
+            setWriteFromDictationQuestions(data?.data || []);
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
+    };
+
     const fetchHighlightSummary = async () => {
         setLoading(true);
         try {
@@ -334,7 +346,8 @@ function Practice() {
             { id: 'Highlight Correct Summary', isAi: true, onClick: fetchHighlightSummary },
             { id: 'Listen: Multiple Choice, choose Single Answer', isAi: true, onClick: fetchListeningMCQSingle },
             { id: 'Select Missing Word', isAi: true, onClick: fetchSelectMissingWord },
-            { id: 'Highlight Incorrect Words', isAi: true, onClick: fetchHighlightIncorrectWords }
+            { id: 'Highlight Incorrect Words', isAi: true, onClick: fetchHighlightIncorrectWords },
+            { id: 'Write From Dictation', isAi: true, onClick: fetchWriteFromDictation }
 
         ]
     };
@@ -377,6 +390,7 @@ function Practice() {
             case 'Highlight Incorrect Words': return highlightIncorrectWordsQuestions; // Implement when data and component are ready
             case 'Fill in the blanks (Type In)': return listeningFIBQuestions;
             case 'Listening: Multiple Choice, Choose Multiple Answer': return listeningMCQMultipleQuestions;
+            case 'Write From Dictation': return writeFromDictationQuestions;
             default: return [];
         }
     })();
@@ -433,6 +447,7 @@ function Practice() {
 
             case 'Fill in the blanks (Type In)': return <ListeningFIB {...props} />;
             case 'Listening: Multiple Choice, Choose Multiple Answer': return <ListeningMultiChoiceMultiAnswer {...props} />;
+            case 'Write From Dictation': return <WriteFromDictation {...props} />;
 
             default: return <div>Component not found</div>;
         }

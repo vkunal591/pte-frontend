@@ -361,3 +361,24 @@ export const submitListeningMCQMultipleAttempt = async (attemptData) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const getWriteFromDictationQuestions = async (userId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/write-from-dictation/questions/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const submitWriteFromDictationAttempt = async (attemptData) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/write-from-dictation/submit`,
+      attemptData
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
