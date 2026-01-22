@@ -2,14 +2,13 @@ import axios from 'axios';
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-<<<<<<< HEAD
 const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
 export default api;
-=======
+
 
 
 // Add interceptor
@@ -22,7 +21,7 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
->>>>>>> 82621d2cf42ca6bb3b59137cec9bf3ddb34723dc
+
 
 export const submitRepeatAttempt = async (attemptData) => {
   // attemptData should be a FormData object
