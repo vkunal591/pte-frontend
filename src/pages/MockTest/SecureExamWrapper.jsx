@@ -5,6 +5,7 @@ import APEUniMockTest from "./SectionalTest/Speaking";
 import APEUniWritingMockTest from "./SectionalTest/Writing";
 import APEUniListeningTest from "./SectionalTest/Listening";
 import ReadAloudMockTest from "./QuestionTest/ReadAloud";
+import APEUniReadingTest from "./SectionalTest/Reading";
 
 export default function SecureExamWrapper() {
   const navigate = useNavigate();
@@ -59,11 +60,12 @@ export default function SecureExamWrapper() {
       </div>
     );
   }
+  console.log("Rendering question of type:", type);
 return (
   <>  
     {type === "speaking" ? <APEUniMockTest backendData={question} /> : type === "writing" ? <APEUniWritingMockTest backendData={question} /> : 
-    type === "RA"?<ReadAloudMockTest backendData={question} />
-    :<APEUniListeningTest backendData={question} />
+    type === "RA"?<ReadAloudMockTest backendData={question} /> : type==="listening" ?
+    <APEUniListeningTest backendData={question} /> : <APEUniReadingTest backendData={question}   />
     
     }
   </>

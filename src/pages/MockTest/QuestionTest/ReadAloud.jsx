@@ -85,18 +85,14 @@ export default function ReadAloudMockTest({ backendData }) {
 
       {/* Main Content Area */}
       <div className="flex-grow flex flex-col overflow-y-auto bg-white w-full shadow-sm border border-gray-200">
-        {step === 0 && <OverviewScreen />}
-        {step === 1 && <HeadsetCheckScreen />}
-        {step === 2 && <MicCheckScreen />}
-        {step === 3 && <IntroScreen />}
-        {step === 4 && (
+        {step === 0 && (
           <ReadAloudController 
             key={flattenedQuestions[currentIdx]._id}
             question={flattenedQuestions[currentIdx]} 
             onNext={handleNextQuestion} 
           />
         )}
-        {step === 5 && <ResultScreen testResult={testResult} isLoadingResult={isLoadingResult} />}
+        {step === 1 && <ResultScreen testResult={testResult} isLoadingResult={isLoadingResult} />}
       </div>
 
       {/* Footer Navigation */}

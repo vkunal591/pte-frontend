@@ -7,7 +7,7 @@ import api from "../../services/api";
 
 const MAIN_TABS = ["Full Tests", "Section Tests", "Question Tests"];
 
-const SECTION_TABS = ["All", "Speaking", "Writing", "Listening"];
+const SECTION_TABS = ["All", "Speaking", "Writing", "Reading", "Listening"];
 
 const QUESTION_TABS = [
   { id: "Q_ALL", label: "All", api: "all" },
@@ -39,10 +39,11 @@ export default function MockTest() {
 
     try {
       if (section === "All") {
-        const [speaking, writing, listening] = await Promise.all([
+        const [speaking, writing, listening, reading] = await Promise.all([
           api.get("/speaking"),
           api.get("/writing"),
           api.get("/listening"),
+          api.get("/reading"),
         ]);
 
         const speakingQ = (speaking.data?.data || []).map(q => ({
@@ -60,7 +61,12 @@ export default function MockTest() {
           __section: "listening",
         }));
 
-        setQuestions([...speakingQ, ...writingQ, ...listeningQ]);
+        const readingQ = (reading.data?.data || []).map(q => ({
+          ...q,
+          __section: "reading",
+        }));
+
+        setQuestions([...speakingQ, ...writingQ, ...listeningQ, ...readingQ]);
       } else {
         const res = await api.get(`/${section.toLowerCase()}`);
         setQuestions(

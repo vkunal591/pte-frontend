@@ -1,77 +1,113 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import WritingResultScreen from "./WritingResult";
 
 /* ============================================================
    MAIN WRAPPER
 ============================================================ */
 export default function APEUniWritingMockTest({ backendData }) {
   const [step, setStep] = useState(0); 
-  // 0 Overview | 1 Headset | 2 Mic | 3 Intro | 4 Exam | 5 Result
-
   const [currentIdx, setCurrentIdx] = useState(0);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resultId, setResultId] = useState(null);
+
+  // Global Section Timer: 54 Minutes
+  const [globalTime, setGlobalTime] = useState(54 * 60);
+  const answersRef = useRef([]); // Critical for auto-submit
+
+  const { user } = useSelector((state) => state.auth);
 
   /* -------- FLATTEN BACKEND DATA -------- */
   useEffect(() => {
     if (!backendData) return;
-
     const seq = [
-      ...(backendData.summarizeWrittenText || []).map(q => ({
-        ...q,
-        type: "SWT",
-        time: q.answerTime || 600
-      })),
-      ...(backendData.writeEssay || []).map(q => ({
-        ...q,
-        type: "ESSAY",
-        time: q.answerTime || 600
-      })),
-      ...(backendData.summarizeSpokenText || []).map(q => ({
-        ...q,
-        type: "SST",
-        time: 600
-      })),
-      ...(backendData.writeFromDictation || []).map(q => ({
-        ...q,
-        type: "WFD",
-        time: 60
-      }))
+      ...(backendData.summarizeWrittenText || []).map(q => ({ ...q, type: "SWT", time: q.answerTime || 600 })),
+      ...(backendData.writeEssay || []).map(q => ({ ...q, type: "ESSAY", time: q.answerTime || 1200 })),
+      ...(backendData.summarizeSpokenText || []).map(q => ({ ...q, type: "SST", time: 600 })),
+      ...(backendData.writeFromDictation || []).map(q => ({ ...q, type: "WFD", time: 60 }))
     ];
-
     setQuestions(seq);
   }, [backendData]);
 
-  const handleNextQuestion = (payload) => {
-    const updated = [...answers, payload];
-    setAnswers(updated);
+  /* -------- GLOBAL TIMER LOGIC -------- */
+  useEffect(() => {
+    let timer;
+    if (step === 4 && globalTime > 0) {
+      timer = setInterval(() => {
+        setGlobalTime((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            submitFullTest(answersRef.current); // Auto-submit on timeout
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [step]);
+
+  const handleNextQuestion = async (payload) => {
+    const updatedAnswers = [...answers, payload];
+    setAnswers(updatedAnswers);
+    answersRef.current = updatedAnswers; // Keep ref updated
 
     if (currentIdx < questions.length - 1) {
-      setCurrentIdx(prev => prev + 1);
+      setCurrentIdx((prev) => prev + 1);
     } else {
-      setStep(5);
+      submitFullTest(updatedAnswers);
     }
   };
 
-  if (!backendData || questions.length === 0) {
-    return <div className="p-10 text-center">Loading Writing Test...</div>;
-  }
+  const submitFullTest = async (finalAnswers) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const response = await axios.post("/api/writing/attempt", {
+        writingId: backendData._id,
+        userId: user?._id,
+        answers: finalAnswers,
+      });
+      
+      if (response.data.success) {
+        setResultId(response.data.data._id);
+        setStep(5);
+      }
+    } catch (err) {
+      console.error("Submission failed", err);
+      alert("Test ended. Error saving result.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatGlobalTime = (sec) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  if (isSubmitting) return <div className="p-20 text-center font-bold text-[#008199]">Analysing Writing Performance...</div>;
+  if (!backendData || questions.length === 0) return <div className="p-10 text-center">Loading Questions...</div>;
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] flex flex-col font-sans">
       {/* HEADER */}
       <div className="bg-[#eeeeee] border-b border-gray-300">
         <div className="px-6 py-2 flex justify-between items-center text-sm font-bold text-gray-600">
-          <span>APEUni PTE Mock Test — Writing</span>
-          <button className="bg-white border px-3 py-1 rounded text-xs">
-            Exit Test
-          </button>
+          <span>APEUni PTE Mock Test — Writing Section</span>
+          <button className="bg-white border px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
         </div>
 
-        <div className="h-9 bg-[#008199] flex items-center justify-end px-6 text-white text-xs">
+        <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
-            <span className="bg-[#006b81] px-3 py-1 rounded">
-              Question {currentIdx + 1} of {questions.length}
-            </span>
+            <>
+              <span className="bg-[#006b81] px-3 py-1 rounded">Question {currentIdx + 1} of {questions.length}</span>
+              <span className={globalTime < 60 ? "text-red-300 animate-pulse" : ""}>Section Time: {formatGlobalTime(globalTime)}</span>
+            </>
           )}
         </div>
       </div>
@@ -79,9 +115,9 @@ export default function APEUniWritingMockTest({ backendData }) {
       {/* CONTENT */}
       <div className="flex-grow bg-white overflow-y-auto">
         {step === 0 && <WritingOverview onNext={() => setStep(1)} />}
-        {step === 1 && <HeadsetCheckScreen onNext={() => setStep(2)} />}
-        {step === 2 && <MicCheckScreen onNext={() => setStep(3)} />}
-        {step === 3 && <WritingIntro onNext={() => setStep(4)} />}
+        {step === 1 && <HeadsetCheckScreen />}
+        {step === 2 && <MicCheckScreen />}
+        {step === 3 && <WritingIntro />}
         {step === 4 && (
           <WritingQuestionController
             key={questions[currentIdx]._id}
@@ -89,16 +125,13 @@ export default function APEUniWritingMockTest({ backendData }) {
             onNext={handleNextQuestion}
           />
         )}
-        {step === 5 && <WritingResultScreen answers={answers} />}
+        {step === 5 && <WritingResultScreen resultId={resultId} />}
       </div>
 
       {/* FOOTER */}
       {step < 4 && (
         <div className="h-16 bg-[#eeeeee] border-t flex justify-end items-center px-10">
-          <button
-            onClick={() => setStep(step + 1)}
-            className="bg-[#fb8c00] text-white px-10 py-2 font-bold uppercase text-sm"
-          >
+          <button onClick={() => setStep(step + 1)} className="bg-[#fb8c00] text-white px-10 py-2 rounded-sm text-sm font-bold uppercase shadow-md">
             Next
           </button>
         </div>
@@ -108,20 +141,124 @@ export default function APEUniWritingMockTest({ backendData }) {
 }
 
 /* ============================================================
-   OVERVIEW
+   QUESTION CONTROLLER
 ============================================================ */
+function WritingQuestionController({ question, onNext }) {
+  const [text, setText] = useState("");
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioStatus, setAudioStatus] = useState("STOPPED");
+  const audioRef = useRef(null);
+  const textRef = useRef(""); 
+
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+
+  // Audio Progress Tracker
+  const onTimeUpdate = () => {
+    if (audioRef.current) {
+      const prog = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+      setAudioProgress(prog);
+    }
+  };
+
+  const manualSubmit = () => {
+    onNext({ questionId: question._id, type: question.type, answer: text });
+  };
+
+  const renderPrompt = () => {
+    if (question.type === "ESSAY") return question.title || question.description;
+    if (question.type === "SWT") return question.paragraph;
+    if (question.type === "SST") return question.title;
+    return null;
+  };
+
+  const promptText = renderPrompt();
+
+  return (
+    <div className="p-10 max-w-5xl mx-auto flex flex-col h-full">
+      <div className="flex justify-between mb-6 text-sm font-semibold text-gray-700">
+        <span>{getWritingInstruction(question)}</span>
+        <span className="text-gray-400 font-bold uppercase tracking-widest italic">PTE Writing Tasks</span>
+      </div>
+
+      {promptText && (
+        <div className="bg-gray-50 p-6 mb-6 border border-gray-200 rounded text-sm leading-relaxed text-gray-800 shadow-sm font-medium">
+          {promptText}
+        </div>
+      )}
+
+      {/* RE-STYLED AUDIO BAR WITH VISIBLE SLIDER */}
+      {question.audioUrl && (
+        <div className="bg-[#4aa3c2] p-5 rounded-lg w-full mb-8 shadow-md">
+          <div className="flex items-center gap-6">
+            <div className="text-2xl text-white">🔊</div>
+            <div className="flex-1 bg-white/30 h-3 rounded-full overflow-hidden relative">
+              <div 
+                className="bg-white h-full transition-all duration-100 ease-linear" 
+                style={{ width: `${audioProgress}%` }}
+              />
+            </div>
+            <span className="text-white text-xs font-bold min-w-[80px] text-right">
+              {audioProgress >= 100 ? "Completed" : "Playing Audio"}
+            </span>
+          </div>
+          <audio 
+            ref={audioRef}
+            src={question.audioUrl} 
+            onTimeUpdate={onTimeUpdate}
+            onPlay={() => setAudioStatus("PLAYING")}
+            onEnded={() => {setAudioStatus("FINISHED"); setAudioProgress(100)}}
+            autoPlay 
+            className="hidden" 
+          />
+        </div>
+      )}
+
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="w-full flex-grow min-h-[300px] border-2 border-gray-200 p-5 rounded focus:outline-none focus:border-[#008199] shadow-inner text-gray-700 leading-relaxed"
+        placeholder="Type your response here..."
+      />
+
+      <div className="flex justify-between items-center mt-6">
+        <div className="text-sm font-medium text-gray-500 bg-gray-100 px-4 py-2 rounded">
+          Words: <span className="text-black">{text.trim() === "" ? 0 : text.trim().split(/\s+/).filter(Boolean).length}</span>
+        </div>
+
+        <button onClick={manualSubmit} className="bg-[#008199] hover:bg-[#006b81] text-white px-12 py-2 rounded-sm font-bold uppercase tracking-wide shadow-md">
+          NEXT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+/* ============================================================
+   SUPPORTING SCREENS
+============================================================ */
+
 function WritingOverview({ onNext }) {
   return (
     <div className="p-10 max-w-4xl">
       <h2 className="font-bold text-lg mb-6">
-        The Writing test is approximately 30 minutes long.
+        The Writing test is approximately 54 minutes long.
       </h2>
-
       <table className="border border-gray-400 text-xs w-full max-w-md">
         <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Task</th>
-            <th className="border p-2">Description</th>
+          <tr className="bg-gray-100 text-gray-600">
+            <th className="border p-2 text-left">Task</th>
+            <th className="border p-2 text-left">Description</th>
+            <th>Time Allowed</th>
           </tr>
         </thead>
         <tbody>
@@ -134,6 +271,7 @@ function WritingOverview({ onNext }) {
             <tr key={i}>
               <td className="border p-2">{i + 1}</td>
               <td className="border p-2">{t}</td>
+              <td>{i === 1 ? "54 Minutes" : ""}</td>
             </tr>
           ))}
         </tbody>
@@ -142,54 +280,112 @@ function WritingOverview({ onNext }) {
   );
 }
 
-/* ============================================================
-   HEADSET CHECK
-============================================================ */
-function HeadsetCheckScreen({ onNext }) {
-  const audio = useRef(new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"));
+
+function HeadsetCheckScreen() {
   const [playing, setPlaying] = useState(false);
+  const audio = useRef(
+    new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+  );
 
   const toggle = () => {
-    playing ? audio.current.pause() : audio.current.play();
+    if (playing) {
+      audio.current.pause();
+    } else {
+      audio.current.play();
+    }
     setPlaying(!playing);
   };
 
   return (
-    <div className="p-10 flex">
-      <div className="w-1/2">
-        <h2 className="font-bold mb-4">Headset Check</h2>
-        <p className="text-sm mb-4">Click play to test your headset.</p>
+    <div className=" bg-[#e5e0df] flex flex-col">
+      {/* Main Content */}
+      <div className="flex flex-1 bg-white px-10 py-8">
+        {/* LEFT CONTENT */}
+        <div className="w-1/2 pr-10">
+          <h2 className="font-bold mb-4">Headset</h2>
 
-        <button
-          onClick={toggle}
-          className="bg-[#4aa3c0] text-white px-6 py-2 rounded"
-        >
-          {playing ? "Pause" : "Play"}
-        </button>
-      </div>
+          <p className="text-sm mb-2">
+            This is an opportunity to check that your headset is working
+            correctly.
+          </p>
 
-      <div className="w-1/2 flex justify-center items-center">
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
-          className="w-[260px]"
-        />
+          <ol className="text-sm list-decimal ml-4 space-y-1 mb-6">
+            <li>
+              Put your headset on and adjust it so that it fits comfortably over
+              your ears.
+            </li>
+            <li>
+              When you are ready, click on the <b>[Play]</b> button. You will
+              hear a short recording.
+            </li>
+            <li>
+              If you do not hear anything in your headphones while the status
+              reads <b>[Playing]</b>, raise your hand to get the attention of
+              the Test Administrator.
+            </li>
+          </ol>
+
+          {/* AUDIO CONTROL BOX */}
+          <div className="bg-[#4aa3c0] w-[320px] p-5 rounded">
+            {/* Play Button */}
+            <button
+              onClick={toggle}
+              className="flex items-center gap-3 bg-white px-4 py-2 rounded shadow text-sm font-medium"
+            >
+              <span className="text-lg">
+                {playing ? "⏸" : "▶"}
+              </span>
+              {playing ? "Pause Audio" : "Click the play button to start"}
+            </button>
+
+            {/* Volume Slider (UI only) */}
+            <div className="flex items-center gap-3 mt-4 text-white">
+              🔊
+              <div className="flex-1 h-1 bg-white/70 rounded" />
+            </div>
+          </div>
+
+          <p className="text-xs mt-6 text-gray-700">
+            - During the test you will not have [Play] and [Stop] buttons. The
+            audio recording will start playing automatically.
+            <br />
+            - Please do not remove your headset. You should wear it throughout
+            the test.
+          </p>
+        </div>
+
+        {/* RIGHT IMAGE */}
+        <div className="w-1/2 flex justify-center items-center">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
+            alt="Headset Illustration"
+            className="w-[300px] opacity-90"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-/* ============================================================
-   MIC CHECK
-============================================================ */
-function MicCheckScreen({ onNext }) {
+
+
+ function MicCheckScreen() {
   const [recording, setRecording] = useState(false);
+  const [url, setUrl] = useState(null);
   const recorder = useRef(null);
   const chunks = useRef([]);
 
   const start = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     recorder.current = new MediaRecorder(stream);
-    recorder.current.ondataavailable = e => chunks.current.push(e.data);
+    chunks.current = [];
+
+    recorder.current.ondataavailable = (e) => chunks.current.push(e.data);
+    recorder.current.onstop = () => {
+      const blob = new Blob(chunks.current, { type: "audio/wav" });
+      setUrl(URL.createObjectURL(blob));
+    };
+
     recorder.current.start();
     setRecording(true);
   };
@@ -200,128 +396,116 @@ function MicCheckScreen({ onNext }) {
   };
 
   return (
-    <div className="p-10 flex">
-      <div className="w-1/2">
-        <h2 className="font-bold mb-4">Microphone Check</h2>
+    <div className=" bg-white flex flex-col">
+      
+      {/* Main Content */}
+      <div className="flex flex-1 px-10 py-8">
+        {/* LEFT SECTION */}
+        <div className="w-1/2 pr-10">
+          <h2 className="font-semibold mb-4">Microphone Check</h2>
 
-        <div className="flex gap-4">
-          {!recording ? (
-            <button onClick={start} className="bg-[#5aa9c3] text-white px-6 py-2">
-              Record
-            </button>
-          ) : (
-            <button onClick={stop} className="bg-red-500 text-white px-6 py-2">
-              Stop
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
-   INTRO
-============================================================ */
-function WritingIntro({ onNext }) {
-  return (
-    <div className="p-10 max-w-3xl">
-      <h2 className="font-bold mb-4">Writing Test Instructions</h2>
-
-      <ul className="text-sm space-y-4">
-        <li>- Timer is shown at the top right.</li>
-        <li>- You cannot return to previous questions.</li>
-        <li>- Word limits must be respected.</li>
-      </ul>
-    </div>
-  );
-}
-
-/* ============================================================
-   QUESTION CONTROLLER
-============================================================ */
-function WritingQuestionController({ question, onNext }) {
-  const [text, setText] = useState("");
-  const [timeLeft, setTimeLeft] = useState(question.time);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(t);
-          submit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const submit = () => {
-    onNext({
-      questionId: question._id,
-      type: question.type,
-      answer: text
-    });
-  };
-
-  return (
-    <div className="p-10 max-w-5xl mx-auto">
-      <div className="flex justify-between mb-4 text-sm">
-        <span>{getWritingInstruction(question)}</span>
-        <span>⏱ {formatTime(timeLeft)}</span>
-      </div>
-
-      {question.paragraph && (
-        <div className="bg-gray-50 p-5 mb-4 border">
-          {question.paragraph}
-        </div>
-      )}
-
-      {question.audioUrl && (
-        <audio src={question.audioUrl} controls className="mb-4" />
-      )}
-
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="w-full h-48 border p-4 resize-none"
-        placeholder="Type your response here..."
-      />
-
-      <div className="flex justify-between mt-4">
-        <span className="text-xs text-gray-500">
-          Words: {text.trim().split(/\s+/).filter(Boolean).length}
-        </span>
-
-        <button
-          onClick={submit}
-          className="bg-[#008199] text-white px-6 py-2 rounded"
-        >
-          NEXT
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
-   RESULT
-============================================================ */
-function WritingResultScreen({ answers }) {
-  return (
-    <div className="p-10 max-w-3xl">
-      <h2 className="text-2xl font-black mb-6">Writing Test Completed</h2>
-
-      {answers.map((a, i) => (
-        <div key={i} className="border p-4 mb-3 rounded">
-          <p className="text-xs font-bold mb-1">
-            Q{i + 1} • {a.type}
+          <p className="text-sm mb-2">
+            This is an opportunity to check that your microphone is working
+            correctly.
           </p>
-          <p className="text-sm italic">{a.answer || "No response"}</p>
+
+          <ol className="text-sm list-decimal ml-4 space-y-1 mb-6">
+            <li>
+              Make sure your headset is on and the microphone is in the downward
+              position near your mouth.
+            </li>
+            <li>
+              When you are ready, click on the <b>Record</b> button and say{" "}
+              <span className="text-red-500">
+                “Testing, testing, one, two, three”
+              </span>
+              .
+            </li>
+            <li>After you have spoken, click on the Stop button.</li>
+            <li>Now click on the Playback button.</li>
+            <li>
+              If you cannot hear your voice clearly, please raise your hand.
+            </li>
+          </ol>
+
+          {/* RECORD CONTROLS */}
+          <div className="flex items-center gap-4">
+            {!recording ? (
+              <button
+                onClick={start}
+                className="bg-[#5aa9c3] text-white px-10 py-2 rounded shadow"
+              >
+                Record
+              </button>
+            ) : (
+              <button
+                onClick={stop}
+                className="bg-red-500 text-white px-10 py-2 rounded shadow"
+              >
+                Stop
+              </button>
+            )}
+
+            {/* Mic Status Indicator */}
+            <div
+              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
+                recording ? "border-red-500" : "border-gray-400"
+              }`}
+            >
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
+                }`}
+              />
+            </div>
+
+            {url && (
+              <button
+                onClick={() => new Audio(url).play()}
+                className="bg-gray-200 px-8 py-2 rounded shadow"
+              >
+                Playback
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs mt-6 text-gray-700">
+            During the test, you will not have Record, Playback and Stop buttons.
+            The voice recording will start automatically.
+          </p>
         </div>
-      ))}
+
+        {/* RIGHT SECTION (IMAGES) */}
+        <div className="w-1/2 flex justify-center items-center gap-10">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
+            alt="Headset Front"
+            className="w-[220px]"
+          />
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
+            alt="Headset Side"
+            className="w-[180px] opacity-90"
+          />
+        </div>
+      </div>
+    </div>
+  );
+  }
+
+
+function WritingIntro() {
+  return (
+    <div className="bg-white px-10 py-8">
+      <div className="max-w-3xl">
+        <h2 className="font-semibold mb-2 text-lg">Test Introduction</h2>
+        <p className="text-sm mb-6 text-gray-600">This test measures Writing skills that you will need in an academic setting.</p>
+        <ul className="text-sm space-y-4 text-gray-700">
+          <li>- Timer is shown at the top right.</li>
+          <li>- Use Next button to move forward. You cannot go back.</li>
+          <li>- Standard English varieties (UK/US/AU) are all acceptable.</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -332,11 +516,11 @@ function WritingResultScreen({ answers }) {
 function getWritingInstruction(q) {
   switch (q.type) {
     case "SWT":
-      return `Summarize the text in one sentence (Max ${q.maxWords} words)`;
+      return `Summarize written text (Max ${q.maxWords || 75} words)`;
     case "ESSAY":
-      return `Write an essay (${q.minWords}-${q.maxWords} words)`;
+      return `Write an essay (${q.minWords || 200}-${q.maxWords || 300} words)`;
     case "SST":
-      return "Listen and summarize the spoken text";
+      return "Listen and summarize the spoken text (50-70 words)";
     case "WFD":
       return "Listen and write the sentence";
     default:
