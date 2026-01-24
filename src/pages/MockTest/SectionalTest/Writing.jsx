@@ -6,8 +6,8 @@ import WritingResultScreen from "./WritingResult";
 /* ============================================================
    MAIN WRAPPER
 ============================================================ */
-export default function APEUniWritingMockTest({ backendData }) {
-  const [step, setStep] = useState(0); 
+export default function APEUniWritingMockTest({ backendData, onComplete, isFullMock, onExit }) {
+  const [step, setStep] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
@@ -65,13 +65,19 @@ export default function APEUniWritingMockTest({ backendData }) {
   const submitFullTest = async (finalAnswers) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    if (isFullMock && onComplete) {
+      onComplete(finalAnswers);
+      return;
+    }
+
     try {
       const response = await axios.post("/api/writing/attempt", {
         writingId: backendData._id,
         userId: user?._id,
         answers: finalAnswers,
       });
-      
+
       if (response.data.success) {
         setResultId(response.data.data._id);
         setStep(5);
@@ -91,7 +97,7 @@ export default function APEUniWritingMockTest({ backendData }) {
   };
 
   if (isSubmitting) return <div className="p-20 text-center font-bold text-[#008199]">Analysing Writing Performance...</div>;
-  if (!backendData || questions.length === 0) return <div className="p-10 text-center">Loading Questions...</div>;
+  if (!backendData) return <div className="p-10 text-center">Loading Questions...</div>;
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] flex flex-col font-sans">
@@ -99,7 +105,7 @@ export default function APEUniWritingMockTest({ backendData }) {
       <div className="bg-[#eeeeee] border-b border-gray-300">
         <div className="px-6 py-2 flex justify-between items-center text-sm font-bold text-gray-600">
           <span>APEUni PTE Mock Test — Writing Section</span>
-          <button className="bg-white border px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
+          <button onClick={onExit} className="bg-white border px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
         </div>
 
         <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
@@ -111,19 +117,29 @@ export default function APEUniWritingMockTest({ backendData }) {
           )}
         </div>
       </div>
-
-      {/* CONTENT */}
       <div className="flex-grow bg-white overflow-y-auto">
         {step === 0 && <WritingOverview onNext={() => setStep(1)} />}
         {step === 1 && <HeadsetCheckScreen />}
         {step === 2 && <MicCheckScreen />}
         {step === 3 && <WritingIntro />}
         {step === 4 && (
-          <WritingQuestionController
-            key={questions[currentIdx]._id}
-            question={questions[currentIdx]}
-            onNext={handleNextQuestion}
-          />
+          questions.length > 0 ? (
+            <WritingQuestionController
+              key={questions[currentIdx]._id}
+              question={questions[currentIdx]}
+              onNext={handleNextQuestion}
+            />
+          ) : (
+            <div className="p-20 text-center">
+              <h2 className="text-xl font-bold text-gray-500">No questions in this section.</h2>
+              <button
+                onClick={() => onComplete([])}
+                className="mt-6 bg-[#fb8c00] text-white px-8 py-2 rounded font-bold"
+              >
+                Proceed to Next Section
+              </button>
+            </div>
+          )
         )}
         {step === 5 && <WritingResultScreen resultId={resultId} />}
       </div>
@@ -148,7 +164,7 @@ function WritingQuestionController({ question, onNext }) {
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioStatus, setAudioStatus] = useState("STOPPED");
   const audioRef = useRef(null);
-  const textRef = useRef(""); 
+  const textRef = useRef("");
 
   useEffect(() => {
     textRef.current = text;
@@ -194,8 +210,8 @@ function WritingQuestionController({ question, onNext }) {
           <div className="flex items-center gap-6">
             <div className="text-2xl text-white">🔊</div>
             <div className="flex-1 bg-white/30 h-3 rounded-full overflow-hidden relative">
-              <div 
-                className="bg-white h-full transition-all duration-100 ease-linear" 
+              <div
+                className="bg-white h-full transition-all duration-100 ease-linear"
                 style={{ width: `${audioProgress}%` }}
               />
             </div>
@@ -203,14 +219,14 @@ function WritingQuestionController({ question, onNext }) {
               {audioProgress >= 100 ? "Completed" : "Playing Audio"}
             </span>
           </div>
-          <audio 
+          <audio
             ref={audioRef}
-            src={question.audioUrl} 
+            src={question.audioUrl}
             onTimeUpdate={onTimeUpdate}
             onPlay={() => setAudioStatus("PLAYING")}
-            onEnded={() => {setAudioStatus("FINISHED"); setAudioProgress(100)}}
-            autoPlay 
-            className="hidden" 
+            onEnded={() => { setAudioStatus("FINISHED"); setAudioProgress(100) }}
+            autoPlay
+            className="hidden"
           />
         </div>
       )}
@@ -369,7 +385,7 @@ function HeadsetCheckScreen() {
 
 
 
- function MicCheckScreen() {
+function MicCheckScreen() {
   const [recording, setRecording] = useState(false);
   const [url, setUrl] = useState(null);
   const recorder = useRef(null);
@@ -397,7 +413,7 @@ function HeadsetCheckScreen() {
 
   return (
     <div className=" bg-white flex flex-col">
-      
+
       {/* Main Content */}
       <div className="flex flex-1 px-10 py-8">
         {/* LEFT SECTION */}
@@ -448,14 +464,12 @@ function HeadsetCheckScreen() {
 
             {/* Mic Status Indicator */}
             <div
-              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-                recording ? "border-red-500" : "border-gray-400"
-              }`}
+              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${recording ? "border-red-500" : "border-gray-400"
+                }`}
             >
               <div
-                className={`w-3 h-3 rounded-full ${
-                  recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
-                }`}
+                className={`w-3 h-3 rounded-full ${recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
+                  }`}
               />
             </div>
 
@@ -491,7 +505,7 @@ function HeadsetCheckScreen() {
       </div>
     </div>
   );
-  }
+}
 
 
 function WritingIntro() {

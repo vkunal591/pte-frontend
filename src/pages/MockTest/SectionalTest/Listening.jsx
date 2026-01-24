@@ -3,11 +3,11 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 // --- MAIN WRAPPER ---
-export default function APEUniListeningTest({ backendData }) {
-  const [step, setStep] = useState(0); 
+export default function APEUniListeningTest({ backendData, onComplete, isFullMock, onExit }) {
+  const [step, setStep] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [flattenedQuestions, setFlattenedQuestions] = useState([]);
-  const [answers, setAnswers] = useState([]); 
+  const [answers, setAnswers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultId, setResultId] = useState(null);
 
@@ -57,7 +57,7 @@ export default function APEUniListeningTest({ backendData }) {
       type: flattenedQuestions[currentIdx].type,
       answer: answerData,
     };
-    
+
     const updatedAnswers = [...answers, payload];
     setAnswers(updatedAnswers);
     answersRef.current = updatedAnswers; // Sync ref
@@ -72,6 +72,12 @@ export default function APEUniListeningTest({ backendData }) {
   const submitFullMockTest = async (finalAnswers) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    if (isFullMock && onComplete) {
+      onComplete(finalAnswers);
+      return;
+    }
+
     try {
       const response = await axios.post("/api/listening/attempt", {
         listeningId: backendData._id,
@@ -104,7 +110,7 @@ export default function APEUniListeningTest({ backendData }) {
       <div className="bg-[#eeeeee] border-b border-gray-300">
         <div className="px-6 py-2 flex justify-between items-center text-sm font-bold text-gray-600">
           <span>APEUni PTE Mock Test - {backendData.title || "Listening"}</span>
-          <button className="bg-white border border-gray-400 px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
+          <button onClick={onExit} className="bg-white border border-gray-400 px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
         </div>
         <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
@@ -114,30 +120,42 @@ export default function APEUniListeningTest({ backendData }) {
             </>
           )}
         </div>
-      </div>
 
-      <div className="flex-grow flex flex-col overflow-y-auto bg-white w-full shadow-sm border border-gray-200">
-        {step === 0 && <OverviewScreen />}
-        {step === 1 && <HeadsetCheckScreen />}
-        {step === 2 && <MicCheckScreen />}
-        {step === 3 && <IntroScreen />}
-        {step === 4 && (
-          <ListeningQuestionController 
-            key={flattenedQuestions[currentIdx]._id}
-            question={flattenedQuestions[currentIdx]} 
-            onNext={handleNextQuestion} 
-          />
-        )}
-        {step === 5 && <ResultScreen resultId={resultId} />}
-      </div>
-
-      {step < 4 && (
-        <div className="h-16 bg-[#eeeeee] border-t border-gray-300 flex items-center justify-end px-10">
-          <button onClick={() => setStep(step + 1)} className="bg-[#fb8c00] text-white px-10 py-2 rounded-sm text-sm font-bold uppercase">
-            Next
-          </button>
+        <div className="flex-grow flex flex-col overflow-y-auto bg-white w-full shadow-sm border border-gray-200">
+          {step === 0 && <OverviewScreen />}
+          {step === 1 && <HeadsetCheckScreen />}
+          {step === 2 && <MicCheckScreen />}
+          {step === 3 && <IntroScreen />}
+          {step === 4 && (
+            flattenedQuestions.length > 0 ? (
+              <ListeningQuestionController
+                key={flattenedQuestions[currentIdx]._id}
+                question={flattenedQuestions[currentIdx]}
+                onNext={handleNextQuestion}
+              />
+            ) : (
+              <div className="p-20 text-center">
+                <h2 className="text-xl font-bold text-gray-500">No questions in this section.</h2>
+                <button
+                  onClick={() => onComplete([])}
+                  className="mt-6 bg-[#fb8c00] text-white px-8 py-2 rounded font-bold"
+                >
+                  Proceed to Next Section
+                </button>
+              </div>
+            )
+          )}
+          {step === 5 && <ResultScreen resultId={resultId} />}
         </div>
-      )}
+
+        {step < 4 && (
+          <div className="h-16 bg-[#eeeeee] border-t border-gray-300 flex items-center justify-end px-10">
+            <button onClick={() => setStep(step + 1)} className="bg-[#fb8c00] text-white px-10 py-2 rounded-sm text-sm font-bold uppercase">
+              Next
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -145,8 +163,8 @@ export default function APEUniListeningTest({ backendData }) {
 /* ===================== LISTENING QUESTION CONTROLLER ===================== */
 
 function ListeningQuestionController({ question, onNext }) {
-  const [status, setStatus] = useState("PREPARING"); 
-  const [prepTime, setPrepTime] = useState(3); 
+  const [status, setStatus] = useState("PREPARING");
+  const [prepTime, setPrepTime] = useState(3);
   const [audioProgress, setAudioProgress] = useState(0); // 0 to 100
   const [answer, setAnswer] = useState(null);
   const audioRef = useRef(null);
@@ -164,11 +182,12 @@ function ListeningQuestionController({ question, onNext }) {
   const startAudio = () => {
     setStatus("PLAYING");
     audioRef.current = new Audio(question.audioUrl);
-    
+
     // Track Audio Progress
-    audioRef.current.ontimeupdate = () => {
+    audioRef.current.ontimeupdate = (e) => {
+      if (!audioRef.current) return;
       const prog = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-      setAudioProgress(prog);
+      setAudioProgress(prog || 0);
     };
 
     audioRef.current.play();
@@ -193,7 +212,7 @@ function ListeningQuestionController({ question, onNext }) {
       case "SST":
         return (
           <div className="mt-6">
-            <textarea 
+            <textarea
               className="w-full h-48 border-2 p-4 text-sm focus:outline-none focus:border-[#008199] rounded"
               placeholder="Write summary (50-70 words)..."
               onChange={(e) => setAnswer(e.target.value)}
@@ -204,18 +223,18 @@ function ListeningQuestionController({ question, onNext }) {
         const words = (question.content || "").split(" ");
         return (
           <div className="mt-6 leading-loose text-lg">
-             {words.map((word, i) => (
-               <span 
-                 key={i} 
-                 onClick={() => {
-                    const current = Array.isArray(answer) ? answer : [];
-                    setAnswer(current.includes(word) ? current.filter(w => w !== word) : [...current, word]);
-                 }}
-                 className={`cursor-pointer px-1 rounded ${ (answer || []).includes(word) ? "bg-yellow-300" : "hover:bg-gray-100"}`}
-               >
-                 {word}{" "}
-               </span>
-             ))}
+            {words.map((word, i) => (
+              <span
+                key={i}
+                onClick={() => {
+                  const current = Array.isArray(answer) ? answer : [];
+                  setAnswer(current.includes(word) ? current.filter(w => w !== word) : [...current, word]);
+                }}
+                className={`cursor-pointer px-1 rounded ${(answer || []).includes(word) ? "bg-yellow-300" : "hover:bg-gray-100"}`}
+              >
+                {word}{" "}
+              </span>
+            ))}
           </div>
         );
       case "FIB_L":
@@ -226,12 +245,12 @@ function ListeningQuestionController({ question, onNext }) {
               <React.Fragment key={i}>
                 {part}
                 {i < parts.length - 1 && (
-                  <input 
-                    type="text" 
-                    className="border-b-2 border-gray-400 w-32 mx-1 px-2 focus:outline-none focus:border-[#008199] text-center" 
+                  <input
+                    type="text"
+                    className="border-b-2 border-gray-400 w-32 mx-1 px-2 focus:outline-none focus:border-[#008199] text-center"
                     onChange={(e) => {
-                        const current = answer || {};
-                        setAnswer({...current, [i]: e.target.value});
+                      const current = answer || {};
+                      setAnswer({ ...current, [i]: e.target.value });
                     }}
                   />
                 )}
@@ -245,29 +264,46 @@ function ListeningQuestionController({ question, onNext }) {
           <div className="mt-6 space-y-3">
             <p className="font-bold text-gray-700 mb-4">{question.question}</p>
             {question.options?.map((opt, i) => (
-                <label key={i} className="flex items-center space-x-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
-                    <input 
-                      type={question.type === "MCMA" ? "checkbox" : "radio"} 
-                      name="listening-opt"
-                      onChange={() => setAnswer(opt)}
-                    />
-                    <span className="text-sm">{typeof opt === 'string' ? opt : opt.text}</span>
-                </label>
+              <label key={i} className="flex items-center space-x-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
+                <input
+                  type={question.type === "MCMA" ? "checkbox" : "radio"}
+                  name="listening-opt"
+                  onChange={() => setAnswer(opt)}
+                />
+                <span className="text-sm">{typeof opt === 'string' ? opt : opt.text}</span>
+              </label>
             ))}
           </div>
         );
       case "WFD":
+      case "ASQ":
         return (
-            <div className="mt-10">
-                <input 
-                    type="text" 
-                    className="w-full border-b-2 border-gray-300 p-2 focus:outline-none focus:border-[#008199] text-xl"
-                    placeholder="Type the sentence here..."
-                    onChange={(e) => setAnswer(e.target.value)}
-                />
-            </div>
+          <div className="mt-10">
+            <input
+              type="text"
+              className="w-full border-b-2 border-gray-300 p-2 focus:outline-none focus:border-[#008199] text-xl"
+              placeholder={question.type === "ASQ" ? "Type your short answer..." : "Type the sentence here..."}
+              onChange={(e) => setAnswer(e.target.value)}
+            />
+          </div>
         );
-      default: return <div className="mt-10 text-gray-400 italic">Task UI Loading...</div>;
+      case "HCS":
+      case "SMW":
+        return (
+          <div className="mt-6 space-y-3">
+            <p className="font-bold text-gray-700 mb-4">{question.question}</p>
+            {question.options?.map((opt, i) => (
+              <label key={i} className="flex items-center space-x-3 p-4 border rounded cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="listening-opt"
+                  onChange={() => setAnswer(opt)}
+                />
+                <span className="text-sm">{typeof opt === 'string' ? opt : opt.text}</span>
+              </label>
+            ))}
+          </div>
+        );
     }
   };
 
@@ -279,20 +315,20 @@ function ListeningQuestionController({ question, onNext }) {
 
         {/* DYNAMIC AUDIO PROGRESS BAR */}
         <div className="bg-[#4aa3c2] p-5 rounded-lg w-full mb-10 shadow-md">
-            <div className="flex items-center gap-6">
-                <div className="text-2xl text-white">
-                    {status === "PREPARING" ? "⏳" : status === "PLAYING" ? "🔊" : "✅"}
-                </div>
-                <div className="flex-1 bg-white/30 h-3 rounded-full overflow-hidden">
-                    <div 
-                        className="bg-white h-full transition-all duration-100 ease-linear" 
-                        style={{ width: `${audioProgress}%` }}
-                    />
-                </div>
-                <span className="text-white text-sm font-bold min-w-[110px] text-right">
-                    {status === "PREPARING" ? `Starts in ${prepTime}s` : status === "PLAYING" ? "Playing..." : "Completed"}
-                </span>
+          <div className="flex items-center gap-6">
+            <div className="text-2xl text-white">
+              {status === "PREPARING" ? "⏳" : status === "PLAYING" ? "🔊" : "✅"}
             </div>
+            <div className="flex-1 bg-white/30 h-3 rounded-full overflow-hidden">
+              <div
+                className="bg-white h-full transition-all duration-100 ease-linear"
+                style={{ width: `${audioProgress}%` }}
+              />
+            </div>
+            <span className="text-white text-sm font-bold min-w-[110px] text-right">
+              {status === "PREPARING" ? `Starts in ${prepTime}s` : status === "PLAYING" ? "Playing..." : "Completed"}
+            </span>
+          </div>
         </div>
 
         {renderQuestionUI()}
@@ -312,8 +348,18 @@ function ListeningQuestionController({ question, onNext }) {
 /* ===================== STATIC HELPERS ===================== */
 
 function getTaskTitle(type) {
-    const map = { SST: "Summarize Spoken Text", MCMA: "Multiple Choice (Multiple)", FIB_L: "Fill in the Blanks", HIW: "Highlight Incorrect Words", WFD: "Write from Dictation" };
-    return map[type] || "Listening Task";
+  const map = {
+    SST: "Summarize Spoken Text",
+    MCMA: "Multiple Choice (Multiple)",
+    FIB_L: "Fill in the Blanks",
+    HIW: "Highlight Incorrect Words",
+    WFD: "Write from Dictation",
+    HCS: "Highlight Correct Summary",
+    SMW: "Select Missing Word",
+    ASQ: "Answer Short Question",
+    MCS: "Multiple Choice (Single)"
+  };
+  return map[type] || "Listening Task";
 }
 
 function getInstructionText(type) {
@@ -325,33 +371,33 @@ function getInstructionText(type) {
 }
 
 function ResultScreen({ resultId }) {
-    return (
-        <div className="flex flex-col items-center justify-center py-20">
-            <div className="bg-white p-10 border rounded shadow-lg text-center">
-                <h2 className="text-2xl font-bold text-[#008199] mb-4">Test Submitted Successfully</h2>
-                <p className="text-gray-500 mb-6">Result Reference: {resultId}</p>
-                <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-8 py-2 font-bold">Restart Test</button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="bg-white p-10 border rounded shadow-lg text-center">
+        <h2 className="text-2xl font-bold text-[#008199] mb-4">Test Submitted Successfully</h2>
+        <p className="text-gray-500 mb-6">Result Reference: {resultId}</p>
+        <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-8 py-2 font-bold">Restart Test</button>
+      </div>
+    </div>
+  );
 }
 
 /* ===================== HARDWARE & INTRO SCREENS (REUSED) ===================== */
 
 function OverviewScreen() {
-    return (
-      <div className="p-10 max-w-4xl">
-        <h2 className="text-2xl font-bold mb-4">The test is approximately 50 minutes long.</h2>
-        <table className="border-collapse border border-gray-300 w-full text-sm">
-          <thead><tr className="bg-gray-100"><th className="border p-2 text-left">Task Type</th><th className="border p-2 text-left">Time Allowed</th></tr></thead>
-          <tbody>
-            {["Summarize Spoken Text", "Multiple Choice", "Fill in the Blanks", "Highlight Correct Summary", "Select Missing Word", "Highlight Incorrect Words", "Write from Dictation"].map((item, idx) => (
-              <tr key={idx}><td className="border p-2">{item}</td><td className="border p-2">{idx === 3 ? " 50 Minutes" : ""}</td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
+  return (
+    <div className="p-10 max-w-4xl">
+      <h2 className="text-2xl font-bold mb-4">The test is approximately 50 minutes long.</h2>
+      <table className="border-collapse border border-gray-300 w-full text-sm">
+        <thead><tr className="bg-gray-100"><th className="border p-2 text-left">Task Type</th><th className="border p-2 text-left">Time Allowed</th></tr></thead>
+        <tbody>
+          {["Summarize Spoken Text", "Multiple Choice", "Fill in the Blanks", "Highlight Correct Summary", "Select Missing Word", "Highlight Incorrect Words", "Write from Dictation"].map((item, idx) => (
+            <tr key={idx}><td className="border p-2">{item}</td><td className="border p-2">{idx === 3 ? " 50 Minutes" : ""}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function HeadsetCheckScreen() {
@@ -442,7 +488,7 @@ function HeadsetCheckScreen() {
 
 
 
- function MicCheckScreen() {
+function MicCheckScreen() {
   const [recording, setRecording] = useState(false);
   const [url, setUrl] = useState(null);
   const recorder = useRef(null);
@@ -470,7 +516,7 @@ function HeadsetCheckScreen() {
 
   return (
     <div className=" bg-white flex flex-col">
-      
+
       {/* Main Content */}
       <div className="flex flex-1 px-10 py-8">
         {/* LEFT SECTION */}
@@ -521,14 +567,12 @@ function HeadsetCheckScreen() {
 
             {/* Mic Status Indicator */}
             <div
-              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-                recording ? "border-red-500" : "border-gray-400"
-              }`}
+              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${recording ? "border-red-500" : "border-gray-400"
+                }`}
             >
               <div
-                className={`w-3 h-3 rounded-full ${
-                  recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
-                }`}
+                className={`w-3 h-3 rounded-full ${recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
+                  }`}
               />
             </div>
 
@@ -564,12 +608,12 @@ function HeadsetCheckScreen() {
       </div>
     </div>
   );
-  }
+}
 
 
 
 
- function IntroScreen() {
+function IntroScreen() {
   return (
     <div className=" bg-white px-10 py-8">
       {/* Content */}

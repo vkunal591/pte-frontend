@@ -3,13 +3,13 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 // --- MAIN WRAPPER ---
-export default function APEUniReadingTest({ backendData }) {
+export default function APEUniReadingTest({ backendData, onComplete, isFullMock, onExit }) {
   const [step, setStep] = useState(0); // 0: Overview, 1: Headset, 2: Mic, 3: Intro, 4: Exam, 5: Result
   const [currentIdx, setCurrentIdx] = useState(0);
   const [flattenedQuestions, setFlattenedQuestions] = useState([]);
   const [answers, setAnswers] = useState([]); // For backend submission
   const [userAnswers, setUserAnswers] = useState({}); // For UI component state
-  const [timeLeft, setTimeLeft] = useState(51* 60); 
+  const [timeLeft, setTimeLeft] = useState(51 * 60);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultId, setResultId] = useState(null);
 
@@ -49,6 +49,7 @@ export default function APEUniReadingTest({ backendData }) {
 
   const handleNextQuestion = () => {
     const currentQuestion = flattenedQuestions[currentIdx];
+    if (!currentQuestion) return; // Prevention for undefined access
     const currentAnswer = userAnswers[currentQuestion._id];
 
     const payload = {
@@ -71,16 +72,22 @@ export default function APEUniReadingTest({ backendData }) {
   const submitFullTest = async (finalAnswers) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    if (isFullMock && onComplete) {
+      onComplete(finalAnswers);
+      return;
+    }
+
     try {
       const response = await axios.post("/api/reading/attempt", {
         readingId: backendData._id,
         userId: user?._id,
         answers: finalAnswers,
       });
-      
+
       if (response.data.success) {
         setResultId(response.data.data._id);
-        setStep(5); 
+        setStep(5);
       }
     } catch (err) {
       console.error("Submission failed", err);
@@ -98,7 +105,7 @@ export default function APEUniReadingTest({ backendData }) {
   };
 
   if (isSubmitting) return <div className="p-20 text-center font-bold text-[#008199]">Analysing Reading Answers...</div>;
-  if (!backendData || (flattenedQuestions.length === 0 && step !== 5)) {
+  if (!backendData) {
     return <div className="p-10 text-center text-gray-400">Loading Reading Test Data...</div>;
   }
 
@@ -108,7 +115,7 @@ export default function APEUniReadingTest({ backendData }) {
       <div className="bg-[#eeeeee] border-b border-gray-300">
         <div className="px-6 py-2 flex justify-between items-center text-sm font-bold text-gray-600">
           <span>APEUni PTE Reading - {backendData.title}</span>
-          <button className="bg-white border border-gray-400 px-3 py-1 rounded text-xs">Exit</button>
+          <button onClick={onExit} className="bg-white border border-gray-400 px-3 py-1 rounded text-xs hover:bg-gray-100">Exit</button>
         </div>
         <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
@@ -119,20 +126,30 @@ export default function APEUniReadingTest({ backendData }) {
           )}
         </div>
       </div>
-
-      {/* Content Area */}
       <div className="flex-grow flex flex-col overflow-y-auto bg-white border border-gray-200">
         {step === 0 && <OverviewScreen />}
         {step === 1 && <HeadsetCheckScreen />}
         {step === 2 && <MicCheckScreen />}
         {step === 3 && <IntroScreen />}
         {step === 4 && (
-          <ReadingQuestionController
-            key={flattenedQuestions[currentIdx]._id} // Forces fresh UI per question
-            question={flattenedQuestions[currentIdx]}
-            answer={userAnswers[flattenedQuestions[currentIdx]._id]}
-            setAnswer={(val) => setUserAnswers({ ...userAnswers, [flattenedQuestions[currentIdx]._id]: val })}
-          />
+          flattenedQuestions.length > 0 ? (
+            <ReadingQuestionController
+              key={flattenedQuestions[currentIdx]._id} // Forces fresh UI per question
+              question={flattenedQuestions[currentIdx]}
+              answer={userAnswers[flattenedQuestions[currentIdx]._id]}
+              setAnswer={(val) => setUserAnswers({ ...userAnswers, [flattenedQuestions[currentIdx]._id]: val })}
+            />
+          ) : (
+            <div className="p-20 text-center">
+              <h2 className="text-xl font-bold text-gray-500">No questions in this section.</h2>
+              <button
+                onClick={() => onComplete([])}
+                className="mt-6 bg-[#fb8c00] text-white px-8 py-2 rounded font-bold"
+              >
+                Proceed to Next Section
+              </button>
+            </div>
+          )
         )}
         {step === 5 && <ReadingResultScreen resultId={resultId} />}
       </div>
@@ -212,7 +229,7 @@ function ChoiceLayout({ question, answer, setAnswer }) {
   const currentSelections = answer || [];
 
   const toggleOption = (opt) => {
-    if (!isMulti) { setAnswer([opt]); } 
+    if (!isMulti) { setAnswer([opt]); }
     else {
       if (currentSelections.includes(opt)) setAnswer(currentSelections.filter(i => i !== opt));
       else setAnswer([...currentSelections, opt]);
@@ -334,7 +351,7 @@ function OverviewScreen() {
         <thead className="bg-gray-100"><tr><th className="border p-3 text-left">Task</th><th className="border p-3 text-left">Time Allowed</th></tr></thead>
         <tbody>
           {["Summarize Written Text", "Fill in the Blanks", "Multiple Choice", "Re-order Paragraphs", "Fill in the Blanks (Drag and Drop)", "Multiple Choice (single)", "Highlight Correct Summary", "Higlight incorrect Words"].map((t, i) => (
-            <tr key={i}><td className="border p-3">{t}</td><td className="border p-3 text-gray-400 italic">{i===3 ? "51 Minutes" : ""}</td></tr>
+            <tr key={i}><td className="border p-3">{t}</td><td className="border p-3 text-gray-400 italic">{i === 3 ? "51 Minutes" : ""}</td></tr>
           ))}
         </tbody>
       </table>
@@ -442,7 +459,7 @@ function HeadsetCheckScreen() {
 
 
 
- function MicCheckScreen() {
+function MicCheckScreen() {
   const [recording, setRecording] = useState(false);
   const [url, setUrl] = useState(null);
   const recorder = useRef(null);
@@ -470,7 +487,7 @@ function HeadsetCheckScreen() {
 
   return (
     <div className=" bg-white flex flex-col">
-      
+
       {/* Main Content */}
       <div className="flex flex-1 px-10 py-8">
         {/* LEFT SECTION */}
@@ -521,14 +538,12 @@ function HeadsetCheckScreen() {
 
             {/* Mic Status Indicator */}
             <div
-              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-                recording ? "border-red-500" : "border-gray-400"
-              }`}
+              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${recording ? "border-red-500" : "border-gray-400"
+                }`}
             >
               <div
-                className={`w-3 h-3 rounded-full ${
-                  recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
-                }`}
+                className={`w-3 h-3 rounded-full ${recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
+                  }`}
               />
             </div>
 
@@ -564,12 +579,12 @@ function HeadsetCheckScreen() {
       </div>
     </div>
   );
-  }
+}
 
 
 
 
- function IntroScreen() {
+function IntroScreen() {
   return (
     <div className=" bg-white px-10 py-8">
       {/* Content */}

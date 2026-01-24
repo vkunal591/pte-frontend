@@ -403,3 +403,32 @@ export const submitWriteFromDictationAttempt = async (attemptData) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+/* ================= FULL MOCK TEST ================= */
+
+export const createFullMockTest = async (testData) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/mocktest/full`, testData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getAllFullMockTests = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/mocktest/full`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getFullMockTestById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/mocktest/full/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

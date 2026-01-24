@@ -12,6 +12,7 @@ import SecureExamWrapper from './pages/MockTest/SecureExamWrapper';
 import Pricing from './pages/Pricing/Pricing';
 
 import PracticeLimitModal from './components/PracticeLimitModal';
+import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
 
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
     return () => window.removeEventListener('practiceLimitReached', handleLimitReached);
   }, []);
 
- 
+
   return (
     <BrowserRouter>
       <PracticeLimitModal isOpen={showLimitModal} onClose={() => setShowLimitModal(false)} />
@@ -46,9 +47,12 @@ function App() {
         <Route path="/practice/:id" element={<ReadAloudSession />} />
         <Route path='mock-test' element={<MockTest />} />
 
-       {/* Question attempt */}
+        {/* Question attempt */}
         <Route path="/question/:type" element={<SecureExamWrapper />} />
         <Route path='/pricing' element={<Pricing />} />
+
+        {/* Full Mock Test */}
+        <Route path="/mocktest/full/:id" element={<FullExamRunner />} />
 
       </Routes>
     </BrowserRouter>

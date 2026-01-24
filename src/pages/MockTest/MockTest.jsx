@@ -121,11 +121,33 @@ export default function MockTest() {
     }
   };
 
+  /* ================= FETCH FULL MOCK TESTS ================= */
+
+  const fetchFullMockTests = async () => {
+    setLoading(true);
+    setQuestions([]);
+    try {
+      const res = await api.get("/mocktest/full");
+      // Backend returns { success: true, data: [...] }
+      setQuestions(res.data?.data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ================= URL → STATE ================= */
 
   useEffect(() => {
     const module = searchParams.get("module");
-    if (!module) return;
+    if (!module) {
+      // Default to Full Tests if no module param
+      if (activeMainTab === "Full Tests") {
+        fetchFullMockTests();
+      }
+      return;
+    }
 
     if (SECTION_TABS.includes(module)) {
       setActiveMainTab("Section Tests");
@@ -140,7 +162,7 @@ export default function MockTest() {
       setActiveSubTab(qTab.id);
       fetchQuestionType(qTab);
     }
-  }, [searchParams]);
+  }, [searchParams, activeMainTab]);
 
   /* ================= HANDLERS ================= */
 
@@ -164,6 +186,12 @@ export default function MockTest() {
   /* ================= CORRECT NAVIGATION ================= */
 
   const handleQuestionNavigate = (q) => {
+    // Full Mock Test
+    if (activeMainTab === "Full Tests") {
+      navigate(`/mocktest/full/${q._id}`);
+      return;
+    }
+
     // Question Tests → RA / RS / DI / etc.
     if (q.__questionType) {
       navigate(`/question/${q.__questionType}?id=${q._id}`);
@@ -186,11 +214,10 @@ export default function MockTest() {
             <button
               key={tab}
               onClick={() => handleMainTabClick(tab)}
-              className={`flex-1 py-4 font-bold ${
-                activeMainTab === tab
-                  ? "border-b-4 border-emerald-500 text-black"
-                  : "text-slate-400"
-              }`}
+              className={`flex-1 py-4 font-bold ${activeMainTab === tab
+                ? "border-b-4 border-emerald-500 text-black"
+                : "text-slate-400"
+                }`}
             >
               {tab}
             </button>
@@ -261,11 +288,10 @@ function SubTab({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-6 py-2 rounded-full text-xs font-bold transition ${
-        active
-          ? "bg-emerald-500 text-white"
-          : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-      }`}
+      className={`px-6 py-2 rounded-full text-xs font-bold transition ${active
+        ? "bg-emerald-500 text-white"
+        : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+        }`}
     >
       {label}
     </button>

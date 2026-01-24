@@ -3,11 +3,11 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 // --- MAIN WRAPPER ---
-export default function APEUniSpeakingMockTest({ backendData }) {
+export default function APEUniSpeakingMockTest({ backendData, onComplete, isFullMock, onExit }) {
   const [step, setStep] = useState(0); // 0: Overview, 1: Headset, 2: Mic, 3: Intro, 4: Exam, 5: Result
   const [currentIdx, setCurrentIdx] = useState(0);
   const [flattenedQuestions, setFlattenedQuestions] = useState([]);
-  const [answers, setAnswers] = useState([]); 
+  const [answers, setAnswers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultId, setResultId] = useState(null);
 
@@ -53,7 +53,7 @@ export default function APEUniSpeakingMockTest({ backendData }) {
       type: flattenedQuestions[currentIdx].type,
       audio: audioBlob,
     };
-    
+
     const updatedAnswers = [...answers, payload];
     setAnswers(updatedAnswers);
     answersRef.current = updatedAnswers; // Keep ref updated for timer
@@ -68,13 +68,20 @@ export default function APEUniSpeakingMockTest({ backendData }) {
   const submitFinalMock = async (finalAnswers) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    // FULL MOCK MODE INTERCEPTION
+    if (isFullMock && onComplete) {
+      onComplete(finalAnswers);
+      return; // Hand over control to parent
+    }
+
     setStep(5);
     try {
       // Note: Speaking requires FormData to upload Blobs
       const formData = new FormData();
       formData.append("speakingTestId", backendData._id);
       formData.append("userId", user?._id);
-      
+
       finalAnswers.forEach((ans, index) => {
         if (ans.audio) {
           formData.append(`audio_${index}`, ans.audio, `q_${ans.questionId}.wav`);
@@ -107,8 +114,8 @@ export default function APEUniSpeakingMockTest({ backendData }) {
       {/* HEADER */}
       <div className="bg-[#eeeeee] border-b border-gray-300">
         <div className="px-6 py-2 flex justify-between items-center text-sm font-bold text-gray-600">
-          <span>APEUni Mock Test — Speaking Section</span>
-          <button className="bg-white border px-3 py-1 rounded text-xs">Exit Test</button>
+          <span>Practice PTE Mock Test — Speaking Section</span>
+          <button onClick={onExit} className="bg-white border px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
         </div>
         <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
@@ -127,11 +134,23 @@ export default function APEUniSpeakingMockTest({ backendData }) {
         {step === 2 && <MicCheckScreen />}
         {step === 3 && <IntroScreen />}
         {step === 4 && (
-          <SpeakingQuestionController 
-            key={flattenedQuestions[currentIdx]._id}
-            question={flattenedQuestions[currentIdx]} 
-            onNext={handleNextQuestion} 
-          />
+          flattenedQuestions.length > 0 ? (
+            <SpeakingQuestionController
+              key={flattenedQuestions[currentIdx]._id}
+              question={flattenedQuestions[currentIdx]}
+              onNext={handleNextQuestion}
+            />
+          ) : (
+            <div className="p-20 text-center">
+              <h2 className="text-xl font-bold text-gray-500">No questions in this section.</h2>
+              <button
+                onClick={() => onComplete([])}
+                className="mt-6 bg-[#fb8c00] text-white px-8 py-2 rounded font-bold"
+              >
+                Proceed to Next Section
+              </button>
+            </div>
+          )
         )}
         {step === 5 && <ResultScreen resultId={resultId} />}
       </div>
@@ -151,7 +170,7 @@ export default function APEUniSpeakingMockTest({ backendData }) {
 /* ===================== SPEAKING QUESTION CONTROLLER ===================== */
 
 function SpeakingQuestionController({ question, onNext }) {
-  const [status, setStatus] = useState("PREPARING"); // PREPARING, PLAYING, RECORDING, FINISHED
+  const [status, setStatus] = useState("PREPARING");
   const [timer, setTimer] = useState(question.prepTime);
   const [audioProgress, setAudioProgress] = useState(0);
 
@@ -175,7 +194,7 @@ function SpeakingQuestionController({ question, onNext }) {
     setStatus("PREPARING");
     let count = question.prepTime;
     setTimer(count);
-    
+
     phaseTimerRef.current = setInterval(() => {
       count -= 1;
       setTimer(count);
@@ -209,7 +228,7 @@ function SpeakingQuestionController({ question, onNext }) {
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
-      
+
       const chunks = [];
       recorder.ondataavailable = e => chunks.push(e.data);
       recorder.onstop = () => {
@@ -219,7 +238,7 @@ function SpeakingQuestionController({ question, onNext }) {
       };
 
       recorder.start();
-      
+
       phaseTimerRef.current = setInterval(() => {
         count += 1;
         setTimer(count);
@@ -248,31 +267,31 @@ function SpeakingQuestionController({ question, onNext }) {
         {question.imageUrl && <div className="flex justify-center mb-10"><img src={question.imageUrl} className="max-h-72 border rounded-lg" alt="Describe" /></div>}
 
         <div className="bg-gray-50 p-8 rounded-2xl border border-dashed border-gray-300 flex flex-col items-center">
-            <div className="flex items-center gap-8 w-full max-w-2xl">
-                <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xs
+          <div className="flex items-center gap-8 w-full max-w-2xl">
+            <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center font-bold text-xs
                     ${status === "RECORDING" ? "border-red-500 text-red-500 animate-pulse" : status === "PLAYING" ? "border-blue-500 text-blue-500" : "border-gray-400 text-gray-400"}`}>
-                    {status === "RECORDING" ? "REC" : status === "PLAYING" ? "PLAY" : "WAIT"}
-                </div>
-
-                <div className="flex-1">
-                    <div className="flex justify-between text-[10px] font-bold uppercase mb-2 text-gray-400">
-                        <span>{status} PHASE</span>
-                        <span>{status === "RECORDING" ? `${timer}s / ${question.recTime}s` : `${timer}s left`}</span>
-                    </div>
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden relative">
-                        <div 
-                          className={`h-full transition-all duration-1000 ease-linear ${status === "RECORDING" ? "bg-red-500" : "bg-[#008199]"}`}
-                          style={{ width: status === "RECORDING" ? `${(timer / question.recTime) * 100}%` : status === "PLAYING" ? `${audioProgress}%` : `${(timer / question.prepTime) * 100}%` }}
-                        />
-                    </div>
-                </div>
+              {status === "RECORDING" ? "REC" : status === "PLAYING" ? "PLAY" : "WAIT"}
             </div>
-            
-            {status === "RECORDING" && (
-                <button onClick={stopRecording} className="mt-8 bg-[#fb8c00] text-white px-12 py-2 rounded-sm text-sm font-bold uppercase shadow-md">
-                    Finish Recording & Next
-                </button>
-            )}
+
+            <div className="flex-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase mb-2 text-gray-400">
+                <span>{status} PHASE</span>
+                <span>{status === "RECORDING" ? `${timer}s / ${question.recTime}s` : `${timer}s left`}</span>
+              </div>
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden relative">
+                <div
+                  className={`h-full transition-all duration-1000 ease-linear ${status === "RECORDING" ? "bg-red-500" : "bg-[#008199]"}`}
+                  style={{ width: status === "RECORDING" ? `${(timer / question.recTime) * 100}%` : status === "PLAYING" ? `${audioProgress}%` : `${(timer / question.prepTime) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {status === "RECORDING" && (
+            <button onClick={stopRecording} className="mt-8 bg-[#fb8c00] text-white px-12 py-2 rounded-sm text-sm font-bold uppercase shadow-md">
+              Finish Recording & Next
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -293,15 +312,15 @@ function getInstructionText(type) {
 }
 
 function ResultScreen({ resultId }) {
-    return (
-        <div className="p-20 text-center">
-            <div className="bg-white p-12 rounded-2xl shadow-xl border inline-block">
-                <h2 className="text-3xl font-black text-[#008199] mb-4">Speaking Test Finished</h2>
-                <p className="text-gray-400 font-bold uppercase mb-8 tracking-widest">Result Reference: {resultId || "Processing..."}</p>
-                <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-12 py-3 rounded font-bold uppercase shadow-lg">Return to dashboard</button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="p-20 text-center">
+      <div className="bg-white p-12 rounded-2xl shadow-xl border inline-block">
+        <h2 className="text-3xl font-black text-[#008199] mb-4">Speaking Test Finished</h2>
+        <p className="text-gray-400 font-bold uppercase mb-8 tracking-widest">Result Reference: {resultId || "Processing..."}</p>
+        <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-12 py-3 rounded font-bold uppercase shadow-lg">Return to dashboard</button>
+      </div>
+    </div>
+  );
 }
 
 // Reuse HeadsetCheckScreen, MicCheckScreen, IntroScreen from your existing code.
@@ -323,7 +342,7 @@ function OverviewScreen() {
     </div>
   );
 }
- 
+
 function HeadsetCheckScreen() {
   const [playing, setPlaying] = useState(false);
   const audio = useRef(
@@ -412,7 +431,7 @@ function HeadsetCheckScreen() {
 
 
 
- function MicCheckScreen() {
+function MicCheckScreen() {
   const [recording, setRecording] = useState(false);
   const [url, setUrl] = useState(null);
   const recorder = useRef(null);
@@ -440,7 +459,7 @@ function HeadsetCheckScreen() {
 
   return (
     <div className=" bg-white flex flex-col">
-      
+
       {/* Main Content */}
       <div className="flex flex-1 px-10 py-8">
         {/* LEFT SECTION */}
@@ -491,14 +510,12 @@ function HeadsetCheckScreen() {
 
             {/* Mic Status Indicator */}
             <div
-              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-                recording ? "border-red-500" : "border-gray-400"
-              }`}
+              className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${recording ? "border-red-500" : "border-gray-400"
+                }`}
             >
               <div
-                className={`w-3 h-3 rounded-full ${
-                  recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
-                }`}
+                className={`w-3 h-3 rounded-full ${recording ? "bg-red-500 animate-pulse" : "bg-gray-400"
+                  }`}
               />
             </div>
 
@@ -534,12 +551,12 @@ function HeadsetCheckScreen() {
       </div>
     </div>
   );
-  }
+}
 
 
 
 
- function IntroScreen() {
+function IntroScreen() {
   return (
     <div className=" bg-white px-10 py-8">
       {/* Content */}
