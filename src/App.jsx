@@ -13,6 +13,8 @@ import Pricing from './pages/Pricing/Pricing';
 
 import PracticeLimitModal from './components/PracticeLimitModal';
 import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
+import FullMockResultPage from './pages/MockTest/FullMockTest/FullMockResultPage';
+import SectionResultPage from './pages/MockTest/SectionalTest/SectionResultPage';
 
 
 function App() {
@@ -52,7 +54,14 @@ function App() {
         <Route path='/pricing' element={<Pricing />} />
 
         {/* Full Mock Test */}
+        {/* Full Mock Test */}
         <Route path="/mocktest/full/:id" element={<FullExamRunner />} />
+        <Route path="/mocktest/full/result/:id" element={<FullMockResultPage />} />
+
+        {/* Section Mock Test Result */}
+        <Route path="/mocktest/section/:type/result/:id" element={<SectionResultPage />} />
+
+
 
       </Routes>
     </BrowserRouter>
