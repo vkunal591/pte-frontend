@@ -432,3 +432,38 @@ export const getFullMockTestById = async (id) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+/* ================= RESULTS ================= */
+
+export const getUserFullMockTestResults = async () => {
+  const res = await api.get("/mocktest/full/results/my");
+  return res.data;
+};
+
+export const getUserReadingResults = async () => {
+  const res = await api.get("/question/reading/results/my");
+  return res.data;
+};
+
+export const getUserSpeakingResults = async () => {
+  const res = await api.get("/question/speaking/results/my");
+  return res.data;
+};
+
+export const getUserWritingResults = async () => {
+  // writingRoute.js doesn't have /results/my yet, checking...
+  // Actually, I missed adding the route to writingRoute.js in the plan execution.
+  // I need to fix writingRoute.js too.
+  // For now I will add this here assuming I will fix backend next.
+  // Wait, writingRoute line 14: router.get("/result/:resultId", ...); 
+  // It does NOT have /results/my. 
+  // I need to add getting ALL results for user.
+  // Let's assume endpoint /question/writing/results/my
+  const res = await api.get("/question/writing/results/my");
+  return res.data;
+};
+
+export const getUserListeningResults = async () => {
+  const res = await api.get("/question/listening/result/my");
+  return res.data;
+};

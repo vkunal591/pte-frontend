@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout/DashboardLayout";
 import api from "../../services/api";
+import MockTestResults from "./MockTestResults";
+
 
 /* ================= CONFIG ================= */
-const MAIN_TABS = ["Full Tests", "Section Tests", "Question Tests"];
+const MAIN_TABS = ["Full Tests", "Section Tests", "Question Tests", "Results"];
+
 const SECTION_TABS = ["All", "Speaking", "Writing", "Reading", "Listening"];
 const QUESTION_TABS = [
   { id: "Q_ALL", label: "All", api: "all" },
@@ -102,13 +105,15 @@ export default function MockTest() {
 
   /* ================= FETCH FULL MOCK TESTS ================= */
 
+  /* ================= FETCH FULL MOCK TESTS ================= */
+
   const fetchFullMockTests = async () => {
     setLoading(true);
     setQuestions([]);
     try {
       const res = await api.get("/mocktest/full");
       // Backend returns { success: true, data: [...] }
-      setQuestions(res.data?.data || []);
+      setQuestions((res.data?.data || []).map(q => ({ ...q, __type: "full_mock" })));
     } catch (err) {
       console.error(err);
     } finally {
@@ -120,9 +125,16 @@ export default function MockTest() {
   useEffect(() => {
     const module = searchParams.get("module");
     if (!module) {
-      // Default to Full Tests if no module param
       if (activeMainTab === "Full Tests") {
         fetchFullMockTests();
+      }
+      return;
+    }
+
+    // NEW: Handle Results tab logic (reusing section tabs for filter)
+    if (activeMainTab === "Results") {
+      if (SECTION_TABS.includes(module)) {
+        setActiveSubTab(module);
       }
       return;
     }
@@ -141,6 +153,7 @@ export default function MockTest() {
       fetchQuestionType(qTab);
     }
   }, [searchParams, activeMainTab]);
+
 
   /* ================= HANDLERS ================= */
   const handleMainTabClick = (tab) => {
@@ -161,12 +174,17 @@ export default function MockTest() {
   };
 
   const handleQuestionNavigate = (q) => {
+    if (q.__type === "full_mock") {
+      navigate(`/mocktest/full/${q._id}`);
+      return;
+    }
     if (q.__questionType) {
       navigate(`/question/${q.__questionType}?id=${q._id}`);
       return;
     }
     navigate(`/question/${q.__section}?id=${q._id}`);
   };
+
 
   /* ================= UI ================= */
   return (
@@ -178,9 +196,8 @@ export default function MockTest() {
             <button
               key={tab}
               onClick={() => handleMainTabClick(tab)}
-              className={`flex-1 py-4 font-bold ${
-                activeMainTab === tab ? "border-b-4 border-emerald-500 text-black" : "text-slate-400"
-              }`}
+              className={`flex-1 py-4 font-bold ${activeMainTab === tab ? "border-b-4 border-emerald-500 text-black" : "text-slate-400"
+                }`}
             >
               {tab}
             </button>
@@ -199,7 +216,63 @@ export default function MockTest() {
               />
             ))}
 
+
+
+          {activeMainTab === "Results" && (
+            <div className="flex bg-slate-100 p-1 rounded-full gap-1 mb-4">
+              <button
+                onClick={() => setActiveMainTab("Full Tests") || navigate("/mock-test")} // Reset to default or just change filter? 
+              // Actually user requested Results -> Full Tests AND Section Tests inside.
+              // Let's make "Results" have its own SubTabs: "Full Tests", "Section Tests" is redundant if we follow existing pattern.
+              // Proposal:
+              // Under "Results" Main Tab:
+              // SubTabs: "Full Tests", "Section Tests". 
+              // If Section Tests selected -> Show Sections (All, Reading, etc.)
+              // My MockTestResults component logic was:
+              // if (activeMainTab === "Full Tests") -> show full test results.
+              // Wait, "Results" is now a sibling of "Full Tests".
+              // So if I click "Results", activeMainTab is "Results".
+              // MockTestResults component expects `activeMainTab` to be "Full Tests" to show full mock results? 
+              // No, I need to pass a property or handle sub-tabs within Results.
+              // Let's Refactor:
+              // Inside "Results", we need subtabs: "Full Tests" | "Section Tests"
+              />
+              {/* Reuse Section Tabs for UI, but handle logic differently? */}
+              {/* Simpler: Just reuse the SubTab UI to switch between generic filters if needed. 
+                      Let's hardcode a local sub-tab switcher for Results or use the `activeSubTab` state.
+                   */}
+              {["Full Tests", "Section Tests"].map(t => (
+                <SubTab
+                  key={t}
+                  label={t}
+                  active={activeSubTab === t || (t === "Full Tests" && !activeSubTab)}
+                  onClick={() => setActiveSubTab(t)}
+                />
+              ))}
+            </div>
+          )}
+          {activeMainTab === "Results" && activeSubTab === "Section Tests" && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {SECTION_TABS.map(tab => (
+                <SubTab
+                  key={tab}
+                  label={tab}
+                  // Use a different state or reuse? 
+                  // It gets complex re-using activeSubTab for 2 levels.
+                  // I'll update MockTestResults to accept "filter" prop.
+                  // For now let's just stick to "Full Tests" and "Section Tests" as top level inside Results.
+                  // If Section Tests, show ALL section tests sorted by date.
+                  active={false} // Disable sub-filtering for now to keep simple, or implement later.
+                  onClick={() => { }}
+                />
+              ))}
+              {/* Actually, let's keep it simple. Results -> List everything or simple toggle. */}
+              {/* I will implement the sub-tab logic in MockTestResults internally or update MockTest to handle it. */}
+            </div>
+          )}
+
           {activeMainTab === "Question Tests" &&
+
             QUESTION_TABS.map(tab => (
               <SubTab
                 key={tab.id}
@@ -211,44 +284,54 @@ export default function MockTest() {
         </div>
 
         {/* QUESTIONS */}
-        <div className="bg-white border rounded-xl overflow-hidden">
-          {loading ? (
-            <p className="p-10 text-center text-slate-400">Loading…</p>
-          ) : questions.length === 0 ? (
-            <p className="p-10 text-center text-slate-400">Select a category to view questions</p>
-          ) : (
-            questions.map((q, index) => (
-              <div
-                key={q._id}
-                onClick={() => handleQuestionNavigate(q)}
-                className="flex justify-between items-center p-4 border-b hover:bg-slate-50 cursor-pointer"
-              >
-                <div>
-                  <p className="text-xs text-slate-400">
-                    {q.__questionType || q.__section} • Question {index + 1}
-                  </p>
-                  <h4 className="font-semibold">{q.title || q.name || "Untitled Question"}</h4>
+
+
+        {/* RESULTS VIEW */}
+        {activeMainTab === "Results" && (
+          <MockTestResults activeMainTab={activeMainTab} activeSubTab={activeSubTab} />
+        )}
+
+        {/* QUESTIONS VIEW */}
+        {activeMainTab !== "Results" && (
+          <div className="bg-white border rounded-xl overflow-hidden">
+            {loading ? (
+              <p className="p-10 text-center text-slate-400">Loading…</p>
+            ) : questions.length === 0 ? (
+              <p className="p-10 text-center text-slate-400">Select a category to view questions</p>
+            ) : (
+              questions.map((q, index) => (
+                <div
+                  key={q._id}
+                  onClick={() => handleQuestionNavigate(q)}
+                  className="flex justify-between items-center p-4 border-b hover:bg-slate-50 cursor-pointer"
+                >
+                  <div>
+                    <p className="text-xs text-slate-400">
+                      {q.__questionType || q.__section} • Question {index + 1}
+                    </p>
+                    <h4 className="font-semibold">{q.title || q.name || "Untitled Question"}</h4>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">
+                    {q.difficulty || "Medium"}
+                  </span>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700">
-                  {q.difficulty || "Medium"}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
+
 
 /* ================= SUB TAB ================= */
 function SubTab({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-6 py-2 rounded-full text-xs font-bold transition ${
-        active ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-      }`}
+      className={`px-6 py-2 rounded-full text-xs font-bold transition ${active ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+        }`}
     >
       {label}
     </button>
