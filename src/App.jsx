@@ -16,6 +16,7 @@ import PracticeLimitModal from './components/PracticeLimitModal';
 import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
 import FullMockResultPage from './pages/MockTest/FullMockTest/FullMockResultPage';
 import SectionResultPage from './pages/MockTest/SectionalTest/SectionResultPage';
+import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
 
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
         } />
 
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/practice-history" element={<PracticeHistoryPage />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/practice/:id" element={<ReadAloudSession />} />
         <Route path='mock-test' element={<MockTest />} />
@@ -56,14 +58,11 @@ function App() {
         <Route path='/buy-vouchers' element={<BuyVouchers />} />
 
         {/* Full Mock Test */}
-        {/* Full Mock Test */}
         <Route path="/mocktest/full/:id" element={<FullExamRunner />} />
         <Route path="/mocktest/full/result/:id" element={<FullMockResultPage />} />
 
         {/* Section Mock Test Result */}
         <Route path="/mocktest/section/:type/result/:id" element={<SectionResultPage />} />
-
-
 
       </Routes>
     </BrowserRouter>
