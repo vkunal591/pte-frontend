@@ -57,7 +57,10 @@ const DashboardLayout = ({ children }) => {
 
                     {/* Right: User Profile & Upgrade */}
                     <div className="flex items-center gap-6">
-                        <button className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors hover:bg-purple-200">
+                        <button
+                            onClick={() => navigate('/pricing')}
+                            className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors hover:bg-purple-200"
+                        >
                             <span className="w-6 h-6 bg-purple-600 rounded flex items-center justify-center text-white text-xs">
                                 &lt;
                             </span>

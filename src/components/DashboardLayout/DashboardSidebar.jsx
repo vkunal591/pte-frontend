@@ -7,7 +7,7 @@ const navItems = [
     { name: 'Section Test', icon: <path d="M21 12H3M21 6H3M21 18H3" />, path: '/section-test' },
     { name: 'Mock Test', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />, path: '/mock-test' },
     { name: 'Pricing', icon: <path d="M3 6h18M3 12h18M3 18h18" />, path: '/pricing', isNew: true },
-    { name: 'Buy Vouchers', icon: <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />, path: '/vouchers' },
+    { name: 'Buy Vouchers', icon: <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z M6 6h12 M6 10h12 M6 14h12" />, path: '/buy-vouchers' },
     { name: 'Vocab Book', icon: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />, path: '/vocab' },
     { name: 'Materials', icon: <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />, path: '/materials' },
 ];

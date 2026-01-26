@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 // Layout
@@ -37,10 +37,11 @@ import { getWriteFromDictationQuestions } from '../../services/api';
 
 function Practice() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useSelector((state) => state.auth);
 
     // --- STATE ---
-    const [activeTab, setActiveTab] = useState('Speaking');
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'Speaking');
 
     const [activeSubTab, setActiveSubTab] = useState('Read Aloud');
     const [loading, setLoading] = useState(false);
@@ -353,6 +354,13 @@ function Practice() {
     };
 
     // --- EFFECTS ---
+
+    // Update activeTab when location state changes (for navigation from Dashboard)
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setActiveTab(location.state.activeTab);
+        }
+    }, [location.state]);
 
     // When main tab changes, set default subtab and fetch data
     useEffect(() => {

@@ -10,6 +10,7 @@ import ReadAloudSession from './pages/Practice/ReadAloudSession';
 import MockTest from './pages/MockTest/MockTest';
 import SecureExamWrapper from './pages/MockTest/SecureExamWrapper';
 import Pricing from './pages/Pricing/Pricing';
+import BuyVouchers from './pages/BuyVouchers/BuyVouchers';
 
 import PracticeLimitModal from './components/PracticeLimitModal';
 import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
@@ -50,6 +51,7 @@ function App() {
         {/* Question attempt */}
         <Route path="/question/:type" element={<SecureExamWrapper />} />
         <Route path='/pricing' element={<Pricing />} />
+        <Route path='/buy-vouchers' element={<BuyVouchers />} />
 
         {/* Full Mock Test */}
         <Route path="/mocktest/full/:id" element={<FullExamRunner />} />
