@@ -16,9 +16,7 @@ import ProtectedAdminRoute from './components/Admin/ProtectedAdminRoute';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ManageVideos from './pages/Admin/ManageVideos';
 import ManageBanners from './pages/Admin/ManageBanners';
-import ManageReadAloud from './pages/Admin/ManageReadAloud';
-import ManageRepeatSentence from './pages/Admin/ManageRepeatSentence';
-import ManageDescribeImage from './pages/Admin/ManageDescribeImage';
+
 import VoucherOrders from './pages/Admin/VoucherOrders';
 
 import PracticeLimitModal from './components/PracticeLimitModal';
@@ -32,6 +30,12 @@ import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
 import Home from './pages/Home';
 import { Contact } from './pages/Contact';
 import { About } from './pages/About';
+import ManageReadAloud from './pages/Admin/Practise/ManageReadAloud';
+import ManageDescribeImage from './pages/Admin/Practise/ManageDescribeImage';
+import ManageRepeatSentence from './pages/Admin/Practise/ManageRepeatSentence';
+import ManageRetellLecture from './pages/Admin/Practise/ManageReTell';
+import ManageShortAnswer from './pages/Admin/Practise/ManageAnsShortQuestion';
+import SummarizeGroupManage from './pages/Admin/Practise/SummarizeGroupDiscussion';
 
 
 
@@ -95,6 +99,9 @@ function App() {
           <Route path="practice/speaking/rs" element={<ManageRepeatSentence />} />
           <Route path="practice/speaking/di" element={<ManageDescribeImage />} />
           <Route path="orders" element={<VoucherOrders />} />
+          <Route path="practice/speaking/rl" element={<ManageRetellLecture />} />
+           <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
+            <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
         </Route>
 
       </Routes>
