@@ -57,8 +57,8 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
           <button
             onClick={() => setActiveTab('my_answer')}
             className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'my_answer'
-              ? 'border-purple-600 text-purple-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'border-purple-600 text-purple-600 text-sm'
+              : 'border-slate-200 text-slate-500 text-sm hover:border-purple-200 hover:text-purple-500'
               }`}
           >
             <div className="w-5 h-5 rounded bg-purple-100 flex items-center justify-center text-purple-600">
@@ -730,7 +730,7 @@ const ReadAloudSession = () => {
                       <span className="text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded inline-block mt-2 w-fit">Good</span>
                     </div>
 
-                    <div className="bg-white border border-orange-100 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div className="bg-white border border-slate-100 rounded-2xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
                       <span className="text-sm font-semibold text-slate-500">Oral Fluency</span>
                       <div className="mt-2 flex items-baseline gap-1">
                         <span className="text-2xl font-bold text-slate-800">{view.fluency ?? 0}</span>

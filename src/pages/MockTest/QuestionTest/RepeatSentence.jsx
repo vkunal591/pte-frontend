@@ -32,7 +32,7 @@ export default function RepeatSentenceMockTest({ backendData }) {
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none overflow-hidden">
       {/* HEADER */}
-      <div className="bg-[#4d4d4d] text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
+      <div className="bg-slate-900 text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
         <div className="text-lg font-medium">APEUni Mock Test</div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
@@ -40,13 +40,13 @@ export default function RepeatSentenceMockTest({ backendData }) {
             <span className="font-mono text-white text-base">{formatTime(globalTime)}</span>
           </div>
           <div className="bg-[#666] px-2 py-0.5 rounded text-xs text-white">
-             {currentIdx + 1} of {questions.length}
+            {currentIdx + 1} of {questions.length}
           </div>
         </div>
       </div>
 
       {/* INSTRUCTION BAR */}
-      <div className="bg-[#008199] text-white px-8 py-3 text-[13px] font-medium border-t border-[#006b81]">
+      <div className="bg-slate-800 text-white px-8 py-3 text-[13px] font-medium border-t border-slate-700">
         You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once.
       </div>
 
@@ -77,7 +77,7 @@ function RepeatSentenceController({ question, onNext }) {
 
     // Handle Metadata
     const handleMetadata = () => {
-        setAudioTime(`00:00 / 00:${Math.round(audio.duration).toString().padStart(2, '0')}`);
+      setAudioTime(`00:00 / 00:${Math.round(audio.duration).toString().padStart(2, '0')}`);
     };
 
     // Handle Progress Slider
@@ -137,22 +137,22 @@ function RepeatSentenceController({ question, onNext }) {
 
   const stopMic = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stop();
     }
     if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach(t => t.stop());
     }
   };
 
   return (
     <div className="w-full flex flex-col items-center h-full">
       {/* AUDIO PLAYER BOX */}
-      <div className="bg-[#4aa3c2] w-[450px] p-6 rounded shadow-sm mb-12">
+      <div className="bg-slate-800 w-[450px] p-6 rounded shadow-sm mb-12">
         <div className="flex items-center gap-4 mb-4">
           <div className="text-white text-xs">▶</div>
           <div className="flex-grow h-3 bg-white/30 rounded-sm relative overflow-hidden">
-             {/* Slider progress */}
-            <div 
+            {/* Slider progress */}
+            <div
               className="absolute h-full bg-white transition-all duration-200"
               style={{ width: `${audioProgress}%` }}
             />
@@ -163,7 +163,7 @@ function RepeatSentenceController({ question, onNext }) {
           <div className="flex items-center gap-2">
             <span>🔊</span>
             <div className="w-24 h-1 bg-white/50 rounded">
-                <div className="w-3/4 h-full bg-white" />
+              <div className="w-3/4 h-full bg-white" />
             </div>
             <span className="text-xs">⋮</span>
           </div>
@@ -177,7 +177,7 @@ function RepeatSentenceController({ question, onNext }) {
           <div className={`w-6 h-6 rounded-full ${status === "RECORDING" ? "bg-gray-500 animate-pulse" : "bg-gray-300"}`} />
         </div>
         {status === "RECORDING" && (
-            <span className="text-gray-500 font-medium text-sm animate-pulse">Recording... {recTimeLeft}s</span>
+          <span className="text-gray-500 font-medium text-sm animate-pulse">Recording... {recTimeLeft}s</span>
         )}
       </div>
 
@@ -194,9 +194,9 @@ function RepeatSentenceController({ question, onNext }) {
           }}
           disabled={status === "PLAYING"}
           className={`px-10 py-1 text-sm rounded border shadow-md font-bold uppercase tracking-wider transition-all
-            ${status === "PLAYING" 
-              ? "bg-[#99b5bc] text-white border-transparent cursor-not-allowed opacity-60" 
-              : "bg-[#008199] text-white border-[#006b81] hover:bg-[#006b81]"
+            ${status === "PLAYING"
+              ? "bg-[#1e293b] text-white border-transparent cursor-not-allowed opacity-60"
+              : "bg-primary-600 text-white border-[#006b81] hover:bg-primary-700"
             }`}
         >
           Next

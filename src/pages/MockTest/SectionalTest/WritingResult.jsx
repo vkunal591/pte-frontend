@@ -20,7 +20,7 @@ function WritingResultScreen({ resultData }) {
       <div className="bg-white border-b p-8 mb-8">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Writing Section Result</h1>
-          <div className="text-4xl font-bold text-[#008199]">{resultData.overallScore} <span className="text-lg text-gray-500">/ 90</span></div>
+          <div className="text-4xl font-bold text-primary-700">{resultData.overallScore} <span className="text-lg text-gray-500">/ 90</span></div>
         </div>
       </div>
       <ScoreBreakdownTable result={breakdownData} />

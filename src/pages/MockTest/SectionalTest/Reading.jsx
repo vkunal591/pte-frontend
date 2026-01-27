@@ -106,7 +106,7 @@ export default function APEUniReadingTest({ backendData, onComplete, isFullMock,
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  if (isSubmitting) return <div className="p-20 text-center font-bold text-[#008199]">Analysing Reading Answers...</div>;
+  if (isSubmitting) return <div className="p-20 text-center font-bold text-primary-700">Analysing Reading Answers...</div>;
   if (!backendData) {
     return <div className="p-10 text-center text-gray-400">Loading Reading Test Data...</div>;
   }
@@ -119,7 +119,7 @@ export default function APEUniReadingTest({ backendData, onComplete, isFullMock,
           <span>APEUni PTE Reading - {backendData.title}</span>
           <button onClick={onExit} className="bg-white border border-gray-400 px-3 py-1 rounded text-xs hover:bg-gray-100">Exit</button>
         </div>
-        <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
+        <div className="h-9 bg-slate-900 flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
             <>
               <span className="bg-[#006b81] px-3 py-1 rounded">Question {currentIdx + 1} of {flattenedQuestions.length}</span>
@@ -146,7 +146,7 @@ export default function APEUniReadingTest({ backendData, onComplete, isFullMock,
               <h2 className="text-xl font-bold text-gray-500">No questions in this section.</h2>
               <button
                 onClick={() => onComplete([])}
-                className="mt-6 bg-[#fb8c00] text-white px-8 py-2 rounded font-bold"
+                className="mt-6 bg-primary-600 text-white px-8 py-2 rounded font-bold"
               >
                 Proceed to Next Section
               </button>
@@ -162,7 +162,7 @@ export default function APEUniReadingTest({ backendData, onComplete, isFullMock,
         {step < 5 && (
           <button
             onClick={step < 4 ? () => setStep(step + 1) : handleNextQuestion}
-            className="bg-[#fb8c00] text-white px-10 py-2 rounded-sm text-sm font-bold shadow-md hover:bg-[#e67e00] uppercase tracking-wide"
+            className="bg-primary-600 text-white px-10 py-2 rounded-sm text-sm font-bold shadow-md hover:bg-[#e67e00] uppercase tracking-wide"
           >
             Next
           </button>
@@ -213,7 +213,7 @@ function SWTLayout({ question, answer, setAnswer }) {
       </div>
       <textarea
         autoFocus
-        className="w-full h-40 border-2 border-gray-300 p-4 focus:border-[#008199] outline-none rounded shadow-sm"
+        className="w-full h-40 border-2 border-gray-300 p-4 focus:border-primary-500 outline-none rounded shadow-sm"
         placeholder="Type your summary here..."
         value={answer || ""}
         onChange={(e) => setAnswer(e.target.value)}
@@ -252,7 +252,7 @@ function ChoiceLayout({ question, answer, setAnswer }) {
                 type={isMulti ? "checkbox" : "radio"}
                 checked={currentSelections.includes(opt)}
                 onChange={() => toggleOption(opt)}
-                className="mt-1 w-4 h-4 text-[#008199]"
+                className="mt-1 w-4 h-4 text-primary-700"
               />
               <span className="text-sm text-gray-700 font-medium">{opt}</span>
             </label>
@@ -290,7 +290,7 @@ function ReorderLayout({ question, answer, setAnswer }) {
         <p className="text-xs font-black text-cyan-500 mb-4 uppercase text-center tracking-widest">Target Order</p>
         {target.map((s, idx) => (
           <div key={s.id} onClick={() => moveToSource(s)} className="p-4 mb-3 bg-white border-l-4 border-l-[#008199] border rounded shadow-md cursor-pointer text-sm leading-relaxed">
-            <span className="font-black mr-2 text-[#008199]">{idx + 1}.</span> {s.text}
+            <span className="font-black mr-2 text-primary-700">{idx + 1}.</span> {s.text}
           </div>
         ))}
       </div>
@@ -311,7 +311,7 @@ function FIBDragDropLayout({ question, answer, setAnswer }) {
           if (match) {
             const slotIdx = match[1];
             return (
-              <span key={i} className="inline-block mx-2 min-w-[130px] h-10 border-b-2 border-[#008199] bg-white px-3 leading-10 text-center font-bold text-[#008199] rounded-t">
+              <span key={i} className="inline-block mx-2 min-w-[130px] h-10 border-b-2 border-[#008199] bg-white px-3 leading-10 text-center font-bold text-primary-700 rounded-t">
                 {selections[slotIdx] || "______"}
               </span>
             );
@@ -330,7 +330,7 @@ function FIBDragDropLayout({ question, answer, setAnswer }) {
                 const nextSlot = parts.map(p => p.match(/\[(\d+)\]/)).find(m => m && !selections[m[1]]);
                 if (nextSlot) handleDrop(nextSlot[1], opt);
               }}
-              className={`px-6 py-2 border rounded-full shadow-sm text-sm font-bold transition-all ${isUsed ? "bg-gray-300 text-gray-50 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-[#008199] hover:text-white"}`}
+              className={`px-6 py-2 border rounded-full shadow-sm text-sm font-bold transition-all ${isUsed ? "bg-gray-300 text-gray-50 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-primary-600 hover:text-white"}`}
             >
               {opt}
             </button>
@@ -347,7 +347,7 @@ function FIBDragDropLayout({ question, answer, setAnswer }) {
 function OverviewScreen() {
   return (
     <div className="p-16 max-w-4xl ">
-      <h2 className="text-2xl font-black mb-8 text-gray-800 border-b-4 border-[#fb8c00] pb-2 inline-block">Part 2: Reading</h2>
+      <h2 className="text-2xl font-black mb-8 text-gray-800 border-b-4 border-primary-600 pb-2 inline-block">Part 2: Reading</h2>
       <p className="text-gray-600 mb-10 text-lg leading-relaxed">The Reading section measures your ability to understand academic English. You will have approximately 51 minutes for this part.</p>
       <table className="border-collapse border border-gray-300 w-full text-sm">
         <thead className="bg-gray-100"><tr><th className="border p-3 text-left">Task</th><th className="border p-3 text-left">Time Allowed</th></tr></thead>
@@ -385,10 +385,10 @@ function ReadingResultScreen({ resultId, resultData }) {
   return (
     <div className="p-10 max-w-6xl mx-auto">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black mb-4 text-[#008199]">Test Result</h1>
+        <h1 className="text-4xl font-black mb-4 text-primary-700">Test Result</h1>
         <p className="text-gray-500 mb-6">Result ID: {resultId}</p>
 
-        <div className="inline-block bg-[#008199] text-white p-6 rounded-2xl shadow-lg">
+        <div className="inline-block bg-primary-600 text-white p-6 rounded-2xl shadow-lg">
           <p className="text-sm uppercase font-bold opacity-80 mb-1">Overall Reading Score</p>
           <p className="text-5xl font-black">{resultData.overallScore}</p>
         </div>
@@ -397,7 +397,7 @@ function ReadingResultScreen({ resultId, resultData }) {
       <ScoreBreakdownTable result={breakdownData} />
 
       <div className="mt-10 text-center">
-        <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-10 py-3 rounded font-bold uppercase shadow-md hover:bg-[#e67e00]">
+        <button onClick={() => window.location.reload()} className="bg-primary-600 text-white px-10 py-3 rounded font-bold uppercase shadow-md hover:bg-[#e67e00]">
           Return to Dashboard
         </button>
       </div>

@@ -109,7 +109,7 @@ export default function APEUniListeningTest({ backendData, onComplete, isFullMoc
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  if (isSubmitting) return <div className="p-20 text-center font-bold text-[#008199]">Analysing your results...</div>;
+  if (isSubmitting) return <div className="p-20 text-center font-bold text-primary-700">Analysing your results...</div>;
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] flex flex-col font-sans select-none overflow-hidden">
@@ -118,7 +118,7 @@ export default function APEUniListeningTest({ backendData, onComplete, isFullMoc
           <span>APEUni PTE Mock Test - {backendData.title || "Listening"}</span>
           <button onClick={onExit} className="bg-white border border-gray-400 px-3 py-1 rounded text-xs hover:bg-gray-100">Exit Test</button>
         </div>
-        <div className="h-9 bg-[#008199] flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
+        <div className="h-9 bg-slate-900 flex items-center justify-end px-6 space-x-6 text-white text-xs font-medium">
           {step === 4 && (
             <>
               <span className="bg-[#006b81] px-3 py-1 rounded">Question {currentIdx + 1} of {flattenedQuestions.length}</span>
@@ -156,7 +156,7 @@ export default function APEUniListeningTest({ backendData, onComplete, isFullMoc
 
         {step < 4 && (
           <div className="h-16 bg-[#eeeeee] border-t border-gray-300 flex items-center justify-end px-10">
-            <button onClick={() => setStep(step + 1)} className="bg-[#fb8c00] text-white px-10 py-2 rounded-sm text-sm font-bold uppercase">
+            <button onClick={() => setStep(step + 1)} className="bg-primary-600 text-white px-10 py-2 rounded-sm text-sm font-bold uppercase">
               Next
             </button>
           </div>
@@ -219,7 +219,7 @@ function ListeningQuestionController({ question, onNext }) {
         return (
           <div className="mt-6">
             <textarea
-              className="w-full h-48 border-2 p-4 text-sm focus:outline-none focus:border-[#008199] rounded"
+              className="w-full h-48 border-2 p-4 text-sm focus:outline-none focus:border-primary-500 rounded"
               placeholder="Write summary (50-70 words)..."
               onChange={(e) => setAnswer(e.target.value)}
             />
@@ -253,7 +253,7 @@ function ListeningQuestionController({ question, onNext }) {
                 {i < parts.length - 1 && (
                   <input
                     type="text"
-                    className="border-b-2 border-gray-400 w-32 mx-1 px-2 focus:outline-none focus:border-[#008199] text-center"
+                    className="border-b-2 border-gray-400 w-32 mx-1 px-2 focus:outline-none focus:border-primary-500 text-center"
                     onChange={(e) => {
                       const current = answer || {};
                       setAnswer({ ...current, [i]: e.target.value });
@@ -287,7 +287,7 @@ function ListeningQuestionController({ question, onNext }) {
           <div className="mt-10">
             <input
               type="text"
-              className="w-full border-b-2 border-gray-300 p-2 focus:outline-none focus:border-[#008199] text-xl"
+              className="w-full border-b-2 border-gray-300 p-2 focus:outline-none focus:border-primary-500 text-xl"
               placeholder={question.type === "ASQ" ? "Type your short answer..." : "Type the sentence here..."}
               onChange={(e) => setAnswer(e.target.value)}
             />
@@ -320,7 +320,7 @@ function ListeningQuestionController({ question, onNext }) {
         <p className="text-sm text-gray-700 mb-8 italic border-l-4 border-[#008199] pl-4">{getInstructionText(question.type)}</p>
 
         {/* DYNAMIC AUDIO PROGRESS BAR */}
-        <div className="bg-[#4aa3c2] p-5 rounded-lg w-full mb-10 shadow-md">
+        <div className="bg-slate-800 p-5 rounded-lg w-full mb-10 shadow-md">
           <div className="flex items-center gap-6">
             <div className="text-2xl text-white">
               {status === "PREPARING" ? "⏳" : status === "PLAYING" ? "🔊" : "✅"}
@@ -341,7 +341,7 @@ function ListeningQuestionController({ question, onNext }) {
 
         <div className="fixed bottom-0 left-0 w-full bg-[#eeeeee] border-t border-gray-300 z-50">
           <div className="px-10 py-3 flex justify-end">
-            <button onClick={() => onNext(answer)} className="bg-[#fb8c00] text-white px-12 py-2 rounded-sm text-sm font-bold uppercase shadow-md hover:bg-[#e67e00]">
+            <button onClick={() => onNext(answer)} className="bg-primary-600 text-white px-12 py-2 rounded-sm text-sm font-bold uppercase shadow-md hover:bg-[#e67e00]">
               NEXT
             </button>
           </div>
@@ -390,8 +390,8 @@ function ResultScreen({ resultId, resultData }) {
   return (
     <div className="p-10 max-w-6xl mx-auto">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-black text-[#008199] mb-4">Listening Test Result</h1>
-        <div className="inline-block bg-[#008199] text-white p-6 rounded-2xl shadow-lg">
+        <h1 className="text-3xl font-black text-primary-700 mb-4">Listening Test Result</h1>
+        <div className="inline-block bg-primary-600 text-white p-6 rounded-2xl shadow-lg">
           <p className="text-sm uppercase font-bold opacity-80 mb-1">Overall Score</p>
           <p className="text-5xl font-black">{resultData.overallScore}</p>
         </div>
@@ -399,7 +399,7 @@ function ResultScreen({ resultId, resultData }) {
       <ScoreBreakdownTable result={breakdownData} />
 
       <div className="mt-8 text-center">
-        <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-8 py-2 font-bold uppercase rounded">Return to Dashboard</button>
+        <button onClick={() => window.location.reload()} className="bg-primary-600 text-white px-8 py-2 font-bold uppercase rounded">Return to Dashboard</button>
       </div>
     </div>
   );

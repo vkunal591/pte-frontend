@@ -246,7 +246,7 @@ function WritingQuestionController({ question, onNext }) {
           Words: <span className="text-black">{text.trim() === "" ? 0 : text.trim().split(/\s+/).filter(Boolean).length}</span>
         </div>
 
-        <button onClick={manualSubmit} className="bg-[#008199] hover:bg-[#006b81] text-white px-12 py-2 rounded-sm font-bold uppercase tracking-wide shadow-md">
+        <button onClick={manualSubmit} className="bg-primary-600 hover:bg-primary-700 text-white px-12 py-2 rounded-sm font-bold uppercase tracking-wide shadow-md">
           NEXT
         </button>
       </div>

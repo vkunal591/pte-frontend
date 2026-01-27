@@ -127,19 +127,19 @@ function SSTController({ question, currentIdx, total, onNext }) {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header 
-        title="APEUni Mock Test" 
-        timer={formatTime(examTime)} 
-        counter={`${currentIdx + 1} of ${total}`} 
+      <Header
+        title="APEUni Mock Test"
+        timer={formatTime(examTime)}
+        counter={`${currentIdx + 1} of ${total}`}
       />
 
-      <div className="bg-[#008199] text-white px-8 py-3 text-[13px] leading-relaxed font-medium">
+      <div className="bg-slate-800 text-white px-8 py-3 text-[13px] leading-relaxed font-medium">
         You will hear a short report. Write a summary for a fellow student who was not present. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.
       </div>
 
       <div className="flex-grow flex flex-col items-center bg-[#f9f9f9] pt-8 px-4 overflow-y-auto">
         {/* AUDIO PLAYER */}
-        <div className="bg-[#4aa3c2] w-[450px] p-6 rounded shadow-sm mb-8">
+        <div className="bg-slate-800 w-[450px] p-6 rounded shadow-sm mb-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="text-white text-[10px]">▶</div>
             <div className="flex-grow h-[8px] bg-white/30 rounded-sm relative overflow-hidden">
@@ -160,7 +160,7 @@ function SSTController({ question, currentIdx, total, onNext }) {
               </div>
             </div>
             <div className="w-4 h-4 bg-white/20 flex flex-col justify-around p-0.5 rounded-sm">
-               {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
+              {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
             </div>
           </div>
         </div>
@@ -168,14 +168,14 @@ function SSTController({ question, currentIdx, total, onNext }) {
         {/* TEXT EDITOR */}
         <div className="w-full max-w-[1200px] border border-[#4aa3c2] rounded shadow-sm bg-white overflow-hidden">
           {/* TOOLBAR */}
-          <div className="bg-[#4aa3c2] px-2 py-1 flex items-center gap-4 text-white text-[12px]">
+          <div className="bg-slate-800 px-2 py-1 flex items-center gap-4 text-white text-[12px]">
             <ToolbarBtn icon="✂" label="Cut" />
             <ToolbarBtn icon="📋" label="Copy" />
             <ToolbarBtn icon="📥" label="Paste" />
             <ToolbarBtn icon="↩" label="Undo" />
             <ToolbarBtn icon="↪" label="Redo" />
           </div>
-          
+
           <textarea
             className="w-full h-48 p-4 outline-none text-[15px] leading-relaxed resize-none"
             value={text}
@@ -183,7 +183,7 @@ function SSTController({ question, currentIdx, total, onNext }) {
             spellCheck="false"
           />
 
-          <div className="bg-[#4aa3c2] px-4 py-1.5 text-white text-[13px] border-t border-white/20">
+          <div className="bg-slate-800 px-4 py-1.5 text-white text-[13px] border-t border-white/20">
             Word Count: {wordCount}
           </div>
         </div>
@@ -198,7 +198,7 @@ function SSTController({ question, currentIdx, total, onNext }) {
 
 function Header({ title, timer, counter }) {
   return (
-    <div className="bg-[#4d4d4d] text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
+    <div className="bg-slate-900 text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
       <div className="text-lg font-medium">{title}</div>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-1">
@@ -221,7 +221,7 @@ function Footer({ onNext }) {
       </button>
       <button
         onClick={onNext}
-        className="bg-[#008199] text-white px-10 py-1 text-sm rounded border border-[#006b81] shadow-md font-bold uppercase tracking-wider hover:bg-[#006b81]"
+        className="bg-primary-600 text-white px-10 py-1 text-sm rounded border border-[#006b81] shadow-md font-bold uppercase tracking-wider hover:bg-primary-700"
       >
         Next
       </button>

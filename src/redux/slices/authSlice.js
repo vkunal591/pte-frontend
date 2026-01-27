@@ -4,9 +4,11 @@ const userFromStorage = localStorage.getItem("user")
   ? JSON.parse(localStorage.getItem("user"))
   : null;
 
+const tokenFromStorage = localStorage.getItem("token") || null;
+
 const initialState = {
   user: userFromStorage,
-  token: null,
+  token: tokenFromStorage,
   isAuthenticated: !!userFromStorage,
 };
 

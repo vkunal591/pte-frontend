@@ -86,7 +86,7 @@ const Dashboard = () => {
                 {/* Main Content (Top Section) */}
                 <div className="w-full">
                     {/* Welcome Banner */}
-                    <div className="bg-gradient-to-r from-primary-600 to-orange-400 rounded-3xl p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-orange-200">
+                    <div className="bg-gradient-to-r from-primary-600 to-purple-500 rounded-3xl p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-purple-200">
                         {/* Decorative circles */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -116,11 +116,11 @@ const Dashboard = () => {
                             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                                 <div>
                                     <h2 className="text-xl font-bold mb-1">Start strong and stay consistent!</h2>
-                                    <p className="text-orange-100">Practice regularly and watch your skills improve.</p>
+                                    <p className="text-purple-100">Practice regularly and watch your skills improve.</p>
                                 </div>
                                 <button
                                     onClick={() => navigate('/practice')}
-                                    className="bg-white text-primary-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-50 transition-colors flex items-center gap-2 shadow-lg"
+                                    className="bg-white text-primary-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors flex items-center gap-2 shadow-lg"
                                 >
                                     Start Practice Now
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" /></svg>

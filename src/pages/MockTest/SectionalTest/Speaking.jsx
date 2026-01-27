@@ -342,8 +342,9 @@ function ResultScreen({ resultId, resultData }) {
       {/* Detailed Table */}
       <ScoreBreakdownTable result={breakdownData} />
 
+
       <div className="mt-8 text-center">
-        <button onClick={() => window.location.reload()} className="bg-[#fb8c00] text-white px-10 py-3 rounded font-bold uppercase shadow-md">
+        <button onClick={() => window.location.reload()} className="bg-primary-600 text-white px-10 py-3 rounded font-bold uppercase shadow-md">
           Return to dashboard
         </button>
       </div>

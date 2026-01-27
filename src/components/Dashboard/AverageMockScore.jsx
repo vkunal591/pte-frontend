@@ -44,36 +44,43 @@ const AverageMockScore = ({ score = 0, target = 90 }) => {
                         cy="100"
                         r={radius}
                         fill="none"
-                        stroke="#f97316" // Orange
-                        strokeWidth={stroke}
+                        stroke="#4f46e5" // Indigo-600
+                        strokeWidth="12"
                         strokeLinecap="round"
                         style={{
                             strokeDasharray: circumference,
                             strokeDashoffset: strokeDashoffset,
                             transition: 'stroke-dashoffset 1s ease-out'
                         }}
+                        className="transition-all duration-1000 ease-out"
                     />
                 </svg>
 
-                {/* Needle (simplified as a central text for now, or intricate SVG rotation) */}
-                <div className="absolute bottom-0 mb-4 flex flex-col items-center">
-                    {/* Small needle generic rep */}
-                    <div className="w-4 h-4 rounded-full bg-orange-500 border-4 border-white shadow-sm z-10"></div>
+                {/* Score Text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-slate-800 tracking-tight">{score}</span>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">/ 90</span>
+                </div>
+
+                {/* Decorative Dot to simulate start point if needed or just visual flair */}
+                {/* Position calculation is complex for dynamic dot, so simpler static decorative dot or removing */}
+                <div className="absolute top-0 right-0 w-3 h-3 bg-purple-200 rounded-full blur-sm"></div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-2 gap-4 w-full px-4">
+                <div className="flex flex-col items-center bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">Target</span>
+                    <span className="text-xl font-bold text-indigo-700">79+</span>
+                </div>
+                <div className="flex flex-col items-center bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Previous</span>
+                    <span className="text-xl font-bold text-slate-600">--</span>
                 </div>
             </div>
 
-            {/* Ticks/Labels similar to screenshot */}
-            <div className="w-full flex justify-between px-8 text-xs text-gray-400 font-mono -mt-6 mb-8">
-                <span>10</span>
-                <span>50</span>
-                <span>90</span>
-            </div>
-
-            <div className="text-center">
-                <div className="text-lg font-medium text-slate-700">
-                    Your Score: <span className="font-bold text-slate-900">{score}</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-2 max-w-[200px] mx-auto">
+            <div className="mt-6 flex items-center gap-2 text-xs font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full">
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <p className="text-xs text-gray-400 max-w-[200px] mx-auto">
                     {score === 0 ? "Start your first mock test to begin your PTE journey." : "Keep practicing to improve your average!"}
                 </p>
             </div>

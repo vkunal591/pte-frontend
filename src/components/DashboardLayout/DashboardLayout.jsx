@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/slices/authSlice';
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, LayoutDashboard } from 'lucide-react';
 import DashboardSidebar from './DashboardSidebar';
 
 const DashboardLayout = ({ children }) => {
@@ -94,6 +94,18 @@ const DashboardLayout = ({ children }) => {
                                     </div>
 
                                     <div className="px-2">
+                                        {user?.role === 'admin' && (
+                                            <button
+                                                onClick={() => {
+                                                    navigate('/admin/dashboard');
+                                                    setShowDropdown(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-primary-600 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                <LayoutDashboard size={18} />
+                                                Admin Panel
+                                            </button>
+                                        )}
                                         <button className="w-full flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-primary-600 rounded-lg transition-colors text-sm font-medium">
                                             <User size={18} />
                                             Profile

@@ -52,9 +52,9 @@ const FullMockTestResult = ({ result }) => {
                                 title="Reading"
                                 score={reading?.score}
                                 icon={<BookOpen size={24} />}
-                                color="text-orange-600"
-                                bg="bg-orange-50"
-                                border="border-orange-100"
+                                color="text-primary-600"
+                                bg="bg-primary-50"
+                                border="border-primary-100"
                             />
                             <SectionScoreCard
                                 title="Listening"

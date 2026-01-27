@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 export default function WriteEssayMockTest({ backendData }) {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [step, setStep] = useState(0); 
+  const [step, setStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20 * 60); // 20 mins per essay
   const questions = backendData.essayQuestions || [];
 
@@ -32,7 +32,7 @@ export default function WriteEssayMockTest({ backendData }) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none overflow-hidden">
-      <div className="bg-[#4d4d4d] text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
+      <div className="bg-slate-900 text-[#e0e0e0] px-4 py-2 flex justify-between items-center text-sm">
         <div className="text-lg font-medium">APEUni Mock Test - WE</div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
@@ -43,7 +43,7 @@ export default function WriteEssayMockTest({ backendData }) {
         </div>
       </div>
 
-      <div className="bg-[#008199] text-white px-6 py-2 text-[13px] font-medium border-t border-[#006b81]">
+      <div className="bg-slate-800 text-white px-6 py-2 text-[13px] font-medium border-t border-slate-700">
         You will have 20 minutes to plan, write and revise an essay about the topic below. Your response will be judged on how well you develop a position, organize your ideas, present supporting details, and control the elements of standard written English. You should write 200-300 words.
       </div>
 
@@ -52,7 +52,7 @@ export default function WriteEssayMockTest({ backendData }) {
           <p className="font-bold text-gray-800 mb-6 leading-relaxed">
             {questions[currentIdx]?.questionText}
           </p>
-          
+
           <EssayInput onNext={handleNext} />
         </div>
       </div>
@@ -67,7 +67,7 @@ function EssayInput({ onNext }) {
   return (
     <div className="flex flex-col flex-grow">
       <textarea
-        className="w-full flex-grow p-4 border-2 border-gray-200 focus:border-[#008199] outline-none resize-none text-lg"
+        className="w-full flex-grow p-4 border-2 border-gray-200 focus:border-primary-500 outline-none resize-none text-lg"
         placeholder="Type your essay here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -76,7 +76,7 @@ function EssayInput({ onNext }) {
         <div className="text-sm text-gray-600 font-bold uppercase">
           Word Count: <span className={wordCount < 200 || wordCount > 300 ? "text-red-500" : "text-green-600"}>{wordCount}</span>
         </div>
-        <button onClick={onNext} className="bg-[#008199] text-white px-12 py-2 rounded font-bold uppercase shadow-md">Next</button>
+        <button onClick={onNext} className="bg-primary-600 text-white px-12 py-2 rounded font-bold uppercase shadow-md">Next</button>
       </div>
     </div>
   );

@@ -12,6 +12,14 @@ import SecureExamWrapper from './pages/MockTest/SecureExamWrapper';
 import Pricing from './pages/Pricing/Pricing';
 import BuyVouchers from './pages/BuyVouchers/BuyVouchers';
 
+import ProtectedAdminRoute from './components/Admin/ProtectedAdminRoute';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import ManageVideos from './pages/Admin/ManageVideos';
+import ManageBanners from './pages/Admin/ManageBanners';
+import ManageReadAloud from './pages/Admin/ManageReadAloud';
+import ManageRepeatSentence from './pages/Admin/ManageRepeatSentence';
+import VoucherOrders from './pages/Admin/VoucherOrders';
+
 import PracticeLimitModal from './components/PracticeLimitModal';
 import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
 import FullMockResultPage from './pages/MockTest/FullMockTest/FullMockResultPage';
@@ -24,12 +32,7 @@ import { About } from './pages/About';
 
 
 
-import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
 
-
-import Home from './pages/Home';
-import { Contact } from './pages/Contact';
-import { About } from './pages/About';
 
 
 
@@ -51,8 +54,8 @@ function App() {
 
         <Route path="/" element={<Home />} />
         <Route path="home" element={<Home />} />
-        <Route path="contact" element={<Contact/>}/>
-        <Route path="aboutus" element={<About/>}/>
+        <Route path="contact" element={<Contact />} />
+        <Route path="aboutus" element={<About />} />
 
 
         <Route path="/signin" element={<SignIn />} />
@@ -84,6 +87,16 @@ function App() {
 
         {/* Section Mock Test Result */}
         <Route path="/mocktest/section/:type/result/:id" element={<SectionResultPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<ProtectedAdminRoute />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="videos" element={<ManageVideos />} />
+          <Route path="banners" element={<ManageBanners />} />
+          <Route path="questions/read-aloud" element={<ManageReadAloud />} />
+          <Route path="questions/repeat-sentence" element={<ManageRepeatSentence />} />
+          <Route path="orders" element={<VoucherOrders />} />
+        </Route>
 
       </Routes>
     </BrowserRouter>

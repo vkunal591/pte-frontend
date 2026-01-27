@@ -203,7 +203,7 @@ const Pricing = () => {
                 <div className="flex justify-center mt-12 mb-20">
                     <button
                         onClick={scrollToBenefits}
-                        className="text-orange-500 font-semibold flex items-center gap-1 hover:underline group"
+                        className="text-purple-500 font-semibold flex items-center gap-1 hover:underline group"
                     >
                         See Benefits <span className="text-xl group-hover:translate-y-1 transition-transform">↓</span>
                     </button>
