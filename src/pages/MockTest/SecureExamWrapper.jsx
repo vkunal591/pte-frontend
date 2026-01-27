@@ -14,6 +14,10 @@ import RepeatSentenceMockTest from "./QuestionTest/RepeatSentence";
 import SSTGroup from "./QuestionTest/SSTGroup";
 import HIWGroup from "./QuestionTest/HIWGroup";
 import SGDGroup from "./QuestionTest/SGDGroup";
+import WriteEssay from "./QuestionTest/WriteEssay";
+import SWT from "./QuestionTest/SWT";
+import FIBR from "./QuestionTest/FIBR";
+import FIBDMockTest from "./QuestionTest/FIBDMockTest";
 
 export default function SecureExamWrapper() {
   const navigate = useNavigate();
@@ -37,6 +41,10 @@ export default function SecureExamWrapper() {
     SST: SSTGroup,
     HIW: HIWGroup,
     SGD: SGDGroup,
+    WE: WriteEssay,
+    SWT: SWT,
+    FIB: FIBR,
+    FIBD: FIBDMockTest
   };
 
   /* ================= FETCH QUESTION ================= */
