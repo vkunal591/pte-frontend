@@ -25,6 +25,8 @@ import PracticeLimitModal from './components/PracticeLimitModal';
 import FullExamRunner from './pages/MockTest/FullMockTest/FullExamRunner';
 import FullMockResultPage from './pages/MockTest/FullMockTest/FullMockResultPage';
 import SectionResultPage from './pages/MockTest/SectionalTest/SectionResultPage';
+
+
 import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
 
 import Home from './pages/Home';
@@ -33,6 +35,12 @@ import { About } from './pages/About';
 
 
 
+import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
+
+
+import Home from './pages/Home';
+import { Contact } from './pages/Contact';
+import { About } from './pages/About';
 
 
 
@@ -55,15 +63,10 @@ function App() {
 
         <Route path="/" element={<Home />} />
         <Route path="home" element={<Home />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="aboutus" element={<About />} />
-
-
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/select-product" element={
+        <Route path="contact" element={<Contact/>}/>
+        <Route path="aboutus" element={<About/>}/>
           <Layout currentStep={1}>
             <SelectProduct />
-          </Layout>
         } />
         <Route path="/personal-details" element={
           <Layout currentStep={2}>

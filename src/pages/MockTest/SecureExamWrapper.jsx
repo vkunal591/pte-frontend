@@ -14,6 +14,17 @@ import RepeatSentenceMockTest from "./QuestionTest/RepeatSentence";
 import SSTGroup from "./QuestionTest/SSTGroup";
 import HIWGroup from "./QuestionTest/HIWGroup";
 import SGDGroup from "./QuestionTest/SGDGroup";
+import WriteEssay from "./QuestionTest/WriteEssay";
+import SWT from "./QuestionTest/SWT";
+import FIBR from "./QuestionTest/FIBR";
+import FIBDMockTest from "./QuestionTest/FIBDMockTest";
+import RO from "./QuestionTest/RO";
+import  WFD  from "./QuestionTest/WFD";
+import  FIBL  from "./QuestionTest/FIBL";
+import RTS from "./QuestionTest/RTS";
+
+
+
 
 export default function SecureExamWrapper() {
   const navigate = useNavigate();
@@ -25,19 +36,28 @@ export default function SecureExamWrapper() {
   const [loading, setLoading] = useState(true);
 
   /* ================= MAP TYPES TO COMPONENTS ================= */
-  const COMPONENT_MAP = {
-    speaking: APEUniMockTest,
-    writing: APEUniWritingMockTest,
-    reading: APEUniReadingTest,
-    listening: APEUniListeningTest,
-    RA: ReadAloudMockTest,
-    RL: ReTellLectureMockTest,
-    DI: DescribeImageMockTest,
-    RS: RepeatSentenceMockTest,
-    SST: SSTGroup,
-    HIW: HIWGroup,
-    SGD: SGDGroup,
-  };
+ const COMPONENT_MAP = {
+  speaking: APEUniMockTest,
+  writing: APEUniWritingMockTest,
+  reading: APEUniReadingTest,
+  listening: APEUniListeningTest,
+  RA: ReadAloudMockTest,
+  RL: ReTellLectureMockTest,
+  DI: DescribeImageMockTest,
+  RS: RepeatSentenceMockTest,
+  SST: SSTGroup,
+  HIW: HIWGroup,
+  SGD: SGDGroup,
+  WE: WriteEssay,
+  SWT: SWT,
+  FIB: FIBR,
+  FIBD: FIBDMockTest,
+  RO: RO,
+  WFD: WFD,
+  FIBL: FIBL,
+  RTS: RTS
+};
+
 
   /* ================= FETCH QUESTION ================= */
   useEffect(() => {
