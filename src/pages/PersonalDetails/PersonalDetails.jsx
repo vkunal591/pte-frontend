@@ -65,7 +65,12 @@ const PersonalDetails = () => {
             localStorage.setItem("user", JSON.stringify(user));
             if (token) localStorage.setItem("token", token);
 
-            navigate('/dashboard');
+            if (token) localStorage.setItem("token", token);
+
+            const searchParams = new URLSearchParams(location.search);
+            const redirectPath = searchParams.get('redirect') || "/dashboard";
+
+            navigate(redirectPath);
         } catch (err) {
             console.error(err);
             setError(err.message);

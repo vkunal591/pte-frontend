@@ -28,8 +28,8 @@ import SectionResultPage from './pages/MockTest/SectionalTest/SectionResultPage'
 import PracticeHistoryPage from './pages/Dashboard/PracticeHistoryPage';
 
 import Home from './pages/Home';
-import { Contact } from './pages/Contact';
-import { About } from './pages/About';
+import Contact from './pages/Contact';
+import About from './pages/About';
 import ManageReadAloud from './pages/Admin/Practise/ManageReadAloud';
 import ManageDescribeImage from './pages/Admin/Practise/ManageDescribeImage';
 import ManageRepeatSentence from './pages/Admin/Practise/ManageRepeatSentence';
@@ -96,7 +96,7 @@ function App() {
         <Route path="/mocktest/section/:type/result/:id" element={<SectionResultPage />} />
 
 
-  
+
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedAdminRoute />}>
           <Route path="dashboard" element={<AdminDashboard />} />
@@ -107,13 +107,13 @@ function App() {
           <Route path="practice/speaking/di" element={<ManageDescribeImage />} />
           <Route path="orders" element={<VoucherOrders />} />
           <Route path="practice/speaking/rl" element={<ManageRetellLecture />} />
-           <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
-            <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
-            <Route path="practice/speaking/rts" element={<ManageRespondSituation />} />
-            <Route path="practice/writing/we" element={<ManageWriteEssay />} />
-            <Route path="practice/writing/swt" element={<ManageSummarizeText />} />
-            <Route path="practice/reading/fibrw" element={<ManageReadingFIBDropdown />} />
-             {/* <Route path="practice/listening/sst" element={<ManageSST />} />
+          <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
+          <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
+          <Route path="practice/speaking/rts" element={<ManageRespondSituation />} />
+          <Route path="practice/writing/we" element={<ManageWriteEssay />} />
+          <Route path="practice/writing/swt" element={<ManageSummarizeText />} />
+          <Route path="practice/reading/fibrw" element={<ManageReadingFIBDropdown />} />
+          {/* <Route path="practice/listening/sst" element={<ManageSST />} />
              <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
              <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} /> */}
 

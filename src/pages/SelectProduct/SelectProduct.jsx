@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ProductCard from '../../components/ProductCard/ProductCard';
 
 const products = [
@@ -15,11 +15,15 @@ const products = [
 const SelectProduct = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleNext = () => {
         if (selectedProduct) {
             console.log('Proceeding with:', selectedProduct);
-            navigate('/personal-details', { state: { selectedProduct } });
+            navigate({
+                pathname: '/personal-details',
+                search: location.search
+            }, { state: { selectedProduct } });
         }
     };
 

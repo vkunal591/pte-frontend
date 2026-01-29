@@ -4,35 +4,44 @@ import 'aos/dist/aos.css';
 import FeatherIcon from 'feather-icons-react';
 import { Link } from 'react-router-dom';
 
-export const Contact = () => {
+import logo from "../assets/logo.png";
+
+const Contact = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
   }, []);
 
   return (
     <div className="font-sans antialiased text-slate-800 bg-slate-50/30">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
+      {/* NAVBAR */}
+      <nav className="bg-white sticky top-0 z-50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+          {/* Logo */}
           <div className="flex items-center gap-2">
-             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              PAWAN <span className="text-blue-600">PTE</span>
-            </h1>
+            <img src={logo} alt="Pawan PTE Logo" className="h-10 w-10 rounded-full object-cover" />
+            <div className="text-3xl font-bold text-blue-600 tracking-tighter flex items-center">
+              <span className="text-blue-500 mr-1">{"<"}</span>
+              Pawan PTE
+            </div>
           </div>
 
-          <div className="hidden md:flex space-x-8 items-center">
-            {["Home", "Courses", "About Us", "Vouchers", "Contact"].map(item => (
-             <Link
-                key={item}
-                to={`/${item.toLowerCase().replace(/\s+/g, "")}`}
-                className="text-sm font-bold text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                {item}
-                </Link>
-            ))}
-            <button className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all">
-              Enroll Now
-            </button>
+          {/* Links */}
+          <div className="hidden md:flex items-center space-x-8 font-medium text-slate-600">
+            <Link to="/" className="hover:text-blue-600 transition">Home</Link>
+            <Link to="/signin?redirect=/mock-test" className="hover:text-blue-600 transition">Mock Test</Link>
+            <Link to="/signin?redirect=/buy-vouchers" className="hover:text-blue-600 transition">Vouchers</Link>
+            <Link to="/aboutus" className="hover:text-blue-600 transition">About</Link>
+            <Link to="/contact" className="hover:text-blue-600 transition">Contact</Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/signin" className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:border-slate-800 transition">
+              Sign In
+            </Link>
+            <Link to="/select-product" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-lg shadow-blue-200 transition">
+              Free Sign Up
+            </Link>
           </div>
         </div>
       </nav>
@@ -44,7 +53,7 @@ export const Contact = () => {
           <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/30 rotate-45 -translate-x-10 -translate-y-10"></div>
           <div className="absolute bottom-0 right-0 w-48 h-48 bg-blue-400/20 rounded-full translate-x-10 translate-y-10"></div>
           <div className="absolute top-1/2 left-1/4 w-4 h-4 bg-white/10 rotate-12"></div>
-          
+
           <div className="relative z-10" data-aos="zoom-in">
             <h1 className="text-4xl md:text-5xl font-black mb-4">Get in Touch</h1>
             <p className="text-blue-100 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
@@ -72,7 +81,7 @@ export const Contact = () => {
                   <div className="w-8 h-5 bg-orange-100 flex items-center justify-center rounded-sm overflow-hidden">🇮🇳</div>
                   <h3 className="font-bold text-xl">India (Headquarter)</h3>
                 </div>
-                
+
                 <div className="flex items-start gap-3 mb-8">
                   <FeatherIcon icon="map-pin" className="text-blue-600 mt-1" size="20" />
                   <div>
@@ -88,17 +97,17 @@ export const Contact = () => {
                 <h4 className="font-bold mb-4">Our <span className="text-blue-600">Branches</span></h4>
                 <div className="flex gap-6">
                   <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">🇮🇳 India</div>
-                  
+
                 </div>
               </div>
             </div>
 
             {/* Map Placeholder */}
             <div className="lg:col-span-8 rounded-[2rem] overflow-hidden shadow-xl border-4 border-white" data-aos="fade-left">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d109741.02912911311!2d76.69348873246835!3d30.73506264436677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fed0be6609603%3A0x34a3df0174473d11!2sChandigarh!5e0!3m2!1sen!2sin!4v1700000000000" 
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d109741.02912911311!2d76.69348873246835!3d30.73506264436677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390fed0be6609603%3A0x34a3df0174473d11!2sChandigarh!5e0!3m2!1sen!2sin!4v1700000000000"
                 className="w-full h-[400px] grayscale hover:grayscale-0 transition-all duration-700"
-                allowFullScreen="" 
+                allowFullScreen=""
                 loading="lazy"
               ></iframe>
             </div>
@@ -117,27 +126,27 @@ export const Contact = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <ActionCard 
-              icon="phone" 
-              title="Call" 
-              subtitle="Get support: 9 AM - 7 PM (Mon-Fri)" 
-              value="(+91) 82229-08523" 
+            <ActionCard
+              icon="phone"
+              title="Call"
+              subtitle="Get support: 9 AM - 7 PM (Mon-Fri)"
+              value="(+91) 82229-08523"
               link="tel:+918222908523"
               delay="0"
             />
-            <ActionCard 
-              icon="mail" 
-              title="Email" 
-              subtitle="Get a response within 24-48 hours" 
-              value="pawanpteclasses@gmail.com" 
+            <ActionCard
+              icon="mail"
+              title="Email"
+              subtitle="Get a response within 24-48 hours"
+              value="pawanpteclasses@gmail.com"
               link="mailto:pawanpteclasses@gmail.com"
               delay="100"
             />
-            <ActionCard 
-              icon="message-circle" 
-              title="WhatsApp" 
-              subtitle="Get support: 9 AM - 7 PM (Mon-Fri)" 
-              value="(+91) 82229-08523" 
+            <ActionCard
+              icon="message-circle"
+              title="WhatsApp"
+              subtitle="Get support: 9 AM - 7 PM (Mon-Fri)"
+              value="(+91) 82229-08523"
               link="https://wa.me/918222908523"
               delay="200"
             />
@@ -150,14 +159,14 @@ export const Contact = () => {
         <div className="max-w-7xl mx-auto bg-blue-600 rounded-[2rem] relative overflow-hidden py-12 text-center text-white shadow-2xl shadow-blue-200">
           <div className="absolute top-0 left-0 w-32 h-full bg-blue-500/20 -skew-x-12 -translate-x-10"></div>
           <div className="absolute top-0 right-0 w-32 h-full bg-blue-700/20 skew-x-12 translate-x-10"></div>
-          
+
           <div className="relative z-10" data-aos="zoom-in-up">
             <h2 className="text-3xl md:text-4xl font-black">Take a Free Mock Test Now!</h2>
           </div>
         </div>
       </section>
 
-       {/* Footer - Based on Chandigarh Contact */}
+      {/* Footer - Based on Chandigarh Contact */}
       <footer className="bg-slate-900 text-white pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
@@ -199,24 +208,25 @@ export const Contact = () => {
 
 // --- Action Card Component ---
 const ActionCard = ({ icon, title, subtitle, value, link, delay }) => (
-  <div 
+  <div
     className="group bg-white rounded-2xl p-10 text-center shadow-xl shadow-slate-100 border-t-4 border-blue-600 hover:-translate-y-3 transition-all duration-300 relative overflow-hidden"
     data-aos="fade-up"
     data-aos-delay={delay}
   >
     {/* Decorative background circle on hover */}
     <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-    
+
     <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
       <FeatherIcon icon={icon} size="24" />
     </div>
-    
+
     <h3 className="text-xl font-black mb-2 text-slate-800">{title}</h3>
     <p className="text-slate-400 text-[13px] mb-4 font-medium">{subtitle}</p>
-    
+
     <a href={link} className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
       {value}
     </a>
   </div>
 );
 
+export default Contact;

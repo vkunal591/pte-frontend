@@ -4,30 +4,44 @@ import 'aos/dist/aos.css';
 import FeatherIcon from 'feather-icons-react';
 import { Link } from 'react-router-dom';
 
-export const About = () => {
+import logo from "../assets/logo.png";
+
+const About = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
   }, []);
 
   return (
     <div className="font-sans antialiased text-slate-800 bg-white selection:bg-blue-100">
-      {/* Navigation */}
-      <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
+      {/* NAVBAR */}
+      <nav className="bg-white sticky top-0 z-50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+          {/* Logo */}
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              PAWAN <span className="text-blue-600">PTE</span>
-            </h1>
+            <img src={logo} alt="Pawan PTE Logo" className="h-10 w-10 rounded-full object-cover" />
+            <div className="text-3xl font-bold text-blue-600 tracking-tighter flex items-center">
+              <span className="text-blue-500 mr-1">{"<"}</span>
+              Pawan PTE
+            </div>
           </div>
-          <div className="hidden md:flex space-x-8 items-center">
-            {["Home", "Courses", "About Us", "Vouchers", "Contact"].map(item => (
-              <Link key={item} to={`/${item.toLowerCase().replace(/\s+/g, "")}`} className="text-sm font-semibold text-gray-600 hover:text-blue-600">
-                {item}
-              </Link>
-            ))}
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
-              Enroll Now
-            </button>
+
+          {/* Links */}
+          <div className="hidden md:flex items-center space-x-8 font-medium text-slate-600">
+            <Link to="/" className="hover:text-blue-600 transition">Home</Link>
+            <Link to="/signin?redirect=/mock-test" className="hover:text-blue-600 transition">Mock Test</Link>
+            <Link to="/signin?redirect=/buy-vouchers" className="hover:text-blue-600 transition">Vouchers</Link>
+            <Link to="/aboutus" className="hover:text-blue-600 transition">About</Link>
+            <Link to="/contact" className="hover:text-blue-600 transition">Contact</Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/signin" className="px-5 py-2.5 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:border-slate-800 transition">
+              Sign In
+            </Link>
+            <Link to="/select-product" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-lg shadow-blue-200 transition">
+              Free Sign Up
+            </Link>
           </div>
         </div>
       </nav>
@@ -73,43 +87,43 @@ export const About = () => {
       {/* --- THE TIMELINE (Wavy Dashed Style) --- */}
       <section className="py-20 relative">
         <div className="max-w-6xl mx-auto px-4 relative">
-          
+
           {/* Vertical Dashed Line Path */}
           <div className="absolute left-1/2 top-0 bottom-0 w-0.5 border-l-2 border-dashed border-blue-200 -translate-x-1/2 hidden md:block"></div>
 
           <div className="space-y-24">
-            <TimelineItem 
-              month="December" year="2018" 
-              title="The Seed is Sown" 
-              desc="Pawan PTE is born with the vision of transforming language preparation through high-end AI technology." 
+            <TimelineItem
+              month="December" year="2018"
+              title="The Seed is Sown"
+              desc="Pawan PTE is born with the vision of transforming language preparation through high-end AI technology."
               align="right"
               shade="blue-400"
             />
-            <TimelineItem 
-              month="July" year="2019" 
-              title="Launching Our Learning Platform" 
-              desc="We unveil our groundbreaking learning platform, offering an array of cutting-edge resources and tools to empower students." 
+            <TimelineItem
+              month="July" year="2019"
+              title="Launching Our Learning Platform"
+              desc="We unveil our groundbreaking learning platform, offering an array of cutting-edge resources and tools to empower students."
               align="left"
               shade="blue-500"
             />
-            <TimelineItem 
-              month="August" year="2020" 
-              title="1,000 Strong Community" 
-              desc="We celebrate our first 1,000 registered users, marking the beginning of a supportive global learning community." 
+            <TimelineItem
+              month="August" year="2020"
+              title="1,000 Strong Community"
+              desc="We celebrate our first 1,000 registered users, marking the beginning of a supportive global learning community."
               align="right"
               shade="blue-600"
             />
-            <TimelineItem 
-              month="January" year="2022" 
-              title="100,000 Dreams Take Flight" 
-              desc="Our user base explodes to 100,000, empowering countless individuals on their PTE journeys toward success." 
+            <TimelineItem
+              month="January" year="2022"
+              title="100,000 Dreams Take Flight"
+              desc="We user base explodes to 100,000, empowering countless individuals on their PTE journeys toward success."
               align="left"
               shade="blue-700"
             />
-            <TimelineItem 
-              month="March" year="2024" 
-              title="1 Million Milestones!" 
-              desc="We reach an incredible milestone - 1 million registered users! Signifying the trust students place in Pawan PTE." 
+            <TimelineItem
+              month="March" year="2024"
+              title="1 Million Milestones!"
+              desc="We reach an incredible milestone - 1 million registered users! Signifying the trust students place in Pawan PTE."
               align="right"
               shade="blue-800"
             />
@@ -121,13 +135,13 @@ export const About = () => {
       <section className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-center text-slate-700 mb-12">Message from Our Founder</h2>
-          
+
           <div className="relative p-1 bg-blue-100 rounded-[3rem]">
             <div className="bg-white p-12 md:p-16 rounded-[2.8rem] text-center border-2 border-blue-50">
               <h3 className="text-3xl font-extrabold text-blue-600 mb-8">Welcome to Pawan PTE!</h3>
               <div className="max-w-4xl mx-auto text-gray-500 leading-relaxed space-y-6 text-base">
                 <p>
-                  When we started Pawan PTE, our vision was clear: to empower individuals from all walks of life with the tools, knowledge, and confidence they need to succeed in their language journey. 
+                  When we started Pawan PTE, our vision was clear: to empower individuals from all walks of life with the tools, knowledge, and confidence they need to succeed in their language journey.
                 </p>
                 <p>
                   From our humble beginnings to building a thriving community of over 1 million learners, our mission has remained the same: to make high-quality, accessible, and innovative learning solutions available to everyone.
@@ -142,8 +156,8 @@ export const About = () => {
       </section>
 
       {/* Simple Blue Footer */}
-        {/* Simple Footer */}
-       {/* Footer - Based on Chandigarh Contact */}
+      {/* Simple Footer */}
+      {/* Footer - Based on Chandigarh Contact */}
       <footer className="bg-slate-900 text-white pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div>
@@ -210,3 +224,5 @@ const TimelineItem = ({ month, year, title, desc, align, shade }) => {
     </div>
   );
 };
+
+export default About;

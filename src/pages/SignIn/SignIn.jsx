@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlice"; // ✅ adjust path if needed
 
@@ -24,6 +24,11 @@ const SignIn = () => {
   console.log('SignIn: Rendering SignIn component');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  /* Check for redirect url */
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect') || "/dashboard";
 
   const [formData, setFormData] = React.useState({
     email: "",
@@ -73,7 +78,7 @@ const SignIn = () => {
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
 
-      navigate("/dashboard");
+      navigate(redirectPath);
     } catch (err) {
       setError(err?.message || "Something went wrong");
     } finally {
@@ -182,13 +187,12 @@ const SignIn = () => {
           <div className="mt-8 text-center text-slate-500">
             Don't have an account?{" "}
             <Link
-              to="/select-product"
+              to={`/select-product${location.search}`}
               className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
             >
               Sign up
             </Link>
-          </div>
-        </div>
+          </div>        </div>
       </div>
     </div>
   );
