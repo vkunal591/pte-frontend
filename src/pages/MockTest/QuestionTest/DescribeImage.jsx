@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 export default function DescribeImageMockTest({ backendData }) {
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -20,15 +21,58 @@ export default function DescribeImageMockTest({ backendData }) {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleNext = () => {
+  const [userAnswers, setUserAnswers] = useState([]);
+  const [testResult, setTestResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleNext = (audioBlob) => {
+    // Save current answer
+    const currentQ = questions[currentIdx];
+    const newAnswers = [...userAnswers, { questionId: currentQ._id, audio: audioBlob }];
+    setUserAnswers(newAnswers);
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx((prev) => prev + 1);
     } else {
       setStep(1);
+      submitTest(newAnswers);
     }
   };
 
-  if (step === 1) return <div className="p-20 text-center font-bold">Test Completed</div>;
+  const submitTest = async (answers) => {
+    setIsLoading(true);
+    try {
+      const { data } = await api.post("/question/di/submit", {
+        testId: backendData._id,
+        answers: answers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (error) {
+      console.error("DI Submit Error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (step === 1) {
+    return (
+      <div className="p-20 text-center">
+        <h1 className="text-2xl font-bold mb-6">Test Result</h1>
+        {isLoading ? (
+          <div className="text-blue-500">Calculating Score...</div>
+        ) : (
+          <div className="flex justify-center gap-4">
+            <div className="p-4 border rounded bg-blue-50">Fluency: {testResult?.sectionScores?.fluency || 0}</div>
+            <div className="p-4 border rounded bg-primary-50">Pronunciation: {testResult?.sectionScores?.pronunciation || 0}</div>
+            <div className="p-4 border rounded bg-green-50">Content: {testResult?.sectionScores?.content || 0}</div>
+          </div>
+        )}
+        <button onClick={() => window.location.reload()} className="mt-8 bg-[#008199] text-white px-8 py-2 rounded uppercase font-bold text-xs">Retake Practice</button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none overflow-hidden">
@@ -151,15 +195,15 @@ function DescribeImageController({ question, onNext }) {
               </svg>
               <span className="text-2xl font-bold text-gray-600 z-10">{timeLeft}</span>
             </div>
-            
+
             <span className="text-gray-400 font-medium">
               {status === "PREPARING" ? `Recording in ${timeLeft} seconds` : "Recording..."}
             </span>
-            
+
             {status === "RECORDING" && (
               <div className="flex gap-1 items-center h-4">
                 {[...Array(10)].map((_, i) => (
-                  <div key={i} className="w-1 h-full bg-blue-400 animate-pulse" style={{animationDelay: `${i * 0.1}s`}} />
+                  <div key={i} className="w-1 h-full bg-blue-400 animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
                 ))}
               </div>
             )}
@@ -176,12 +220,12 @@ function DescribeImageController({ question, onNext }) {
         <button
           onClick={() => {
             stopMic();
-            onNext();
+            onNext(null);
           }}
           disabled={status === "PREPARING"}
           className={`px-10 py-1 text-sm rounded border shadow-md font-bold uppercase tracking-wider transition-all
-            ${status === "PREPARING" 
-              ? "bg-[#99b5bc] text-white border-transparent cursor-not-allowed opacity-60" 
+            ${status === "PREPARING"
+              ? "bg-[#99b5bc] text-white border-transparent cursor-not-allowed opacity-60"
               : "bg-[#008199] text-white border-[#006b81] hover:bg-[#006b81]"
             }`}
         >
