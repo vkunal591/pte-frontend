@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { submitSummarizeSpokenAttempt, submitSummarizeWrittenAttempt } from "../../services/api";
 
 const MAX_TIME = 600;
-const MIN_WORDS = 5;
+const MIN_WORDS = 1;
 const MAX_WORDS = 50;
 
 export default function SST({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) {

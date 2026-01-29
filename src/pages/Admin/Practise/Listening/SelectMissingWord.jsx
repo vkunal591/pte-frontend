@@ -2,14 +2,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { 
   Plus, Edit, Trash2, Search, Eye, Headphones, X, PlusCircle, 
   CheckCircle2, Loader2, Music, AlertCircle, PlayCircle, 
-  Layers, FileText, ListChecks
+  VolumeX, ListFilter, AudioLines, FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout";
 
-const ManageListeningMCMA = () => {
+const ManageSelectMissingWord = () => {
   const { user } = useSelector((state) => state.auth);
   
   // Data States
@@ -27,11 +27,13 @@ const ManageListeningMCMA = () => {
   // Form State
   const initialForm = { 
     title: "", 
-    question: "",
-    options: ["", "", "", ""], 
-    correctOptions: [], 
+    options: [
+      { text: "", isCorrect: false }, 
+      { text: "", isCorrect: false }, 
+      { text: "", isCorrect: false },
+      { text: "", isCorrect: false }
+    ], 
     difficulty: "Medium", 
-    transcript: "",
     audio: null 
   };
   const [form, setForm] = useState(initialForm);
@@ -41,8 +43,7 @@ const ManageListeningMCMA = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      // Ensure this endpoint matches your server route
-      const res = await axios.get(`/api/listening-multi-choice-multi-answer/questions/${user._id}`);
+      const res = await axios.get(`/api/select-missing-word/${user._id}`);
       setQuestions(res.data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -58,52 +59,42 @@ const ManageListeningMCMA = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     
-    // Filter out empty strings from options
-    const finalOptions = form.options.filter(opt => opt.trim() !== "");
-
-    if (finalOptions.length < 2) {
-      alert("Please provide at least 2 options.");
-      return;
-    }
-
-    if (form.correctOptions.length === 0) {
-      alert("Please select at least one correct option.");
+    // Validation: Ensure exactly one correct option
+    const correctCount = form.options.filter(o => o.isCorrect).length;
+    if (correctCount !== 1) {
+      alert("Please mark exactly one option as the correct missing word.");
       return;
     }
 
     setSubmitLoading(true);
     const fd = new FormData();
     fd.append("title", form.title);
-    fd.append("question", form.question);
-    fd.append("transcript", form.transcript);
     fd.append("difficulty", form.difficulty);
-    
-    // Stringify arrays for the controller (Multer requirement)
-    fd.append("options", JSON.stringify(finalOptions));
-    fd.append("correctOptions", JSON.stringify(form.correctOptions));
+    // Filter out empty options and stringify
+    const filteredOptions = form.options.filter(opt => opt.text.trim() !== "");
+    fd.append("options", JSON.stringify(filteredOptions));
     
     if (form.audio) fd.append("audio", form.audio);
 
     try {
       if (editingId) {
-        await axios.put(`/api/listening-multi-choice-multi-answer/${editingId}`, fd);
+        await axios.put(`/api/select-missing-word/${editingId}`, fd);
       } else {
-        await axios.post("/api/listening-multi-choice-multi-answer/add", fd);
+        await axios.post("/api/select-missing-word/add", fd);
       }
       setIsModalOpen(false);
       fetchQuestions();
     } catch (err) {
-      console.error("Save Error:", err?.response?.data || err.message);
-      alert(err?.response?.data?.message || "Error saving question");
+      console.error("Save Error:", err);
     } finally {
       setSubmitLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Permanent delete this question?")) return;
+    if (!window.confirm("Delete this question permanently?")) return;
     try {
-      await axios.delete(`/api/listening-multi-choice-multi-answer/${id}`);
+      await axios.delete(`/api/select-missing-word/${id}`);
       setQuestions(questions.filter(q => q._id !== id));
     } catch (err) {
       console.error("Delete Error:", err);
@@ -114,11 +105,8 @@ const ManageListeningMCMA = () => {
     setEditingId(q._id);
     setForm({
       title: q.title || "",
-      question: q.question || "",
-      options: q.options || ["", "", "", ""],
-      correctOptions: q.correctOptions || [],
+      options: q.options.map(o => ({ text: o.text, isCorrect: o.isCorrect })),
       difficulty: q.difficulty || "Medium",
-      transcript: q.transcript || "",
       audio: null 
     });
     setIsModalOpen(true);
@@ -132,17 +120,9 @@ const ManageListeningMCMA = () => {
     );
   }, [questions, searchTerm]);
 
-  // FIXED: Renamed to match the call in JSX
-  const toggleCorrectOption = (optValue) => {
-    if (!optValue) return;
-    const current = [...form.correctOptions];
-    const index = current.indexOf(optValue);
-    if (index > -1) {
-      current.splice(index, 1);
-    } else {
-      current.push(optValue);
-    }
-    setForm({ ...form, correctOptions: current });
+  const setCorrectOption = (idx) => {
+    const updated = form.options.map((opt, i) => ({ ...opt, isCorrect: i === idx }));
+    setForm({ ...form, options: updated });
   };
 
   return (
@@ -153,9 +133,9 @@ const ManageListeningMCMA = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
           <div className="space-y-1">
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-              Listening: <span className="text-indigo-600">Multiple Answers</span>
+              Select <span className="text-indigo-600">Missing Word</span>
             </h2>
-            <p className="text-slate-500 font-medium">Manage MCMA tasks (Score: +1 Correct, -1 Incorrect)</p>
+            <p className="text-slate-500 font-medium">Manage listening tasks with "beep" replaced endings</p>
           </div>
           <motion.button 
             whileHover={{ scale: 1.02 }}
@@ -164,7 +144,7 @@ const ManageListeningMCMA = () => {
             className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100"
           >
             <PlusCircle size={22} />
-            <span>New Question</span>
+            <span>Add New SMW</span>
           </motion.button>
         </div>
 
@@ -175,7 +155,7 @@ const ManageListeningMCMA = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search questions by title..."
+            placeholder="Search missing word questions..."
             className="w-full pl-16 pr-4 py-5 rounded-3xl border border-slate-200 bg-white focus:ring-4 focus:ring-indigo-50 outline-none transition-all shadow-sm font-medium"
           />
         </div>
@@ -183,14 +163,14 @@ const ManageListeningMCMA = () => {
         {/* LIST TABLE */}
         <div className="space-y-4">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-dashed border-slate-200">
-              <Loader2 className="animate-spin text-indigo-500 mb-4" size={40} />
-              <p className="text-slate-400 font-medium">Retrieving MCMA questions...</p>
+            <div className="py-20 text-center bg-white rounded-[2rem] border border-dashed">
+              <Loader2 className="animate-spin text-indigo-500 mx-auto" size={40} />
+              <p className="text-slate-400 mt-4 font-medium tracking-wide">Retrieving SMW questions...</p>
             </div>
           ) : filteredQuestions.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-[2rem] border">
                <AlertCircle className="mx-auto text-slate-200 mb-4" size={48} />
-               <p className="text-slate-500 font-bold">No questions found.</p>
+               <p className="text-slate-500 font-bold tracking-tight">No questions found.</p>
             </div>
           ) : (
             filteredQuestions.map(q => (
@@ -201,11 +181,13 @@ const ManageListeningMCMA = () => {
               >
                 <div className="col-span-6 flex items-center gap-5">
                   <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                    <ListChecks size={24}/>
+                    <VolumeX size={24}/>
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 text-lg">{q.title}</h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">MCMA Question • {q.correctOptions?.length} Correct</p>
+                    <h3 className="font-bold text-slate-800 text-lg">{q.title || "Untitled Question"}</h3>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                        SMW Module • {q.options?.length || 0} Options
+                    </p>
                   </div>
                 </div>
                 <div className="col-span-3 text-center">
@@ -233,68 +215,62 @@ const ManageListeningMCMA = () => {
               <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-8 border-b bg-slate-50/50 flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-indigo-600 text-white rounded-2xl"><Layers size={24}/></div>
-                    <h2 className="text-2xl font-black text-slate-800">{editingId ? "Edit MCMA" : "New MCMA Question"}</h2>
+                    <div className="p-3 bg-indigo-600 text-white rounded-2xl"><AudioLines size={24}/></div>
+                    <h2 className="text-2xl font-black text-slate-800">{editingId ? "Update SMW" : "New SMW Question"}</h2>
                   </div>
                   <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white rounded-xl shadow-sm transition-all"><X/></button>
                 </div>
                 
                 <form onSubmit={handleSave} className="p-8 overflow-y-auto space-y-8 custom-scrollbar">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    {/* Left Column: Form Details */}
                     <div className="space-y-6">
                       <div>
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Title</label>
-                        <input placeholder="Set title" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white transition-all font-medium" required />
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Question Title</label>
+                        <input placeholder="e.g. Science Lecture Missing Word" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white transition-all font-medium" required />
                       </div>
                       <div>
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">The Question</label>
-                        <textarea placeholder="e.g. Which of the following are mentioned..." rows={2} value={form.question} onChange={e => setForm({...form, question: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white transition-all resize-none font-medium" required />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Difficulty</label>
-                           <select value={form.difficulty} onChange={e => setForm({...form, difficulty: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700">
-                             <option>Easy</option><option>Medium</option><option>Hard</option>
-                           </select>
-                        </div>
-                        <div>
-                           <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Audio</label>
-                           <input type="file" onChange={e => setForm({...form, audio: e.target.files[0]})} accept="audio/*" className="w-full mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-2xl text-[10px] font-bold" />
-                        </div>
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Difficulty</label>
+                        <select value={form.difficulty} onChange={e => setForm({...form, difficulty: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700">
+                          <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
+                        </select>
                       </div>
                       <div>
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Transcript (Optional)</label>
-                        <textarea placeholder="Audio transcript..." rows={3} value={form.transcript} onChange={e => setForm({...form, transcript: e.target.value})} className="w-full mt-2 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:bg-white transition-all resize-none text-xs" />
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Upload Audio (With Beep at End)</label>
+                        <div className="mt-2 relative">
+                          <input type="file" onChange={e => setForm({...form, audio: e.target.files[0]})} accept="audio/*" className="hidden" id="audio-smw" />
+                          <label htmlFor="audio-smw" className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-3xl p-8 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer transition-all">
+                            <Music className="text-indigo-400 mb-2" size={32} />
+                            <span className="text-sm font-bold text-slate-600">{form.audio ? form.audio.name : "Select Audio File"}</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Right Column: Dynamic Options */}
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center px-1">
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Manage Options (Select Multiple)</label>
-                        <button type="button" onClick={() => setForm({...form, options: [...form.options, ""]})} className="text-xs font-bold text-indigo-600 hover:underline">+ Add Option</button>
+                      <div className="flex justify-between items-center mb-2 px-1">
+                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Options (Check the correct missing word)</label>
+                        <button type="button" onClick={() => setForm({...form, options: [...form.options, {text: "", isCorrect: false}]})} className="text-xs font-bold text-indigo-600">+ Add Option</button>
                       </div>
                       <div className="space-y-3">
                         {form.options.map((opt, i) => (
-                          <div key={i} className={`flex items-center gap-3 p-4 border rounded-2xl transition-all ${form.correctOptions.includes(opt) && opt !== "" ? 'border-emerald-400 bg-emerald-50/50 shadow-inner' : 'border-slate-100 bg-white'}`}>
+                          <div key={i} className={`flex items-center gap-4 p-4 border rounded-2xl transition-all ${opt.isCorrect ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-100 bg-white'}`}>
                             <input 
-                              type="checkbox" 
-                              checked={form.correctOptions.includes(opt) && opt !== ""} 
-                              onChange={() => toggleCorrectOption(opt)} 
-                              disabled={opt.trim() === ""}
-                              className="w-5 h-5 accent-emerald-600" 
+                                type="radio" 
+                                name="smw-correct" 
+                                checked={opt.isCorrect} 
+                                onChange={() => setCorrectOption(i)} 
+                                className="w-5 h-5 accent-emerald-600" 
                             />
                             <input 
-                              value={opt} 
-                              onChange={e => {
-                                const no = [...form.options];
-                                no[i] = e.target.value;
-                                setForm({...form, options: no});
-                              }} 
-                              className="flex-1 bg-transparent outline-none text-sm font-bold text-slate-700" 
-                              placeholder={`Option ${i+1}`} 
-                              required 
+                                value={opt.text} 
+                                onChange={e => {
+                                    const no = [...form.options];
+                                    no[i].text = e.target.value;
+                                    setForm({...form, options: no});
+                                }} 
+                                className="flex-1 bg-transparent outline-none text-sm font-bold text-slate-700" 
+                                placeholder={`Missing Word Option ${i+1}`} 
+                                required 
                             />
                             {form.options.length > 2 && (
                                 <button type="button" onClick={() => setForm({...form, options: form.options.filter((_, idx) => idx !== i)})} className="text-slate-300 hover:text-rose-500"><Trash2 size={16}/></button>
@@ -305,11 +281,8 @@ const ManageListeningMCMA = () => {
                     </div>
                   </div>
 
-                  <button 
-                    disabled={submitLoading} 
-                    className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
-                  >
-                    {submitLoading ? <Loader2 className="animate-spin" /> : editingId ? "Update Question" : "Create Question"}
+                  <button disabled={submitLoading} className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                    {submitLoading ? <Loader2 className="animate-spin" /> : editingId ? "Save SMW Changes" : "Publish SMW Question"}
                   </button>
                 </form>
               </motion.div>
@@ -322,50 +295,51 @@ const ManageListeningMCMA = () => {
           {isViewModalOpen && viewData && (
             <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsViewModalOpen(false)} className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" />
-              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative overflow-hidden max-h-[90vh] flex flex-col">
+              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
                 <button onClick={() => setIsViewModalOpen(false)} className="absolute top-8 right-8 p-3 bg-slate-100 rounded-full text-slate-400 hover:text-slate-900 transition-all z-10"><X/></button>
                 
                 <div className="p-10 space-y-8 overflow-y-auto custom-scrollbar">
                   <div className="space-y-2">
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-4 py-1 rounded-full uppercase">Multiple Answers Mode</span>
+                    <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-tighter">SMW Preview</span>
                     <h2 className="text-3xl font-black text-slate-900 leading-tight">{viewData.title}</h2>
                   </div>
 
-                  <div className="bg-slate-900 rounded-[2.5rem] p-8 border-4 border-slate-800">
+                  {/* Audio Player */}
+                  <div className="bg-slate-900 rounded-[2.5rem] p-8 border-4 border-slate-800 shadow-2xl">
+                    <div className="flex items-center gap-4 mb-4">
+                       <PlayCircle className="text-indigo-400" size={24} />
+                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Listening Source</span>
+                    </div>
                     <audio controls className="w-full accent-indigo-500">
                       <source src={viewData.audioUrl} />
                     </audio>
                   </div>
 
-                  <div className="space-y-6">
-                    <p className="font-bold text-slate-800 text-lg">Q: {viewData.question}</p>
-                    <div className="grid gap-3">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-indigo-600 font-black text-xs uppercase tracking-widest">
+                        <FileText size={16}/> Transcript (Auto-generated)
+                    </div>
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 italic text-slate-500 text-sm leading-relaxed">
+                        "{viewData.transcript || "No transcript available"}"
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-emerald-600 font-black text-xs uppercase tracking-widest">
+                        <CheckCircle2 size={16}/> Correct Missing Word
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {viewData.options?.map((opt, i) => (
-                        <div 
-                          key={i} 
-                          className={`p-5 rounded-3xl border flex items-center justify-between ${
-                            viewData.correctOptions.includes(opt) 
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-900 ring-2 ring-emerald-500/20' 
-                            : 'bg-slate-50 border-slate-100 text-slate-500 opacity-60'
-                          }`}
-                        >
-                          <span className="font-bold text-sm">{opt}</span>
-                          {viewData.correctOptions.includes(opt) && <CheckCircle2 size={18} className="text-emerald-600"/>}
+                        <div key={i} className={`p-5 rounded-3xl border flex items-center justify-between transition-all ${opt.isCorrect ? 'bg-emerald-50 border-emerald-200 ring-2 ring-emerald-500/10' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
+                          <div className="flex items-center gap-4">
+                             <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${opt.isCorrect ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{String.fromCharCode(65+i)}</span>
+                             <span className={`font-bold text-sm ${opt.isCorrect ? 'text-emerald-900' : 'text-slate-600'}`}>{opt.text}</span>
+                          </div>
+                          {opt.isCorrect && <div className="px-3 py-1 bg-emerald-500 text-white text-[9px] font-black rounded-lg uppercase">Correct</div>}
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {viewData.transcript && (
-                    <div className="space-y-3">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <FileText size={16}/> Audio Transcript
-                        </span>
-                        <div className="p-6 bg-slate-50 rounded-2xl border text-sm text-slate-600 italic leading-relaxed">
-                            {viewData.transcript}
-                        </div>
-                    </div>
-                  )}
                 </div>
               </motion.div>
             </div>
@@ -382,4 +356,4 @@ const ManageListeningMCMA = () => {
   );
 };
 
-export default ManageListeningMCMA;
+export default ManageSelectMissingWord;
