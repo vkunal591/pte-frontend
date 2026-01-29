@@ -54,7 +54,7 @@ const Home = () => {
           <div className="flex items-center gap-2">
             <img src={logo} alt="Pawan PTE Logo" className="h-10 w-10 rounded-full object-cover" />
             <div className="text-3xl font-bold text-blue-600 tracking-tighter flex items-center">
-              <span className="text-blue-500 mr-1">{"<"}</span>
+              <span className="text-blue-500 mr-1">{}</span>
               Pawan PTE
             </div>
           </div>
@@ -159,9 +159,9 @@ const Home = () => {
       {/* HOW IT WORKS / FEATURES */}
       <section className="py-24 bg-slate-50">
         <div className="text-center mb-24 max-w-3xl mx-auto" data-aos="fade-up">
-          <div className="inline-block bg-violet-100 text-violet-700 px-4 py-1.5 rounded-full font-bold text-sm mb-4 tracking-wide">THE PROCESS</div>
+          <div className="inline-block bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full font-bold text-sm mb-4 tracking-wide">THE PROCESS</div>
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">
-            Explore Our <span className="text-violet-600">Intelligent Assessment</span> System
+            Explore Our <span className="text-blue-600">Intelligent Assessment</span> System
           </h2>
           <p className="text-slate-600 text-lg">
             Gear up for PTE Academic and Core with our massive question bank. Get instant, pinpointed feedback to discover your growth areas and improve fast.
@@ -172,14 +172,14 @@ const Home = () => {
           {/* Feature 01 */}
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div data-aos="fade-right">
-              <div className="w-12 h-12 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-violet-200">01</div>
+              <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">01</div>
               <h3 className="text-4xl font-bold text-slate-900 mb-6 relative z-10">
                 AI-Scored Full-Length Mocks
               </h3>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
                 Our state-of-the-art practice platform utilizes advanced AI to ensure you are fully prepared for both PTE Academic and Core. Take complete mock tests with detailed solutions to recognize gaps in your learning and secure your goal score.
               </p>
-              <Link to="/signin?redirect=/mock-test" className="text-violet-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
+              <Link to="/signin?redirect=/mock-test" className="text-blue-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
                 Start Mock Test <ArrowRight size={20} />
               </Link>
             </div>
@@ -194,14 +194,14 @@ const Home = () => {
               <img src={featureSection} alt="Section Tests" className="w-full rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300" />
             </div>
             <div className="order-1 md:order-2" data-aos="fade-left">
-              <div className="w-12 h-12 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-violet-200">02</div>
+              <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">02</div>
               <h3 className="text-4xl font-bold text-slate-900 mb-6 relative z-10">
                 Master Each Section Individually
               </h3>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
                 The PTE exam comprises four distinct modules, and mastering each is key to a high score. Our platform offers dedicated, section-specific tests for Speaking, Writing, Reading, and Listening. Deeply understand the scoring criteria and focus your efforts where they matter most.
               </p>
-              <Link to="/practice" className="text-violet-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
+              <Link to="/practice" className="text-blue-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
                 Start Sectional Practice <ArrowRight size={20} />
               </Link>
             </div>
@@ -210,14 +210,14 @@ const Home = () => {
           {/* Feature 03 */}
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div data-aos="fade-right">
-              <div className="w-12 h-12 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-violet-200">03</div>
+              <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">03</div>
               <h3 className="text-4xl font-bold text-slate-900 mb-6 relative z-10">
                 Unlimited Practice by Question Type
               </h3>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
                 Deeply understand the exam pattern by tackling questions one type at a time. Zero in on your weaker areas to boost your overall performance. Our advanced AI evaluation provides actionable insights to refine your strategy and help you achieve your desired score.
               </p>
-              <Link to="/practice" className="text-violet-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
+              <Link to="/practice" className="text-blue-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
                 Start Question Practice <ArrowRight size={20} />
               </Link>
             </div>
@@ -232,14 +232,14 @@ const Home = () => {
               <img src={featureMobile} alt="Mobile Application" className="w-full rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300" />
             </div>
             <div className="order-1 md:order-2" data-aos="fade-left">
-              <div className="w-12 h-12 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-violet-200">04</div>
+              <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-xl mb-6 shadow-lg shadow-blue-200">04</div>
               <h3 className="text-4xl font-bold text-slate-900 mb-6 relative z-10">
                 Study Anytime, Anywhere
               </h3>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
                 Break free from your desk. Our comprehensive mobile application for iOS and Android lets you access premium practice materials on the move. Download today and turn your commute into productive study time.
               </p>
-              <Link to="#" className="text-violet-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
+              <Link to="#" className="text-blue-600 font-bold flex items-center gap-2 hover:gap-4 transition-all">
                 Download App <ArrowRight size={20} />
               </Link>
             </div>
