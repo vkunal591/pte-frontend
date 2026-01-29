@@ -43,6 +43,7 @@ import ManageReadingFIBDropdown from './pages/Admin/Practise/Reading/FillInBlank
 import ManageReadingMCMA from './pages/Admin/Practise/Reading/ManageReadingMCMA';
 import ManageReadingMCSA from './pages/Admin/Practise/Reading/ManageReadingMCSA';
 import ManageReadingFIBDragDrop from './pages/Admin/Practise/Reading/ManageReadingFIBDragDrop';
+import ManageReadingReorder from './pages/Admin/Practise/Reading/ManageReadingReorder';
 import ManageSST from './pages/Admin/Practise/Listening/ManageSST';
 import ManageListeningMCMA from './pages/Admin/Practise/Listening/MultipleChoiceMultipleAns';
 import ManageListeningMCSA from './pages/Admin/Practise/Listening/MultipleChoiceSingleAns';
@@ -119,6 +120,7 @@ function App() {
           <Route path="practice/reading/mcma" element={<ManageReadingMCMA />} />
           <Route path="practice/reading/mcsa" element={<ManageReadingMCSA />} />
           <Route path="practice/reading/fibd" element={<ManageReadingFIBDragDrop />} />
+          <Route path="practice/reading/reorder" element={<ManageReadingReorder />} />
           {/* <Route path="practice/listening/sst" element={<ManageSST />} />
              <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
              <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} /> */}

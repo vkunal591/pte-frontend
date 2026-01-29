@@ -27,7 +27,7 @@ import { logout } from '../../redux/slices/authSlice';
 const AdminLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [openMenus, setOpenMenus] = useState({});
-    
+
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -53,7 +53,7 @@ const AdminLayout = ({ children }) => {
         { path: '/admin/videos', icon: <PlayCircle size={20} />, label: 'Manage Videos' },
         { path: '/admin/banners', icon: <MessageSquare size={20} />, label: 'Manage Banners' },
         { path: '/admin/orders', icon: <Bell size={20} />, label: 'Voucher Orders' },
-        
+
         {
             label: 'Practice',
             icon: <Mic size={20} />,
@@ -88,7 +88,7 @@ const AdminLayout = ({ children }) => {
                         { label: 'Multiple Choice, Choose Multiple Answer', path: '/admin/practice/reading/mcma' },
                         { label: 'Multiple Choice, Choose Single Answer', path: '/admin/practice/reading/mcsa' },
                         { label: 'Fill in the Blanks(DragDrop)', path: '/admin/practice/reading/fibd' },
-                        { label: 'Re-order Paragraph', path: '/admin/practice/reading/ro' },
+                        { label: 'Re-order Paragraph', path: '/admin/practice/reading/reorder' },
                     ]
                 },
                 {
@@ -100,7 +100,7 @@ const AdminLayout = ({ children }) => {
                         { label: 'Listening: Multiple Choice, Choose Single Answer', path: '/admin/practice/listening/mcsa' },
                         { label: 'Fill in the blanks (TypeIn)', path: '/admin/practice/listening/fibl' },
                         { label: 'Highlight Incorrect Summary', path: '/admin/practice/listening/hiw' },
-                        { label: 'Select Missing Words', path: '/admin/practice/listening/smw' }, 
+                        { label: 'Select Missing Words', path: '/admin/practice/listening/smw' },
                         { label: 'Write From Dictation (WFD)', path: '/admin/practice/listening/wfd' },
                     ]
                 }
@@ -250,12 +250,12 @@ const AdminLayout = ({ children }) => {
 
             {/* MAIN CONTENT - IMPROVED UI */}
             <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
-                
+
                 {/* MODERN HEADER */}
                 <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center justify-between px-8 sticky top-0 z-40 transition-all">
                     <div className="flex items-center gap-6">
-                        <button 
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                        <button
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="p-2.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 rounded-xl transition-all shadow-sm border border-slate-100"
                         >
                             {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -302,7 +302,7 @@ const AdminLayout = ({ children }) => {
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#F8FAFC]">
                     <div className="max-w-7xl mx-auto p-6 lg:p-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        
+
                         {/* <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
