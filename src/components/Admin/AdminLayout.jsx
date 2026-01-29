@@ -99,8 +99,9 @@ const AdminLayout = ({ children }) => {
                         { label: 'Listening: Multiple Choice, Choose Multiple Answer', path: '/admin/practice/listening/mcma' },
                         { label: 'Listening: Multiple Choice, Choose Single Answer', path: '/admin/practice/listening/mcsa' },
                         { label: 'Fill in the blanks (TypeIn)', path: '/admin/practice/listening/fibl' },
-                        { label: 'Highlight Incorrect Summary', path: '/admin/practice/listening/hiw' },
-                        { label: 'Select Missing Words', path: '/admin/practice/listening/smw' },
+                        { label: 'Highlight Correct Summary', path: '/admin/practice/listening/hcs' },
+                        { label: 'Select Missing Words', path: '/admin/practice/listening/smw' }, 
+                        { label: 'Highlight Incorrect Words', path: '/admin/practice/listening/hiw' },
                         { label: 'Write From Dictation (WFD)', path: '/admin/practice/listening/wfd' },
                     ]
                 }

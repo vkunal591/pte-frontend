@@ -47,6 +47,11 @@ import ManageReadingReorder from './pages/Admin/Practise/Reading/ManageReadingRe
 import ManageSST from './pages/Admin/Practise/Listening/ManageSST';
 import ManageListeningMCMA from './pages/Admin/Practise/Listening/MultipleChoiceMultipleAns';
 import ManageListeningMCSA from './pages/Admin/Practise/Listening/MultipleChoiceSingleAns';
+import ManageHighlightSummary from './pages/Admin/Practise/Listening/HighlightInCorrectSummary';
+import ManageHIW from './pages/Admin/Practise/Listening/HighlightIncorrectWord';
+import ManageSelectMissingWord from './pages/Admin/Practise/Listening/SelectMissingWord';
+import ManageWriteFromDictation from './pages/Admin/Practise/Listening/WriteFromDictation';
+import ManageListeningFIB from './pages/Admin/Practise/Listening/FIBL';
 
 
 
@@ -111,6 +116,7 @@ function App() {
           <Route path="practice/speaking/di" element={<ManageDescribeImage />} />
           <Route path="orders" element={<VoucherOrders />} />
           <Route path="practice/speaking/rl" element={<ManageRetellLecture />} />
+
           <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
           <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
           <Route path="practice/speaking/rts" element={<ManageRespondSituation />} />
@@ -120,10 +126,23 @@ function App() {
           <Route path="practice/reading/mcma" element={<ManageReadingMCMA />} />
           <Route path="practice/reading/mcsa" element={<ManageReadingMCSA />} />
           <Route path="practice/reading/fibd" element={<ManageReadingFIBDragDrop />} />
-          <Route path="practice/reading/reorder" element={<ManageReadingReorder />} />
-          {/* <Route path="practice/listening/sst" element={<ManageSST />} />
+           <Route path="practice/listening/sst" element={<ManageSST />} />
+
+           <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
+            <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
+            <Route path="practice/speaking/rts" element={<ManageRespondSituation />} />
+            <Route path="practice/writing/we" element={<ManageWriteEssay />} />
+            <Route path="practice/writing/swt" element={<ManageSummarizeText />} />
+            <Route path="practice/reading/fibrw" element={<ManageReadingFIBDropdown />} />
+             <Route path="practice/listening/sst" element={<ManageSST />} />
+             <Route path="practice/listening/hcs" element={<ManageHighlightSummary />} />
+             <Route path="practice/listening/hiw" element={<ManageHIW />} />
+             <Route path="practice/listening/smw" element={<ManageSelectMissingWord />} />
+              <Route path="practice/listening/wfd" element={<ManageWriteFromDictation />} />
+               <Route path="practice/listening/fibl" element={<ManageListeningFIB />} />
+
              <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
-             <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} /> */}
+             <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
 
         </Route>
 

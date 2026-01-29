@@ -49,7 +49,7 @@ const ManageSST = () => {
     });
 
     try {
-      if (editingId) await axios.put(`/api/sst/${editingId}`, fd);
+      if (editingId) await axios.put(`/api/sst/questions/${editingId}`, fd);
       else await axios.post("/api/sst/add", fd);
       setIsModalOpen(false);
       fetchQuestions();
