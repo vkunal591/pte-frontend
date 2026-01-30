@@ -97,7 +97,7 @@ const ManageSpeaking = () => {
       if (editingId) {
         await axios.put(`/api/question/speaking/${editingId}`, payload);
       } else {
-        await axios.post("/api/speaking", payload); // Assuming this is your create endpoint
+        await axios.post("/api/question/speaking", payload); // Assuming this is your create endpoint
       }
       setIsModalOpen(false);
       await fetchSpeakingSections(); // Re-fetch sections to update list
