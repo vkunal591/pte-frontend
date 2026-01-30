@@ -52,6 +52,10 @@ import ManageHIW from './pages/Admin/Practise/Listening/HighlightIncorrectWord';
 import ManageSelectMissingWord from './pages/Admin/Practise/Listening/SelectMissingWord';
 import ManageWriteFromDictation from './pages/Admin/Practise/Listening/WriteFromDictation';
 import ManageListeningFIB from './pages/Admin/Practise/Listening/FIBL';
+import ManageSpeaking from './pages/Admin/MockTest/SectionalTests/Speaking';
+import ManageListening from './pages/Admin/MockTest/SectionalTests/Listening';
+import ManageReading from './pages/Admin/MockTest/SectionalTests/Reading';
+import ManageWriting from './pages/Admin/MockTest/SectionalTests/Writing';
 
 
 
@@ -142,8 +146,18 @@ function App() {
           <Route path="practice/listening/wfd" element={<ManageWriteFromDictation />} />
           <Route path="practice/listening/fibl" element={<ManageListeningFIB />} />
 
+
           <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
           <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
+
+             <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
+             <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
+             
+              <Route path='mock/sectional/listening' element={<ManageListening/>} />
+              <Route path='mock/sectional/speaking' element={<ManageSpeaking/>} />
+              <Route path='mock/sectional/reading' element={<ManageReading/>} />
+                <Route path='mock/sectional/writing' element={<ManageWriting/>} />
+
 
         </Route>
 
