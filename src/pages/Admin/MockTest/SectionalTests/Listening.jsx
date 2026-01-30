@@ -152,7 +152,7 @@ const ManageListening = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Listening section?")) {
       try {
-        await axios.delete(`/api/listening/${id}`);
+        await axios.delete(`/api/question/listening/${id}`);
         fetchListeningSections();
         fetchUnusedQuestions(); // Re-fetch unused questions after deletion
       } catch (err) {
