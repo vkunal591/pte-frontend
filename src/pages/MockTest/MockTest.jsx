@@ -35,6 +35,7 @@ export default function MockTest() {
 
   const [activeMainTab, setActiveMainTab] = useState("Full Tests");
   const [activeSubTab, setActiveSubTab] = useState(null);
+  const [resultsCategory, setResultsCategory] = useState("All"); // NEW: Filter for Section Results
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -102,8 +103,6 @@ export default function MockTest() {
       setLoading(false);
     }
   };
-
-  /* ================= FETCH FULL MOCK TESTS ================= */
 
   /* ================= FETCH FULL MOCK TESTS ================= */
 
@@ -225,28 +224,38 @@ export default function MockTest() {
                   key={t}
                   label={t}
                   active={activeSubTab === t || (t === "Full Tests" && !activeSubTab)}
-                  onClick={() => setActiveSubTab(t)}
+                  onClick={() => {
+                    setActiveSubTab(t);
+                    setResultsCategory(t === "Question Tests" ? "Q_ALL" : "All");
+                  }}
                 />
               ))}
             </div>
           )}
+
           {activeMainTab === "Results" && activeSubTab === "Section Tests" && (
             <div className="flex flex-wrap gap-2 mt-2">
               {SECTION_TABS.map(tab => (
                 <SubTab
                   key={tab}
                   label={tab}
-                  // Use a different state or reuse? 
-                  // It gets complex re-using activeSubTab for 2 levels.
-                  // I'll update MockTestResults to accept "filter" prop.
-                  // For now let's just stick to "Full Tests" and "Section Tests" as top level inside Results.
-                  // If Section Tests, show ALL section tests sorted by date.
-                  active={false} // Disable sub-filtering for now to keep simple, or implement later.
-                  onClick={() => { }}
+                  active={resultsCategory === tab}
+                  onClick={() => setResultsCategory(tab)}
                 />
               ))}
-              {/* Actually, let's keep it simple. Results -> List everything or simple toggle. */}
-              {/* I will implement the sub-tab logic in MockTestResults internally or update MockTest to handle it. */}
+            </div>
+          )}
+
+          {activeMainTab === "Results" && activeSubTab === "Question Tests" && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {QUESTION_TABS.map(tab => (
+                <SubTab
+                  key={tab.id}
+                  label={tab.id}
+                  active={resultsCategory === tab.id}
+                  onClick={() => setResultsCategory(tab.id)}
+                />
+              ))}
             </div>
           )}
 
@@ -267,7 +276,11 @@ export default function MockTest() {
 
         {/* RESULTS VIEW */}
         {activeMainTab === "Results" && (
-          <MockTestResults activeMainTab={activeMainTab} activeSubTab={activeSubTab} />
+          <MockTestResults
+            activeMainTab={activeMainTab}
+            activeSubTab={activeSubTab}
+            categoryFilter={resultsCategory} // Pass filter
+          />
         )}
 
         {/* QUESTIONS VIEW */}

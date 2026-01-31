@@ -8,17 +8,20 @@ import {
     getUserListeningResults
 } from "../../services/api";
 
-const MockTestResults = ({ activeMainTab, activeSubTab }) => {
+const MockTestResults = ({ activeMainTab, activeSubTab, categoryFilter }) => {
     const navigate = useNavigate();
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchResults();
-    }, [activeMainTab, activeSubTab]);
+    }, [activeMainTab, activeSubTab, categoryFilter]);
 
     const fetchResults = async () => {
         setLoading(true);
+        // Clear previous results to avoid mixing types
+        setResults([]);
+
         try {
             // Default to "Full Tests" if activeSubTab is null (initial load of Results tab)
             const currentTab = activeSubTab || "Full Tests";
@@ -27,61 +30,135 @@ const MockTestResults = ({ activeMainTab, activeSubTab }) => {
                 const data = await getUserFullMockTestResults();
                 setResults(data.data || []);
             } else if (currentTab === "Question Tests") {
-                // Fetch ALL results but filter/identify them as Question Tests?
-                // Actually, due to our backend change, we can fetch all speaking/listening/reading/writing results.
-                // The ones with `testModel` as 'RS', 'DI', 'FIBL', etc. are question tests.
-                // The ones with `testModel` as 'Speaking' or 'Listening' are Section tests.
-                // Note: The backend endpoints return `SpeakingResult` documents.
+                try {
+                    const resultsSettled = await Promise.allSettled([
+                        getUserReadingResults(),
+                        getUserSpeakingResults(),
+                        getUserWritingResults(),
+                        getUserListeningResults()
+                    ]);
 
-                const [r, s, w, l] = await Promise.all([
-                    getUserReadingResults(),
-                    getUserSpeakingResults(),
-                    getUserWritingResults(),
-                    getUserListeningResults()
-                ]);
+                    const [rResult, sResult, wResult, lResult] = resultsSettled;
 
-                const combined = [
-                    ...(r.data || []).map(i => ({ ...i, type: 'Reading', rawType: i.testModel || 'Reading' })),
-                    ...(s.data || []).map(i => ({ ...i, type: 'Speaking', rawType: i.testModel || 'Speaking' })),
-                    ...(w.data || []).map(i => ({ ...i, type: 'Writing', rawType: i.testModel || 'Writing' })),
-                    ...(l.data || []).map(i => ({ ...i, type: 'Listening', rawType: i.testModel || 'Listening' }))
-                ];
+                    const rData = rResult.status === 'fulfilled' ? (rResult.value.data || []) : [];
+                    const sData = sResult.status === 'fulfilled' ? (sResult.value.data || []) : [];
+                    const wData = wResult.status === 'fulfilled' ? (wResult.value.data || []) : [];
+                    const lData = lResult.status === 'fulfilled' ? (lResult.value.data || []) : [];
 
-                const questionTests = combined.filter(item =>
-                    item.rawType !== 'Speaking' &&
-                    item.rawType !== 'Listening' &&
-                    item.rawType !== 'Reading' &&
-                    item.rawType !== 'Writing'
-                );
+                    console.log("Raw Reading Data:", rData); // DEBUG
+                    console.log("Raw Speaking Data:", sData); // DEBUG
 
-                questionTests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setResults(questionTests);
+                    const normalizeType = (type) => {
+                        if (!type) return 'Unknown';
+                        if (type === 'ReadingFIBDropdown') return 'FIBD';
+                        if (type === 'FIBRW') return 'FIB';
+                        if (type === 'ReadingFIBDragDrop') return 'FIBD'; // Drag & Drop -> FIBD
+                        if (type === 'FIBD') return 'FIBD';
+                        if (type === 'Reading') return 'Reading';
+                        return type;
+                    };
+
+                    const combined = [
+                        ...rData.map(i => ({ ...i, type: 'Reading', rawType: normalizeType(i.testModel) || 'Reading', originalModel: i.testModel })),
+                        ...sData.map(i => ({ ...i, type: 'Speaking', rawType: normalizeType(i.testModel) || 'Speaking', originalModel: i.testModel })),
+                        ...wData.map(i => ({ ...i, type: 'Writing', rawType: normalizeType(i.testModel) || 'Writing', originalModel: i.testModel })),
+                        ...lData.map(i => ({ ...i, type: 'Listening', rawType: normalizeType(i.testModel) || 'Listening', originalModel: i.testModel }))
+                    ];
+
+                    console.log("Combined Data:", combined); // DEBUG
+                    console.log("Mapped Types:", combined.map(c => `Model: ${c.originalModel} -> Raw: ${c.rawType}`)); // DEBUG
+
+                    // 1. Whitelist: Only include known Question Types
+                    const VALID_QUESTION_TYPES = [
+                        'RA', 'RS', 'DI', 'RL', 'SGD', 'RTS',
+                        'WE', 'SWT',
+                        'FIB', 'FIBD', 'RO', 'MCM', 'MCS', // Reading types (FIBD for Dropdown/DragDrop)
+                        'WFD', 'SST', 'FIBL', 'HIW', 'HCS', 'SMW' // Listening types
+                    ];
+
+                    let questionTests = combined.filter(item =>
+                        VALID_QUESTION_TYPES.includes(item.rawType)
+                    );
+
+
+                    // 2. Apply Type Filter
+                    if (categoryFilter && categoryFilter !== "All" && categoryFilter !== "Q_ALL") {
+                        questionTests = questionTests.filter(item => item.rawType === categoryFilter);
+                    }
+
+                    questionTests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    setResults(questionTests);
+
+                } catch (err) {
+                    console.error("Error fetching question tests:", err);
+                }
 
             } else if (currentTab === "Section Tests") {
+                console.log("Fetching section tests...");
                 // Existing logic for Section Tests
-                const [r, s, w, l] = await Promise.all([
-                    getUserReadingResults(),
-                    getUserSpeakingResults(),
-                    getUserWritingResults(),
-                    getUserListeningResults()
-                ]);
-                const combined = [
-                    ...(r.data || []).map(i => ({ ...i, type: 'Reading', rawType: i.testModel || 'Reading' })),
-                    ...(s.data || []).map(i => ({ ...i, type: 'Speaking', rawType: i.testModel || 'Speaking' })),
-                    ...(w.data || []).map(i => ({ ...i, type: 'Writing', rawType: i.testModel || 'Writing' })),
-                    ...(l.data || []).map(i => ({ ...i, type: 'Listening', rawType: i.testModel || 'Listening' }))
-                ];
+                try {
+                    const resultsSettled = await Promise.allSettled([
+                        getUserReadingResults(),
+                        getUserSpeakingResults(),
+                        getUserWritingResults(),
+                        getUserListeningResults()
+                    ]);
 
-                // Filter for Section Tests (Only generic Section tests)
-                const sectionTests = combined.filter(item =>
-                    item.rawType === 'Speaking' ||
-                    item.rawType === 'Listening' ||
-                    item.rawType === 'Reading' ||
-                    item.rawType === 'Writing'
-                );
+                    const [rResult, sResult, wResult, lResult] = resultsSettled;
 
-                sectionTests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setResults(sectionTests);
+                    // Log errors for rejected promises
+                    if (rResult.status === 'rejected') console.error("Reading fetch failed:", rResult.reason);
+                    if (sResult.status === 'rejected') console.error("Speaking fetch failed:", sResult.reason);
+                    if (wResult.status === 'rejected') console.error("Writing fetch failed:", wResult.reason);
+                    if (lResult.status === 'rejected') console.error("Listening fetch failed:", lResult.reason);
+
+                    // Extract data or empty array if failed
+                    const rData = rResult.status === 'fulfilled' ? (rResult.value.data || []) : [];
+                    const sData = sResult.status === 'fulfilled' ? (sResult.value.data || []) : [];
+                    const wData = wResult.status === 'fulfilled' ? (wResult.value.data || []) : [];
+                    const lData = lResult.status === 'fulfilled' ? (lResult.value.data || []) : [];
+
+                    console.log("Raw Responses (Settled):", { rData, sData, wData, lData });
+
+                    const combined = [
+                        ...rData.map(i => ({ ...i, type: 'Reading', rawType: i.testModel || 'Reading' })),
+                        ...sData.map(i => ({ ...i, type: 'Speaking', rawType: i.testModel || 'Speaking' })),
+                        ...wData.map(i => ({ ...i, type: 'Writing', rawType: i.testModel || 'Writing' })),
+                        ...lData.map(i => ({ ...i, type: 'Listening', rawType: i.testModel || 'Listening' }))
+                    ];
+
+                    console.log("Combined Results (pre-filter):", combined);
+
+                    // Filter for Section Tests (Only generic Section tests)
+                    let sectionTests = combined.filter(item =>
+                        item.rawType === 'Speaking' ||
+                        item.rawType === 'Listening' ||
+                        item.rawType === 'Reading' ||
+                        item.rawType === 'Writing'
+                    );
+
+                    const normalizeType = (type) => {
+                        if (!type) return 'Unknown';
+                        if (type === 'ReadingFIBDropdown') return 'FIBD';
+                        if (type === 'FIBRW') return 'FIB';
+                        if (type === 'ReadingFIBDragDrop') return 'FIB';
+                        if (type === 'Reading') return 'Reading';
+                        // Add more mappings as implemented
+                        return type;
+                    }; console.log("Filtered Section Tests (Type Check):", sectionTests);
+
+                    // --- Apply Category Filter ---
+                    if (categoryFilter && categoryFilter !== "All") {
+                        console.log("Applying category filter:", categoryFilter);
+                        sectionTests = sectionTests.filter(item => item.type === categoryFilter);
+                    }
+
+                    sectionTests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    console.log("Final Results to Set:", sectionTests);
+                    setResults(sectionTests);
+                } catch (err) {
+                    console.error("Error fetching section tests:", err);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch results", error);
@@ -147,9 +224,9 @@ const MockTestResults = ({ activeMainTab, activeSubTab }) => {
                                         (item.type === 'Speaking' || item.rawType === 'readaloud' || item.rawType === 'RL') ? 'bg-purple-100 text-purple-700' :
                                             item.type === 'Writing' ? 'bg-yellow-100 text-yellow-700' :
                                                 item.type === 'Listening' ? 'bg-pink-100 text-pink-700' :
-                                                    'bg-emerald-100 text-emerald-700' // Full Test
+                                                    'bg-emerald-100 text-emerald-700'
                                         }`}>
-                                        {item.type || "Full Mock"}
+                                        {item.rawType || "Full Mock"}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-slate-500">
