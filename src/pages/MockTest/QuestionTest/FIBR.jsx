@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 /**
  * FIB Mock Test Component
@@ -9,6 +10,9 @@ export default function FIBR({ backendData }) {
   const [globalTimeLeft, setGlobalTimeLeft] = useState(35 * 60); // 35:00 as per image
   const [userAnswers, setUserAnswers] = useState({}); // { questionIdx: { blankIdx: value } }
   const [isFinished, setIsFinished] = useState(false);
+
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
 
   const questions = backendData?.fibQuestions || [];
   const currentQuestion = questions[currentIdx];
@@ -42,11 +46,33 @@ export default function FIBR({ backendData }) {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setIsFinished(true);
-      console.log("Final Answers:", userAnswers);
-      // Here you would typically call your submit API
+      submitTest();
     }
   };
+
+  const submitTest = async () => {
+    setIsFinished(true);
+    setIsLoadingResult(true);
+    try {
+      // Backend expects { testId, answers: { 0: {1: "val"}, ... } }
+      const { data } = await api.post("/question/fib/submit", {
+        testId: backendData._id || questions[0]?._id, // Fallback if needed
+        answers: userAnswers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("FIB Submit Error", err);
+      alert("Error submitting test. Check console.");
+    } finally {
+      setIsLoadingResult(false);
+    }
+  };
+
+  if (isFinished) {
+    return <ResultScreen testResult={testResult} isLoadingResult={isLoadingResult} />;
+  }
 
   if (!currentQuestion) return <div className="p-10">Loading...</div>;
 
@@ -101,13 +127,32 @@ export default function FIBR({ backendData }) {
   );
 }
 
+function ResultScreen({ testResult, isLoadingResult }) {
+  if (isLoadingResult) return <div className="p-20 text-center font-bold text-[#008199]">Calculating Scores...</div>;
+
+  const score = testResult?.overallScore || 0;
+  const max = testResult?.totalMaxScore || 0;
+
+  return (
+    <div className="p-10 text-center">
+      <h1 className="text-2xl font-bold mb-6">Test Result</h1>
+      <div className="flex justify-center gap-4">
+        <div className="p-4 border rounded bg-blue-50 text-xl">
+          Your Score: <span className="font-bold">{score}</span> / {max}
+        </div>
+      </div>
+      <button onClick={() => window.location.reload()} className="mt-8 bg-[#008199] text-white px-8 py-2 rounded uppercase font-bold text-xs">Retake Practice</button>
+    </div>
+  );
+}
+
 /**
  * Helper component to parse text and inject dropdowns
  */
 function FIBTextRenderer({ text, blanks, selectedValues, onSelect }) {
   // Split text by the placeholder "____"
   const parts = text.split("____");
-  
+
   return (
     <>
       {parts.map((part, i) => (
@@ -170,9 +215,8 @@ function FIBDropdown({ options, selectedValue, onSelect }) {
                 onSelect(opt);
                 setIsOpen(false);
               }}
-              className={`px-2 py-1 text-[13px] cursor-pointer hover:bg-[#cccccc] ${
-                selectedValue === opt ? "bg-[#d3eaf0]" : ""
-              }`}
+              className={`px-2 py-1 text-[13px] cursor-pointer hover:bg-[#cccccc] ${selectedValue === opt ? "bg-[#d3eaf0]" : ""
+                }`}
             >
               {opt}
             </div>

@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 const SGDGroup = ({ backendData }) => {
   const [step, setStep] = useState(0); // 0: Intro, 1: Exam, 2: Result
   const [currentIdx, setCurrentIdx] = useState(0);
-  
+
   // Timers
   const [introTime, setIntroTime] = useState(120); // 2:00 for Intro
   const [globalTime, setGlobalTime] = useState(30 * 60); // 30:00 for Exam
-  
+
+  const [userAnswers, setUserAnswers] = useState([]);
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
+
   const questions = backendData?.summarizeGroupDiscussionQuestions || [];
 
   // Logic for Step 0: Intro Timer
@@ -27,7 +32,7 @@ const SGDGroup = ({ backendData }) => {
     if (step === 1 && globalTime > 0) {
       timer = setInterval(() => setGlobalTime((prev) => prev - 1), 1000);
     } else if (step === 1 && globalTime === 0) {
-      setStep(2);
+      finishExam();
     }
     return () => clearInterval(timer);
   }, [step, globalTime]);
@@ -38,11 +43,38 @@ const SGDGroup = ({ backendData }) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleNext = () => {
+  const handleNext = (answerData) => {
+    const newAnswer = {
+      questionId: questions[currentIdx]._id,
+      audioUrl: "https://example.com/mock-audio.mp3"
+    };
+
+    const updatedAnswers = [...userAnswers, newAnswer];
+    setUserAnswers(updatedAnswers);
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx((prev) => prev + 1);
     } else {
-      setStep(2);
+      finishExam(updatedAnswers);
+    }
+  };
+
+  const finishExam = async (finalAnswers = userAnswers) => {
+    setStep(2);
+    setIsLoadingResult(true);
+    try {
+      const { data } = await api.post("/question/sgd/submit", {
+        testId: backendData._id || questions[0]._id,
+        answers: finalAnswers
+      });
+
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
+    } finally {
+      setIsLoadingResult(false);
     }
   };
 
@@ -94,9 +126,7 @@ const SGDGroup = ({ backendData }) => {
         )}
 
         {step === 2 && (
-          <div className="flex-grow flex items-center justify-center font-bold text-2xl text-gray-400">
-            Practice Finished. Generating performance report...
-          </div>
+          <ResultScreen testResult={testResult} isLoadingResult={isLoadingResult} />
         )}
       </div>
     </div>
@@ -105,8 +135,8 @@ const SGDGroup = ({ backendData }) => {
 
 /* --- CORE SGD CONTROLLER --- */
 function SGDController({ question, onNext }) {
-  const [phase, setPhase] = useState("BEGINNING"); // BEGINNING, PLAYING, PREPARING, RECORDING
-  const [timeLeft, setTimeLeft] = useState(3); // 3s initial countdown
+  const [phase, setPhase] = useState("BEGINNING");
+  const [timeLeft, setTimeLeft] = useState(3);
   const [audioProgress, setAudioProgress] = useState(0);
 
   const audioRef = useRef(null);
@@ -114,28 +144,45 @@ function SGDController({ question, onNext }) {
   const streamRef = useRef(null);
 
   useEffect(() => {
+    // Reset
+    setPhase("BEGINNING");
+    setTimeLeft(3);
+    setAudioProgress(0);
+
     const audio = new Audio(question.audioUrl);
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
-      setAudioProgress((audio.currentTime / audio.duration) * 100);
+      if (audio.duration) {
+        setAudioProgress((audio.currentTime / audio.duration) * 100);
+      }
     };
 
     const handleEnded = () => {
       setPhase("PREPARING");
-      setTimeLeft(10); // Standard 10s prep after audio for SGD
+      setTimeLeft(10);
+    };
+
+    const handleError = (e) => {
+      console.error("Audio Load Error", e);
+      setPhase("PREPARING");
+      setTimeLeft(10);
     };
 
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError);
 
-    // Initial 3s Countdown logic
+    // Initial 3s Countdown
     const startCountdown = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(startCountdown);
           setPhase("PLAYING");
-          audio.play().catch(e => console.error("Audio Error:", e));
+          audio.play().catch(e => {
+            console.error("Autoplay Error:", e);
+            handleEnded();
+          });
           return 0;
         }
         return prev - 1;
@@ -147,6 +194,7 @@ function SGDController({ question, onNext }) {
       audio.pause();
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError);
       stopMic();
     };
   }, [question]);
@@ -161,10 +209,11 @@ function SGDController({ question, onNext }) {
             clearInterval(timer);
             if (phase === "PREPARING") {
               startRecording();
-            } else {
-              onNext(); // Auto-move to next when recording time ends
+              return 120; // 2 mins recording
+            } else if (phase === "RECORDING") {
+              onNext();
+              return 0;
             }
-            return 0;
           }
           return prev - 1;
         });
@@ -175,7 +224,7 @@ function SGDController({ question, onNext }) {
 
   const startRecording = async () => {
     setPhase("RECORDING");
-    setTimeLeft(120); // 2 minutes (120s) for SGD response
+    // setTimeLeft(120); // Handled in timer transition above
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -183,13 +232,17 @@ function SGDController({ question, onNext }) {
       mediaRecorderRef.current = recorder;
       recorder.start();
     } catch (err) {
-      alert("Microphone access is required to capture your summary.");
+      console.warn("Mic access denied", err);
     }
   };
 
   const stopMic = () => {
-    if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop();
-    if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+    }
   };
 
   return (
@@ -221,7 +274,7 @@ function SGDController({ question, onNext }) {
             </div>
           </div>
           <div className="w-4 h-4 bg-white/20 flex flex-col justify-around p-0.5 rounded-sm">
-             {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
+            {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
           </div>
         </div>
       </div>
@@ -250,13 +303,29 @@ function Footer({ onNext, disabled }) {
         onClick={onNext}
         disabled={disabled}
         className={`px-10 py-1 text-sm rounded border shadow-md font-bold uppercase tracking-wider transition-all
-            ${disabled 
-              ? "bg-[#99b5bc] text-white border-transparent cursor-not-allowed opacity-60" 
-              : "bg-[#008199] text-white border-[#006b81] hover:bg-[#006b81]"
-            }`}
+            ${disabled
+            ? "bg-[#99b5bc] text-white border-transparent cursor-not-allowed opacity-60"
+            : "bg-[#008199] text-white border-[#006b81] hover:bg-[#006b81]"
+          }`}
       >
         Next
       </button>
+    </div>
+  );
+}
+
+function ResultScreen({ testResult, isLoadingResult }) {
+  if (isLoadingResult) return <div className="p-20 text-center font-bold text-[#008199]">Calculating Scores...</div>;
+
+  return (
+    <div className="p-10 text-center">
+      <h1 className="text-2xl font-bold mb-6">Test Result</h1>
+      <div className="flex justify-center gap-4">
+        <div className="p-4 border rounded bg-blue-50">Fluency: {testResult?.sectionScores?.fluency || 0}</div>
+        <div className="p-4 border rounded bg-primary-50">Pronunciation: {testResult?.sectionScores?.pronunciation || 0}</div>
+        <div className="p-4 border rounded bg-indigo-50">Content: {testResult?.sectionScores?.content || 0}</div>
+      </div>
+      <button onClick={() => window.location.reload()} className="mt-8 bg-[#008199] text-white px-8 py-2 rounded uppercase font-bold text-xs">Retake Practice</button>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 // --- WRITE FROM DICTATION COMPONENT ---
 export default function WFD({ backendData }) {
@@ -47,6 +48,9 @@ export default function WFD({ backendData }) {
     }
   };
 
+
+
+  // ... inside the component
   const handleSubmit = async () => {
     setPhase("RESULT");
     setIsLoadingResult(true);
@@ -57,13 +61,16 @@ export default function WFD({ backendData }) {
         content: answers[q._id] || "",
       }));
 
-      const response = await fetch("/api/writing/calculate-wfd", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ testId: backendData._id, answers: formattedAnswers }),
+      const { data } = await api.post("/question/wfd/submit", {
+        testId: backendData._id,
+        answers: formattedAnswers
       });
-      const result = await response.json();
-      setTestResult(result.data);
+
+      if (data.success) {
+        setTestResult({
+          totalScore: data.data.overallScore
+        });
+      }
     } catch (err) {
       console.error("Scoring Error:", err);
     } finally {
@@ -187,7 +194,7 @@ function AudioPlayer({ url }) {
 
   useEffect(() => {
     const audio = audioRef.current;
-    
+
     // Auto play after a short delay (simulating PTE prep time)
     const timeout = setTimeout(() => {
       audio.play();
@@ -219,8 +226,8 @@ function AudioPlayer({ url }) {
         </div>
       </div>
       <div className="flex items-center gap-2 w-full justify-center text-white">
-         <span className="material-icons text-lg">volume_up</span>
-         <div className="w-32 bg-white/30 h-1 rounded-full"><div className="w-1/2 bg-white h-full" /></div>
+        <span className="material-icons text-lg">volume_up</span>
+        <div className="w-32 bg-white/30 h-1 rounded-full"><div className="w-1/2 bg-white h-full" /></div>
       </div>
     </div>
   );
@@ -238,8 +245,8 @@ function ResultScreen({ testResult, isLoadingResult }) {
     <div className="max-w-2xl mx-auto p-10 text-center border mt-10 rounded-lg shadow-sm bg-white">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Practice Result</h1>
       <div className="p-6 border rounded bg-blue-50 text-left">
-         <p className="text-sm font-bold uppercase text-gray-500 mb-2">Listening & Writing Score</p>
-         <p className="text-3xl font-bold text-[#008199]">{testResult?.totalScore || 0} / 90</p>
+        <p className="text-sm font-bold uppercase text-gray-500 mb-2">Listening & Writing Score</p>
+        <p className="text-3xl font-bold text-[#008199]">{testResult?.totalScore || 0} / 90</p>
       </div>
       <button onClick={() => window.location.reload()} className="mt-8 bg-[#fb8c00] text-white px-8 py-2 rounded uppercase font-bold text-xs">Retake Practice</button>
     </div>

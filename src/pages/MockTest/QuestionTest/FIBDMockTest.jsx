@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
+import api from "../../../services/api";
 
 // --- MAIN COMPONENT ---
 export default function FIBDMockTest({ backendData }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [globalTimeLeft, setGlobalTimeLeft] = useState(30 * 60); // 30 Minutes
-  const [userAnswers, setUserAnswers] = useState({}); // { [blankIndex]: word }
+  const [userAnswers, setUserAnswers] = useState({}); // { [questionIdx]: { [blankIndex]: word } }
   const [isFinished, setIsFinished] = useState(false);
+
+  // Results State
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
 
   const questions = backendData?.ReadingFIBDragDrops || [];
   const currentQuestion = questions[currentIdx];
@@ -18,11 +23,6 @@ export default function FIBDMockTest({ backendData }) {
     }, 1000);
     return () => clearInterval(timer);
   }, [globalTimeLeft, isFinished]);
-
-  // Reset answers when moving to a new question
-  useEffect(() => {
-    setUserAnswers({});
-  }, [currentIdx]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -42,14 +42,18 @@ export default function FIBDMockTest({ backendData }) {
     const source = e.dataTransfer.getData("source");
 
     setUserAnswers((prev) => {
-      const newAnswers = { ...prev };
-      // If word was in another blank, clear that blank
-      if (source !== "pool") {
-        delete newAnswers[source];
+      const currentQAnswers = prev[currentIdx] || {};
+      const newQAnswers = { ...currentQAnswers };
+
+      // If word was in another blank (in same question), clear that blank
+      // Note: Simplifying source check to rely on blank index if source is numeric
+      if (source !== "pool" && source !== blankIndex) {
+        delete newQAnswers[source];
       }
-      // Set word to current blank
-      newAnswers[blankIndex] = word;
-      return newAnswers;
+
+      newQAnswers[blankIndex] = word;
+
+      return { ...prev, [currentIdx]: newQAnswers };
     });
   };
 
@@ -58,9 +62,10 @@ export default function FIBDMockTest({ backendData }) {
     const source = e.dataTransfer.getData("source");
     if (source !== "pool") {
       setUserAnswers((prev) => {
-        const newAnswers = { ...prev };
-        delete newAnswers[source];
-        return newAnswers;
+        const currentQAnswers = prev[currentIdx] || {};
+        const newQAnswers = { ...currentQAnswers };
+        delete newQAnswers[source];
+        return { ...prev, [currentIdx]: newQAnswers };
       });
     }
   };
@@ -69,17 +74,60 @@ export default function FIBDMockTest({ backendData }) {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setIsFinished(true);
-      alert("Test Completed! Check console for results.");
-      console.log("User Results:", userAnswers);
+      submitTest();
+    }
+  };
+
+  const submitTest = async () => {
+    setIsFinished(true);
+    setIsLoadingResult(true);
+    try {
+      const { data } = await api.post("/question/fibd/submit", {
+        testId: backendData._id || questions[0]?._id,
+        answers: userAnswers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
+    } finally {
+      setIsLoadingResult(false);
     }
   };
 
   // Helper to get remaining words for the pool
-  const assignedWords = Object.values(userAnswers);
+  const currentQAnswers = userAnswers[currentIdx] || {};
+  const assignedWords = Object.values(currentQAnswers);
   const poolWords = (currentQuestion?.options || []).filter(
     (opt) => !assignedWords.includes(opt)
   );
+
+  if (isFinished) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-sans">
+        {isLoadingResult ? (
+          <div className="text-xl font-bold text-[#008199]">Calculating Scores...</div>
+        ) : (
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Test Result</h1>
+            <div className="p-8 border rounded-lg bg-blue-50 shadow-md inline-block">
+              <div className="text-4xl font-bold text-[#008199] mb-2">{testResult?.overallScore || 0} / {testResult?.totalMaxScore || 0}</div>
+              <div className="text-gray-600 uppercase tracking-wide text-sm font-semibold">Your Score</div>
+            </div>
+            <div className="mt-10">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-[#008199] text-white px-8 py-3 rounded uppercase font-bold text-sm shadow hover:bg-[#006b81] transition-colors"
+              >
+                Retake Practice
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!currentQuestion) return <div className="p-10">Loading Question...</div>;
 
@@ -104,7 +152,7 @@ export default function FIBDMockTest({ backendData }) {
       <div className="flex-grow bg-white p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           <p className="text-[13px] mb-8 leading-relaxed">
-            In the text below some words are missing. Drag words from the box below to the appropriate place in the text. 
+            In the text below some words are missing. Drag words from the box below to the appropriate place in the text.
             To undo an answer choice, drag the word back to the box below the text.
           </p>
 
@@ -114,7 +162,7 @@ export default function FIBDMockTest({ backendData }) {
               const match = part.match(/\[(\d+)\]/);
               if (match) {
                 const blankIndex = match[1];
-                const word = userAnswers[blankIndex];
+                const word = currentQAnswers[blankIndex];
                 return (
                   <div
                     key={i}
@@ -139,7 +187,7 @@ export default function FIBDMockTest({ backendData }) {
           </div>
 
           {/* Pool Area (Dark Box) */}
-          <div 
+          <div
             className="bg-[#333333] p-6 min-h-[140px] rounded-sm flex flex-wrap gap-4 items-start"
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDropOnPool}
@@ -167,7 +215,7 @@ export default function FIBDMockTest({ backendData }) {
           onClick={handleNext}
           className="bg-[#008199] text-white px-10 py-1.5 rounded-md text-sm font-bold shadow-md hover:bg-[#006b81] tracking-wide"
         >
-          {currentIdx === questions.length - 1 ? "Submit" : "Next"}
+          {currentIdx === questions.length - 1 ? "Finish" : "Next"}
         </button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../../../services/api";
 
 export default function RO({ backendData }) {
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -6,7 +7,11 @@ export default function RO({ backendData }) {
   const [sourceList, setSourceList] = useState([]);
   const [targetList, setTargetList] = useState([]);
   const [selectedId, setSelectedId] = useState(null); // Track which item is clicked for arrow controls
+
+  const [userAnswers, setUserAnswers] = useState({}); // { [questionIdx]: [id1, id2...] }
   const [isFinished, setIsFinished] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
 
   const questions = backendData?.reorderQuestions || [];
   const currentQuestion = questions[currentIdx];
@@ -87,14 +92,69 @@ export default function RO({ backendData }) {
     if (from === "target") moveLeft(id);
   };
 
+  const saveCurrentAnswer = () => {
+    // Save ordered IDs
+    const currentOrder = targetList.map(t => t.id);
+    setUserAnswers(prev => ({
+      ...prev,
+      [currentIdx]: currentOrder
+    }));
+    return { ...userAnswers, [currentIdx]: currentOrder }; // Return updated state proxy
+  };
+
   const handleNext = () => {
+    const updatedAnswers = saveCurrentAnswer();
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setIsFinished(true);
-      console.log("Final Order Submitted");
+      submitTest(updatedAnswers);
     }
   };
+
+  const submitTest = async (finalAnswers) => {
+    setIsFinished(true);
+    setIsLoadingResult(true);
+    try {
+      const { data } = await api.post("/question/ro/submit", {
+        testId: backendData._id || questions[0]?._id,
+        answers: finalAnswers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
+    } finally {
+      setIsLoadingResult(false);
+    }
+  };
+
+  if (isFinished) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-sans">
+        {isLoadingResult ? (
+          <div className="text-xl font-bold text-[#008199]">Calculating Scores...</div>
+        ) : (
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Test Result</h1>
+            <div className="p-8 border rounded-lg bg-blue-50 shadow-md inline-block">
+              <div className="text-4xl font-bold text-[#008199] mb-2">{testResult?.overallScore || 0} / {testResult?.totalMaxScore || 0}</div>
+              <div className="text-gray-600 uppercase tracking-wide text-sm font-semibold">Your Score</div>
+            </div>
+            <div className="mt-10">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-[#008199] text-white px-8 py-3 rounded uppercase font-bold text-sm shadow hover:bg-[#006b81] transition-colors"
+              >
+                Retake Practice
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!currentQuestion) return <div className="p-10">Loading...</div>;
 
@@ -126,10 +186,10 @@ export default function RO({ backendData }) {
             {/* SOURCE BOX */}
             <div className="flex flex-col items-center flex-1">
               <span className="text-[13px] font-bold mb-2">Source</span>
-              <div 
+              <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDropToSource}
-                className="w-full min-h-[400px] border-2 border-black p-4 flex flex-col gap-3 bg-white"
+                className="w-full min-h-[400px] border-2 border-black p-4 flex flex-col gap-3 bg-white shadow-sm"
               >
                 {sourceList.map((s, index) => (
                   <div
@@ -137,9 +197,10 @@ export default function RO({ backendData }) {
                     draggable
                     onDragStart={(e) => onDragStart(e, s.id, "source")}
                     onClick={() => setSelectedId(s.id)}
-                    className={`p-3 border-2 border-dashed border-gray-400 rounded-lg text-[13px] cursor-pointer hover:bg-gray-50 transition-colors ${selectedId === s.id ? 'bg-blue-50 border-blue-400' : ''}`}
+                    className={`p-3 border border-gray-300 rounded text-[14px] cursor-pointer hover:bg-gray-50 transition-colors shadow-sm
+                        ${selectedId === s.id ? 'bg-[#e6f7ff] border-[#1890ff] ring-1 ring-[#1890ff]' : 'bg-gray-50'}`}
                   >
-                    {index + 1}) {s.text}
+                    {s.text}
                   </div>
                 ))}
               </div>
@@ -147,30 +208,40 @@ export default function RO({ backendData }) {
 
             {/* MIDDLE CONTROLS */}
             <div className="flex flex-col gap-4 px-2">
-                <button onClick={moveRight.bind(null, selectedId)} className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200">
-                    <span className="material-icons text-lg">arrow_forward</span>
-                </button>
-                <button onClick={moveLeft.bind(null, selectedId)} className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200">
-                    <span className="material-icons text-lg">arrow_back</span>
-                </button>
+              <button
+                onClick={() => moveRight(selectedId)}
+                className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 shadow-sm transition-colors text-gray-600 hover:text-[#008199]"
+                title="Move Right"
+              >
+                <span className="material-icons text-2xl">arrow_forward</span>
+              </button>
+              <button
+                onClick={() => moveLeft(selectedId)}
+                className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 shadow-sm transition-colors text-gray-600 hover:text-[#008199]"
+                title="Move Left"
+              >
+                <span className="material-icons text-2xl">arrow_back</span>
+              </button>
             </div>
 
             {/* TARGET BOX */}
             <div className="flex flex-col items-center flex-1">
               <span className="text-[13px] font-bold mb-2">Target</span>
-              <div 
+              <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDropToTarget}
-                className="w-full min-h-[400px] border-2 border-black p-4 flex flex-col gap-3 bg-white"
+                className="w-full min-h-[400px] border-2 border-black p-4 flex flex-col gap-3 bg-white shadow-sm"
               >
-                {targetList.map((s) => (
+                {targetList.map((s, idx) => (
                   <div
                     key={s.id}
                     draggable
                     onDragStart={(e) => onDragStart(e, s.id, "target")}
                     onClick={() => setSelectedId(s.id)}
-                    className={`p-3 border-2 border-gray-300 rounded-lg text-[13px] cursor-pointer hover:bg-gray-50 transition-colors ${selectedId === s.id ? 'bg-blue-50 border-blue-400' : ''}`}
+                    className={`p-3 border border-gray-300 rounded text-[14px] cursor-pointer hover:bg-gray-50 transition-colors shadow-sm
+                        ${selectedId === s.id ? 'bg-[#e6f7ff] border-[#1890ff] ring-1 ring-[#1890ff]' : 'bg-white'}`}
                   >
+                    <span className="font-bold text-[#008199] mr-2">{idx + 1})</span>
                     {s.text}
                   </div>
                 ))}
@@ -179,12 +250,20 @@ export default function RO({ backendData }) {
 
             {/* RIGHT CONTROLS */}
             <div className="flex flex-col gap-4 px-2">
-                <button onClick={moveUp} className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200">
-                    <span className="material-icons text-lg">arrow_upward</span>
-                </button>
-                <button onClick={moveDown} className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200">
-                    <span className="material-icons text-lg">arrow_downward</span>
-                </button>
+              <button
+                onClick={moveUp}
+                className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 shadow-sm transition-colors text-gray-600 hover:text-[#008199]"
+                title="Move Up"
+              >
+                <span className="material-icons text-2xl">arrow_upward</span>
+              </button>
+              <button
+                onClick={moveDown}
+                className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-100 shadow-sm transition-colors text-gray-600 hover:text-[#008199]"
+                title="Move Down"
+              >
+                <span className="material-icons text-2xl">arrow_downward</span>
+              </button>
             </div>
           </div>
         </div>
@@ -199,7 +278,7 @@ export default function RO({ backendData }) {
           onClick={handleNext}
           className="bg-[#008199] text-white px-10 py-1.5 rounded-md text-sm font-bold shadow-md hover:bg-[#006b81] tracking-wide"
         >
-          {currentIdx === questions.length - 1 ? "Submit" : "Next"}
+          {currentIdx === questions.length - 1 ? "Finish" : "Next"}
         </button>
       </div>
     </div>

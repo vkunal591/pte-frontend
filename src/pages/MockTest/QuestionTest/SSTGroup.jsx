@@ -1,15 +1,44 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 const SSTGroup = ({ backendData }) => {
   const [step, setStep] = useState(0); // 0: Intro, 1: Exam, 2: Result
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({}); // { [idx]: "text" }
+
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
+
   const questions = backendData?.summarizeSpokenTextQuestion || [];
 
-  const handleNext = () => {
+  const handleNext = (textValue) => {
+    // Save current answer
+    const updatedAnswers = { ...userAnswers, [currentIdx]: textValue };
+    setUserAnswers(updatedAnswers);
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx((prev) => prev + 1);
     } else {
-      setStep(2);
+      submitTest(updatedAnswers);
+    }
+  };
+
+  const submitTest = async (finalAnswers) => {
+    setStep(2);
+    setIsLoadingResult(true);
+    try {
+      const { data } = await api.post("/question/sst/submit", {
+        testId: backendData._id || questions[0]?._id,
+        answers: finalAnswers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("SST Submit Error", err);
+      alert("Error submitting test. Check console.");
+    } finally {
+      setIsLoadingResult(false);
     }
   };
 
@@ -30,9 +59,7 @@ const SSTGroup = ({ backendData }) => {
         />
       )}
       {step === 2 && (
-        <div className="flex-grow flex items-center justify-center text-2xl font-bold text-gray-400">
-          Test Completed. Analyzing Writing...
-        </div>
+        <ResultScreen testResult={testResult} isLoading={isLoadingResult} />
       )}
     </div>
   );
@@ -87,14 +114,14 @@ function SSTController({ question, currentIdx, total, onNext }) {
       setExamTime((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          onNext(); // Auto-submit
+          onNext(text); // Auto-submit with current text
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [onNext]);
+  }, [onNext, text]);
 
   // Beginning Countdown (15s)
   useEffect(() => {
@@ -189,9 +216,64 @@ function SSTController({ question, currentIdx, total, onNext }) {
         </div>
       </div>
 
-      <Footer onNext={onNext} />
+      <Footer onNext={() => onNext(text)} />
     </div>
   );
+}
+
+/* --- RESULT SCREEN --- */
+function ResultScreen({ testResult, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-bold text-[#008199] text-xl">
+        AI is analyzing your summary...
+      </div>
+    );
+  }
+
+  const score = testResult?.overallScore || 0;
+  // Use first question result to show breakdown if available
+  const details = testResult?.scores?.[0] || {};
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
+      <div className="bg-white p-10 rounded-lg shadow-xl max-w-2xl w-full text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Analysis Report</h1>
+
+        <div className="flex justify-center mb-10">
+          <div className="w-32 h-32 rounded-full border-4 border-[#008199] flex flex-col items-center justify-center text-[#008199]">
+            <span className="text-4xl font-bold">{score}</span>
+            <span className="text-xs uppercase font-medium mt-1">Total Score</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 gap-4 mb-8 text-sm">
+          <ScoreCard label="Content" score={details.contentScore} max={2} />
+          <ScoreCard label="Form" score={details.formScore} max={2} />
+          <ScoreCard label="Grammar" score={details.grammarScore} max={2} />
+          <ScoreCard label="Vocab" score={details.vocabScore} max={2} />
+          <ScoreCard label="Spelling" score={details.spellingScore} max={2} />
+        </div>
+
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-[#008199] text-white px-8 py-3 rounded shadow hover:bg-[#006b81] font-bold uppercase tracking-wider"
+        >
+          Practice Again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScoreCard({ label, score, max }) {
+  return (
+    <div className="flex flex-col items-center p-3 bg-gray-50 rounded border border-gray-100">
+      <span className="font-bold text-lg text-gray-700">{score?.toFixed(1) || 0}</span>
+      <span className="text-[10px] text-gray-500 uppercase mt-1">/ {max}</span>
+      <span className="text-xs font-medium text-gray-600 mt-2">{label}</span>
+    </div>
+  )
 }
 
 /* --- REUSABLE UI COMPONENTS --- */

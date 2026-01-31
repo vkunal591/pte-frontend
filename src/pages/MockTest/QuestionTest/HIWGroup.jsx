@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../services/api";
 
 const HIWGroup = ({ backendData }) => {
   const [step, setStep] = useState(0); // 0: Intro, 1: Exam, 2: Result
   const [currentIdx, setCurrentIdx] = useState(0);
-  
+
   // Timers
   const [introTime, setIntroTime] = useState(120); // 2:00 for Intro
   const [globalTime, setGlobalTime] = useState(35 * 60); // 35:00 for Exam
-  
+
+  const [userAnswers, setUserAnswers] = useState({}); // { [idx]: [1, 5, 9] }
+  const [testResult, setTestResult] = useState(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(true);
+
   const questions = backendData?.highlightIncorrectWordsQuestions || [];
 
   // Intro Timer Logic
@@ -27,7 +32,7 @@ const HIWGroup = ({ backendData }) => {
     if (step === 1 && globalTime > 0) {
       timer = setInterval(() => setGlobalTime((prev) => prev - 1), 1000);
     } else if (step === 1 && globalTime === 0) {
-      setStep(2);
+      submitTest(); // Auto submit
     }
     return () => clearInterval(timer);
   }, [step, globalTime]);
@@ -38,11 +43,34 @@ const HIWGroup = ({ backendData }) => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleNext = () => {
+  const handleNext = (currentSelection) => {
+    // Save current selection for this question
+    const updatedAnswers = { ...userAnswers, [currentIdx]: currentSelection };
+    setUserAnswers(updatedAnswers);
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx((prev) => prev + 1);
     } else {
-      setStep(2);
+      submitTest(updatedAnswers);
+    }
+  };
+
+  const submitTest = async (finalAnswers = userAnswers) => {
+    setStep(2);
+    setIsLoadingResult(true);
+    try {
+      const { data } = await api.post("/question/hiw/submit", {
+        testId: backendData._id || questions[0]?._id,
+        answers: finalAnswers
+      });
+      if (data.success) {
+        setTestResult(data.data);
+      }
+    } catch (err) {
+      console.error("HIW Submit Error", err);
+      alert("Error submitting test. Check console.");
+    } finally {
+      setIsLoadingResult(false);
     }
   };
 
@@ -57,7 +85,7 @@ const HIWGroup = ({ backendData }) => {
           <div className="flex items-center gap-1">
             <span className="text-xs opacity-70">🕒 Time Remaining</span>
             <span className="font-mono text-white text-base">
-                {step === 0 ? formatTime(introTime) : formatTime(globalTime)}
+              {step === 0 ? formatTime(introTime) : formatTime(globalTime)}
             </span>
           </div>
           <div className="bg-[#666] px-2 py-0.5 rounded text-xs text-white">
@@ -94,9 +122,7 @@ const HIWGroup = ({ backendData }) => {
         )}
 
         {step === 2 && (
-          <div className="flex-grow flex items-center justify-center font-bold text-2xl text-gray-400">
-            Practice Completed. Analyzing selections...
-          </div>
+          <ResultScreen testResult={testResult} isLoading={isLoadingResult} />
         )}
       </div>
     </div>
@@ -185,7 +211,7 @@ function HIWController({ question, onNext }) {
             </div>
           </div>
           <div className="w-4 h-4 bg-white/20 flex flex-col justify-around p-0.5 rounded-sm">
-             {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
+            {[...Array(9)].map((_, i) => <div key={i} className="bg-white h-[1px] w-full opacity-50" />)}
           </div>
         </div>
       </div>
@@ -196,16 +222,64 @@ function HIWController({ question, onNext }) {
           <span
             key={index}
             onClick={() => toggleWord(index)}
-            className={`cursor-pointer px-1 rounded transition-colors ${
-              selectedIndices.includes(index) ? "bg-[#ffff00] text-black" : "hover:bg-gray-100"
-            }`}
+            className={`cursor-pointer px-1 rounded transition-colors ${selectedIndices.includes(index) ? "bg-[#ffff00] text-black" : "hover:bg-gray-100"
+              }`}
           >
             {word}{" "}
           </span>
         ))}
       </div>
 
-      <Footer onNext={onNext} />
+      <Footer onNext={() => onNext(selectedIndices)} />
+    </div>
+  );
+}
+
+/* --- RESULT SCREEN --- */
+function ResultScreen({ testResult, isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-bold text-[#008199] text-xl">
+        Calculating Scores...
+      </div>
+    );
+  }
+
+  const score = testResult?.overallScore || 0;
+  // Just show totals
+  const totalCorrect = testResult?.scores?.reduce((acc, curr) => acc + (curr.answers?.correctCount || 0), 0) || 0;
+  const totalIncorrect = testResult?.scores?.reduce((acc, curr) => acc + (curr.answers?.incorrectCount || 0), 0) || 0;
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+      <div className="bg-white p-10 rounded-lg shadow-xl border max-w-lg w-full text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Test Result</h1>
+
+        <div className="flex justify-center mb-10">
+          <div className="w-32 h-32 rounded-full border-4 border-[#008199] flex flex-col items-center justify-center text-[#008199]">
+            <span className="text-4xl font-bold">{score}</span>
+            <span className="text-xs uppercase font-medium mt-1">Total Score</span>
+          </div>
+        </div>
+
+        <div className="flex justify-around mb-8">
+          <div className="text-center">
+            <div className="text-xl font-bold text-green-600">{totalCorrect}</div>
+            <div className="text-xs text-gray-500 uppercase">Correct</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xl font-bold text-red-600">{totalIncorrect}</div>
+            <div className="text-xs text-gray-500 uppercase">Wrong</div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-[#008199] text-white px-8 py-3 rounded shadow hover:bg-[#006b81] font-bold uppercase tracking-wider"
+        >
+          Practice Again
+        </button>
+      </div>
     </div>
   );
 }

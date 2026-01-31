@@ -47,9 +47,6 @@ const MockTestResults = ({ activeMainTab, activeSubTab }) => {
                     ...(l.data || []).map(i => ({ ...i, type: 'Listening', rawType: i.testModel || 'Listening' }))
                 ];
 
-                // Filter for Question Tests (exclude generic Section tests)
-                // Section tests usually have testModel = 'Speaking', 'Listening', etc.
-                // Question tests have 'RS', 'DI', 'FIBL', etc.
                 const questionTests = combined.filter(item =>
                     item.rawType !== 'Speaking' &&
                     item.rawType !== 'Listening' &&
