@@ -57,6 +57,14 @@ import ManageListening from './pages/Admin/MockTest/SectionalTests/Listening';
 import ManageReading from './pages/Admin/MockTest/SectionalTests/Reading';
 import ManageWriting from './pages/Admin/MockTest/SectionalTests/Writing';
 import ManageFullMockTest from './pages/Admin/MockTest/ManageFullMockTest';
+import ManageDescribeImages from './pages/Admin/MockTest/Question Tests/DI';
+import ManageSummarizeGroupDiscussions from './pages/Admin/MockTest/Question Tests/SGD';
+import ManageRTSs from './pages/Admin/MockTest/Question Tests/RTS';
+import ManageRepeatSentences from './pages/Admin/MockTest/Question Tests/RS';
+import ManageWriteEssays from './pages/Admin/MockTest/Question Tests/WE';
+import ManageRLs from './pages/Admin/MockTest/Question Tests/RA';
+import ManageRLTFs from './pages/Admin/MockTest/Question Tests/RL';
+import ManageSWTs from './pages/Admin/MockTest/Question Tests/SWT';
 
 
 
@@ -158,6 +166,14 @@ function App() {
           <Route path='mock/sectional/speaking' element={<ManageSpeaking />} />
           <Route path='mock/sectional/reading' element={<ManageReading />} />
           <Route path='mock/sectional/writing' element={<ManageWriting />} />
+          <Route path='mock/qtest/di' element={<ManageDescribeImages />} />
+            <Route path='mock/qtest/sgd' element={<ManageSummarizeGroupDiscussions />} />
+              <Route path='mock/qtest/rts' element={<ManageRTSs />} />
+                <Route path='mock/qtest/rs' element={<ManageRepeatSentences />} />
+                  <Route path='mock/qtest/we' element={<ManageWriteEssays />} />
+                    <Route path='mock/qtest/ra' element={<ManageRLs />} />
+                      <Route path='mock/qtest/rl' element={<ManageRLTFs />} />
+                        <Route path='mock/qtest/swt' element={<ManageSWTs />} />
           <Route path='mock/full/manage' element={<ManageFullMockTest />} />
           <Route path='mock/full' element={<Navigate to="/admin/mock/full/manage" replace />} />
 
