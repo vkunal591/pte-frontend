@@ -247,12 +247,12 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
       </div>
 
       {/* ---------------- LAST ATTEMPTS HISTORY ---------------- */}
-      {question.lastAttempts && question.lastAttempts.length > 0 && (
+      {question.lastAttempts  && (
         <div className="mt-12">
           <h3 className="font-bold text-lg mb-4">Previous Attempts</h3>
           <WrittenAttemptHistory
             question={question}
-            module="summarize"
+            module="summarize-text"
             onSelectAttempt={handleSelectAttempt}
           />
         </div>

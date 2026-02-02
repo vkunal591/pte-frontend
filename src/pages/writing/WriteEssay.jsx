@@ -252,7 +252,7 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
           <h3 className="font-bold text-lg mb-4">Previous Attempts</h3>
           <WrittenAttemptHistory
             question={question}
-            module="summarize"
+            module="essay"
             onSelectAttempt={handleSelectAttempt}
           />
         </div>
