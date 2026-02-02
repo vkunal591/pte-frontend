@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Clock } from "lucide-react";
+import {
+  ArrowLeft, Clock, RefreshCw, ChevronLeft, ChevronRight, Eye, Languages
+} from "lucide-react";
 import { useSelector } from "react-redux";
 import { submitEssayAttempt } from "../../services/api";
 import WrittenAttemptHistory from "./History";
@@ -8,7 +10,7 @@ const MAX_TIME = 1200; // 20 minutes
 const MIN_WORDS = 1;
 const MAX_WORDS = 500;
 
-const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
+const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
   const { user } = useSelector((state) => state.auth);
 
   const [started, setStarted] = useState(true);
@@ -17,6 +19,11 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
   const [status, setStatus] = useState("prep"); // prep | writing | submitting | result
   const [result, setResult] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
+
+  // Reset session when question changes
+  useEffect(() => {
+    resetSession();
+  }, [question]);
 
   // Timer
   useEffect(() => {
@@ -36,6 +43,15 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
   }, [started, timeLeft, status]);
 
   const wordCount = answer.trim() ? answer.trim().split(/\s+/).length : 0;
+
+  const resetSession = () => {
+    setStatus("prep");
+    setStarted(true);
+    setTimeLeft(3);
+    setAnswer("");
+    setResult(null);
+    setIsLocked(false);
+  };
 
   const formatTime = (sec) => {
     const m = Math.floor(sec / 60);
@@ -108,13 +124,7 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
         >
           <ArrowLeft size={20} />
         </button>
-        <button
-          onClick={() => { setStatus("prep"); setStarted(true); setTimeLeft(3); setAnswer(""); setResult(null); setIsLocked(false); }}
-          className="p-2 hover:bg-slate-100 rounded-full text-slate-500"
-          title="Redo / Restart"
-        >
-          <Clock size={20} />
-        </button>
+
 
 
 
@@ -244,6 +254,54 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
           </div>
         )}
 
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="flex items-center justify-between pb-10">
+        {/* LEFT SIDE: Translate, Answer, Redo */}
+        <div className="flex items-center gap-4">
+          {/* Translate (Static) */}
+          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <Languages size={18} />
+            </div>
+            <span className="text-xs font-medium">Translate</span>
+          </button>
+
+          {/* Answer (Static) */}
+          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <Eye size={18} />
+            </div>
+            <span className="text-xs font-medium">Answer</span>
+          </button>
+
+          {/* Redo */}
+          <button onClick={resetSession} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <RefreshCw size={18} />
+            </div>
+            <span className="text-xs font-medium">Redo</span>
+          </button>
+        </div>
+
+
+        {/* RIGHT SIDE: Prev, Next */}
+        <div className="flex items-center gap-4">
+          <button onClick={previousButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <ChevronLeft size={20} />
+            </div>
+            <span className="text-xs font-medium">Previous</span>
+          </button>
+
+          <button onClick={nextButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <ChevronRight size={20} />
+            </div>
+            <span className="text-xs font-medium">Next</span>
+          </button>
+        </div>
       </div>
 
       {/* ---------------- LAST ATTEMPTS HISTORY ---------------- */}
