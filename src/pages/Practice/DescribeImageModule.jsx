@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import {
-    ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Square, Mic, Info,
+    ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Pause, Square, Mic, Info, // Added Pause icon
     BarChart2, CheckCircle, Volume2, PlayCircle, SkipForward, History, Eye, BookOpen
 } from 'lucide-react';
 import { submitDescribeImageAttempt } from '../../services/api';
@@ -17,6 +17,10 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
     const { transcript, resetTranscript } = useSpeechRecognition();
+
+    const [recordingStartTime, setRecordingStartTime] = useState(null); // New state to track recording start
+    const [elapsedRecordingTime, setElapsedRecordingTime] = useState(0); // New state for elapsed recording time
+    const MIN_RECORDING_DURATION = 20; // Minimum recording duration in seconds
 
     useEffect(() => {
         let interval;
@@ -41,6 +45,21 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
         return () => clearInterval(interval);
     }, [status, timeLeft, maxTime]);
 
+    // Effect to update elapsed recording time
+    useEffect(() => {
+        let recordingInterval;
+        if (status === 'recording' && recordingStartTime) {
+            recordingInterval = setInterval(() => {
+                setElapsedRecordingTime(Math.floor((Date.now() - recordingStartTime) / 1000));
+            }, 1000);
+        } else {
+            setElapsedRecordingTime(0); // Reset when not recording
+            setRecordingStartTime(null);
+        }
+        return () => clearInterval(recordingInterval);
+    }, [status, recordingStartTime]);
+
+
     const handleStartClick = () => {
         setStatus('prep');
         setTimeLeft(25);
@@ -55,8 +74,13 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
     const startRecording = async () => {
         resetTranscript();
         setStatus('recording');
+
         setTimeLeft(0); // Count UP starts at 0
+
+        setTimeLeft(40); // Max recording time
+
         setMaxTime(40);
+        setRecordingStartTime(Date.now()); // Set recording start time
         SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -69,21 +93,28 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
     };
 
     const stopRecording = () => {
+        // Only allow stopping if minimum duration is met or max time is reached (handled by timer)
+        if (elapsedRecordingTime < MIN_RECORDING_DURATION && status === 'recording') {
+            // Optionally provide feedback to the user that they need to speak longer
+            console.log(`Please speak for at least ${MIN_RECORDING_DURATION} seconds.`);
+            return; // Prevent stopping
+        }
+
         SpeechRecognition.stopListening();
         if (mediaRecorderRef.current?.state !== 'inactive') {
             mediaRecorderRef.current.stop();
             setStatus('submitting');
+            setRecordingStartTime(null); // Reset recording start time
 
             mediaRecorderRef.current.onstop = async () => {
                 try {
                     const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
                     const formData = new FormData();
 
-                    // Match these keys exactly with your Controller's req.body expectations
                     formData.append('audio', audioBlob, 'recording.webm');
                     formData.append('questionId', question._id);
                     formData.append('transcript', transcript || '');
-                    formData.append("userId", user?._id); // Target User ID
+                    formData.append("userId", user?._id);
 
                     const response = await submitDescribeImageAttempt(formData);
                     setResult(response.data);
@@ -117,6 +148,13 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
             };
         }
     };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
 
     return (
         <div className="max-w-6xl mx-auto space-y-4 px-4 pb-10">
@@ -172,7 +210,20 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                                     {(status === 'prep' || status === 'prep_start') ? (
                                         <button onClick={startRecording} className="text-slate-400 hover:text-black text-sm underline underline-offset-8">Skip Preparation</button>
                                     ) : (
-                                        <button onClick={stopRecording} className="bg-red-600 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg"><Square size={16} fill="white" /> Finish</button>
+                                        <button
+                                            onClick={stopRecording}
+                                            disabled={elapsedRecordingTime < MIN_RECORDING_DURATION} // Disable if less than 20 seconds
+                                            className={`px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors ${
+                                                elapsedRecordingTime < MIN_RECORDING_DURATION
+                                                    ? 'bg-red-300 text-red-100 cursor-not-allowed'
+                                                    : 'bg-red-600 hover:bg-red-700 text-white'
+                                            }`}
+                                        >
+                                            <Square size={16} fill="white" /> Finish
+                                            {elapsedRecordingTime < MIN_RECORDING_DURATION && (
+                                                <span className="text-xs ml-2">({MIN_RECORDING_DURATION - elapsedRecordingTime}s more)</span>
+                                            )}
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -233,11 +284,8 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                             </div>
                         </div>
 
-                        {/* Player for recorded audio */}
-                        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex items-center gap-6 shadow-sm">
-                            <span className="text-xs font-bold text-slate-400 uppercase w-20">My Answer</span>
-                            <audio src={result.studentAudio?.url} controls className="flex-1 h-10" />
-                        </div>
+                        {/* Player for recorded audio (Interactive) */}
+                        <AudioPlayerCard label="My Answer" url={result.studentAudio?.url} isAnswer />
 
                         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
                             <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
@@ -302,7 +350,7 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
             </div>
 
             {/* History Table */}
-            {status === 'idle' && question.lastAttempts?.length > 0 && (
+            {question.lastAttempts && (
                 <div className="mt-8 space-y-4">
                     {/* Header */}
                     <h3 className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest px-4">
@@ -312,6 +360,7 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                     {/* ImageAttemptHistory component */}
                     <ImageAttemptHistory
                         question={question}
+                        module={"image"}
                         onSelectAttempt={handleSelectAttempt}
                     />
                 </div>
@@ -338,8 +387,8 @@ const ControlBtn = ({ icon, label, onClick, className = "" }) => {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl 
-      bg-slate-100 text-slate-700 font-semibold shadow-sm 
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl
+      bg-slate-100 text-slate-700 font-semibold shadow-sm
       hover:bg-slate-800 hover:text-white transition-all ${className}`}
         >
             {icon}
@@ -347,5 +396,95 @@ const ControlBtn = ({ icon, label, onClick, className = "" }) => {
         </button>
     );
 };
+
+// Re-using the interactive AudioPlayerCard from previous components
+const AudioPlayerCard = ({ label, url, isAnswer }) => {
+    const audioRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    useEffect(() => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.play().catch(err => console.error("Playback blocked", err));
+            } else {
+                audioRef.current.pause();
+            }
+        }
+    }, [isPlaying]);
+
+    const handleLoadedMetadata = () => {
+        if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+        }
+    };
+
+    const handleTimeUpdate = () => {
+        if (audioRef.current) {
+            setCurrentTime(audioRef.current.currentTime);
+        }
+    };
+
+    const handleEnded = () => {
+        setIsPlaying(false);
+        setCurrentTime(0); // Reset to start
+    };
+
+    const handleSliderChange = (e) => {
+        const time = parseFloat(e.target.value);
+        if (audioRef.current) {
+            audioRef.current.currentTime = time;
+            setCurrentTime(time);
+        }
+    };
+
+    const formatTime = (seconds) => {
+        if (isNaN(seconds) || seconds < 0) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
+    return (
+        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex items-center gap-6 shadow-sm">
+            <audio
+                ref={audioRef}
+                src={url}
+                onLoadedMetadata={handleLoadedMetadata}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                preload="metadata" // Load metadata to get duration without playing
+                className="hidden"
+            />
+            <div className="flex-1 flex flex-col sm:flex-row items-center gap-3">
+                <span className="text-xs font-bold text-slate-400 uppercase sm:w-20 flex-shrink-0">{label}</span>
+                <div className="flex items-center gap-3 flex-grow">
+                    <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-300 transition-colors"
+                    >
+                        {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                    </button>
+                    <div className="flex-1">
+                        <input
+                            type="range"
+                            min="0"
+                            max={duration || 0}
+                            step="0.1"
+                            value={currentTime}
+                            onChange={handleSliderChange}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-700 hover:accent-slate-800 transition-all"
+                        />
+                    </div>
+                    <div className="text-sm text-slate-500 tabular-nums">
+                        {formatTime(currentTime)} / {formatTime(duration)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 export default DescribeImageModule;

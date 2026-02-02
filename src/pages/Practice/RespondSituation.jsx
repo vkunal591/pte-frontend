@@ -203,7 +203,7 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                         <ArrowLeft size={20} />
                     </button>
                     <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                        Summarize Spoken Text <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
+                        Respons To Situation <span className="text-xs font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded">Ai+</span>
                     </h1>
                 </div>
             </div>
@@ -387,9 +387,10 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                 <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton} />
             </div>
 
-            {question.lastAttempts && question.lastAttempts.length > 0 && status === 'idle' && (
+            {question.lastAttempts  && (
                 <ImageAttemptHistory
                     question={question}
+                    module={"respond-situation"}
                     onSelectAttempt={(attempt) => { setResult(attempt); setStatus('result'); }}
                 />
             )}
