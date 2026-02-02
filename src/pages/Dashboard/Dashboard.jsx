@@ -85,46 +85,54 @@ const Dashboard = () => {
             <div className="flex flex-col gap-8">
                 {/* Main Content (Top Section) */}
                 <div className="w-full">
-                    {/* Welcome Banner */}
-                    <div className="bg-gradient-to-r from-primary-600 to-purple-500 rounded-3xl p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-purple-200">
-                        {/* Decorative circles */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+                    {/* Welcome Banner Redesigned */}
+                    <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 md:p-12 text-white shadow-2xl mb-8">
+                        {/* Background Decor */}
+                        <div className="absolute top-0 right-0 -mt-20 -mr-20 h-96 w-96 rounded-full bg-purple-500/30 blur-3xl" />
+                        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-80 w-80 rounded-full bg-indigo-500/20 blur-3xl" />
 
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h1 className="text-2xl font-bold">Hi {displayName}, 👋</h1>
-                                    </div>
-                                    <div className="text-4xl font-bold mb-4">
-                                        Let’s Target <span className="text-yellow-300">65+</span> Score
-                                    </div>
+                        <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+                            {/* Left: Text & Welcome */}
+                            <div className="space-y-6 max-w-2xl">
+                                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm backdrop-blur-md border border-white/10 font-medium text-purple-200">
+                                    <span className="animate-wave">👋</span> <span>Welcome back, {displayName}</span>
                                 </div>
-                                <div className="hidden md:flex gap-4">
-                                    <button className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm transition-colors">
-                                        <span className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs">🎯</span>
-                                        Set Target Score
+                                <h1 className="text-4xl font-extrabold leading-tight md:text-5xl tracking-tight">
+                                    Ready to crush your <br />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-300">PTE Score?</span>
+                                </h1>
+                                <p className="text-lg text-slate-300 max-w-md leading-relaxed">
+                                    Start your practice session now and get one step closer to your dream score. Consistency is key!
+                                </p>
+
+                                <div className="flex flex-wrap gap-4 pt-2">
+                                    <button
+                                        onClick={() => navigate('/practice')}
+                                        className="bg-white text-slate-900 px-8 py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] active:scale-95"
+                                    >
+                                        Start Practice Now
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                                     </button>
-                                    <button className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm transition-colors">
-                                        <span className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center text-white text-xs">🎤</span>
-                                        Check Microphone
+                                    <button className="px-6 py-3.5 rounded-xl font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 transition-colors flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
+                                        Check Mic
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-                                <div>
-                                    <h2 className="text-xl font-bold mb-1">Start strong and stay consistent!</h2>
-                                    <p className="text-purple-100">Practice regularly and watch your skills improve.</p>
+                            {/* Right: Target Score / Info Card */}
+                            <div className="relative mt-8 md:mt-0">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 blur-xl rounded-full" />
+                                <div className="relative glass-card p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl flex flex-col items-center gap-2 min-w-[200px] hover:bg-white/10 transition-colors cursor-pointer group">
+                                    <div className="text-sm font-medium text-purple-200 uppercase tracking-widest">Target Score</div>
+                                    <div className="text-6xl font-black text-white group-hover:scale-110 transition-transform duration-300">
+                                        65<span className="text-3xl align-top text-yellow-400">+</span>
+                                    </div>
+                                    <button className="text-xs text-white/50 group-hover:text-white mt-2 flex items-center gap-1.5 transition-colors bg-white/5 px-3 py-1 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
+                                        Edit Goal
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => navigate('/practice')}
-                                    className="bg-white text-primary-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors flex items-center gap-2 shadow-lg"
-                                >
-                                    Start Practice Now
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" /></svg>
-                                </button>
                             </div>
                         </div>
                     </div>
