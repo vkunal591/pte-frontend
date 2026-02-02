@@ -421,20 +421,30 @@ const ReadAloudSession = () => {
   // Timer Logic
   useEffect(() => {
     let interval;
-    if (isStarted && (status === 'prep' || status === 'recording') && timeLeft > 0) {
+    // Prep uses countdown
+    if (isStarted && status === 'prep' && timeLeft > 0) {
       interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    } else if (timeLeft === 0) {
-      if (status === 'prep') startRecording();
-      if (status === 'recording') stopRecording();
     }
+    // Recording uses count-up
+    else if (isStarted && status === 'recording' && timeLeft < maxTime) {
+      interval = setInterval(() => setTimeLeft((prev) => prev + 1), 1000);
+    }
+    // Handle switching
+    else if (status === 'prep' && timeLeft === 0) {
+      startRecording();
+    }
+    else if (status === 'recording' && timeLeft >= maxTime) {
+      stopRecording();
+    }
+
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, timeLeft, isStarted]);
+  }, [status, timeLeft, isStarted, maxTime]);
 
   const startRecording = () => {
     setIsStarted(true);
     setStatus('recording');
-    setTimeLeft(40);
+    setTimeLeft(0); // Start at 0 for count-up
     setMaxTime(40);
     resetTranscript();
     SpeechRecognition.startListening({ continuous: true });
@@ -510,7 +520,7 @@ const ReadAloudSession = () => {
   if (loading) return <div className="p-8 text-center">Loading Question...</div>;
   if (!question) return <div className="p-8 text-center text-red-500">Question not found</div>;
 
-  const progressPercent = ((maxTime - timeLeft) / maxTime) * 100;
+  const progressPercent = ((timeLeft) / maxTime) * 100; // Count-up Logic
 
   // what modal should display
   const view = selectedAttempt;
@@ -610,7 +620,7 @@ const ReadAloudSession = () => {
                 <div className="flex flex-col items-center justify-center space-y-6">
                   <div className="flex items-center gap-3 text-red-600 animate-pulse">
                     <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                    <span className="font-bold text-lg">Recording... 00:{timeLeft}</span>
+                    <span className="font-bold text-lg">Recording... {timeLeft} / {maxTime}</span>
                   </div>
 
                   <button

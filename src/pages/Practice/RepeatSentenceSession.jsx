@@ -31,17 +31,24 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
 
     useEffect(() => {
         let interval;
-        if ((status === 'prep' || status === 'recording') && timeLeft > 0) {
+        // Prep uses countdown
+        if (status === 'prep' && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-        } else if (timeLeft === 0) {
-            if (status === 'prep') {
-                handleStartListening();
-            } else if (status === 'recording') {
-                stopRecording();
-            }
         }
+        // Recording uses count-up 
+        else if (status === 'recording' && timeLeft < maxTime) {
+            interval = setInterval(() => setTimeLeft((prev) => prev + 1), 1000);
+        }
+
+        // Handle Switching
+        else if (timeLeft === 0 && status === 'prep') {
+            handleStartListening();
+        } else if (timeLeft >= maxTime && status === 'recording') {
+            stopRecording();
+        }
+
         return () => clearInterval(interval);
-    }, [status, timeLeft]);
+    }, [status, timeLeft, maxTime]);
 
     const handleStartClick = () => {
         setStatus('prep');
@@ -76,7 +83,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
-        setTimeLeft(15);
+        setTimeLeft(0); // Start at 0 for count-up
         setMaxTime(15);
         SpeechRecognition.startListening({ continuous: true });
         try {
@@ -235,7 +242,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                         <div className="flex flex-col items-center gap-6">
                             <div className="flex items-center gap-3 text-red-600">
                                 <div className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-2xl">Recording... 00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+                                <span className="font-bold text-2xl">Recording... {timeLeft < 10 ? `0${timeLeft}` : timeLeft} / {maxTime}</span>
                             </div>
                             <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
                                 <Square size={18} fill="currentColor" /> Finish Recording

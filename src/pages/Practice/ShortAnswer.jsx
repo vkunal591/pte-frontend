@@ -31,17 +31,25 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
 
     useEffect(() => {
         let interval;
-        if ((status === 'prep' || status === 'recording') && timeLeft > 0) {
+        // Prep: Countdown
+        if (status === 'prep' && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-        } else if (timeLeft === 0) {
-            if (status === 'prep') {
-                handleStartListening();
-            } else if (status === 'recording') {
-                stopRecording();
-            }
         }
+        // Recording: Count Up
+        else if (status === 'recording' && timeLeft < maxTime) {
+            interval = setInterval(() => setTimeLeft((prev) => prev + 1), 1000);
+        }
+
+        // Handle Switching
+        else if (timeLeft === 0 && status === 'prep') {
+            handleStartListening();
+        }
+        else if (timeLeft >= maxTime && status === 'recording') {
+            stopRecording();
+        }
+
         return () => clearInterval(interval);
-    }, [status, timeLeft]);
+    }, [status, timeLeft, maxTime]);
 
     const handleStartClick = () => {
         setStatus('prep');
@@ -76,7 +84,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
-        setTimeLeft(10);
+        setTimeLeft(0); // Count UP
         setMaxTime(10);
         SpeechRecognition.startListening({ continuous: true });
         try {
@@ -157,7 +165,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
         transcriptRef.current = "";
     };
 
-    const progressPercent = ((maxTime - timeLeft) / maxTime) * 100;
+    const progressPercent = (timeLeft / maxTime) * 100; // Count UP Logic
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
@@ -231,7 +239,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                         <div className="flex flex-col items-center gap-6">
                             <div className="flex items-center gap-3 text-red-600">
                                 <div className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-2xl">Recording... 00:{timeLeft < 10 ? `0${timeLeft}` : timeLeft}</span>
+                                <span className="font-bold text-2xl">Recording... {timeLeft} / {maxTime}</span>
                             </div>
                             <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
                                 <Square size={18} fill="currentColor" /> Finish Recording

@@ -37,19 +37,26 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         let interval;
         const activeStates = ['prep_start', 'prep_record', 'recording'];
 
-        if (activeStates.includes(status) && timeLeft > 0) {
+        // Prep: Countdown
+        if ((status === 'prep_start' || status === 'prep_record') && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-        } else if (timeLeft === 0) {
-            if (status === 'prep_start') {
-                handleStartAudio();
-            } else if (status === 'prep_record') {
-                startRecording();
-            } else if (status === 'recording') {
-                stopRecording();
-            }
         }
+        // Recording: Count Up
+        else if (status === 'recording' && timeLeft < maxTime) {
+            interval = setInterval(() => setTimeLeft((prev) => prev + 1), 1000);
+        }
+
+        // Transitions
+        else if (timeLeft === 0) {
+            if (status === 'prep_start') handleStartAudio();
+            else if (status === 'prep_record') startRecording();
+        }
+        else if (status === 'recording' && timeLeft >= maxTime) {
+            stopRecording();
+        }
+
         return () => clearInterval(interval);
-    }, [status, timeLeft]);
+    }, [status, timeLeft, maxTime]);
 
     const handleStartClick = () => {
         setStatus('prep_start');
@@ -116,7 +123,7 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
-        setTimeLeft(40); // 2 Minutes
+        setTimeLeft(0); // Count Up
         setMaxTime(40);
 
         SpeechRecognition.startListening({ continuous: true });
@@ -177,7 +184,7 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
-    const progressPercent = ((maxTime - timeLeft) / maxTime) * 100;
+    const progressPercent = (timeLeft / maxTime) * 100;
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
@@ -269,7 +276,7 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                         <div className="flex flex-col items-center gap-8 w-full max-w-md">
                             <div className="flex items-center gap-4 text-red-600">
                                 <div className="w-4 h-4 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)}</span>
+                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)} / {formatTime(maxTime)}</span>
                             </div>
 
                             <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">

@@ -37,19 +37,29 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
         let interval;
         const activeStates = ['prep_start', 'prep_record', 'recording'];
 
-        if (activeStates.includes(status) && timeLeft > 0) {
+        // Prep Start & Prep Record: Count Down
+        if ((status === 'prep_start' || status === 'prep_record') && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-        } else if (timeLeft === 0) {
+        }
+        // Recording: Count Up
+        else if (status === 'recording' && timeLeft < maxTime) {
+            interval = setInterval(() => setTimeLeft((prev) => prev + 1), 1000);
+        }
+
+        // State Transitions
+        else if (timeLeft === 0) {
             if (status === 'prep_start') {
                 handleStartAudio();
             } else if (status === 'prep_record') {
                 startRecording();
-            } else if (status === 'recording') {
-                stopRecording();
             }
         }
+        else if (status === 'recording' && timeLeft >= maxTime) {
+            stopRecording();
+        }
+
         return () => clearInterval(interval);
-    }, [status, timeLeft]);
+    }, [status, timeLeft, maxTime]);
 
     const handleStartClick = () => {
         setStatus('prep_start');
@@ -116,7 +126,7 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
-        setTimeLeft(40); // 2 Minutes
+        setTimeLeft(0); // Count Up
         setMaxTime(40);
 
         SpeechRecognition.startListening({ continuous: true });
@@ -177,7 +187,7 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
-    const progressPercent = ((maxTime - timeLeft) / maxTime) * 100;
+    const progressPercent = (timeLeft / maxTime) * 100; // Count Up Logic
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
@@ -268,7 +278,7 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                         <div className="flex flex-col items-center gap-8 w-full max-w-md">
                             <div className="flex items-center gap-4 text-red-600">
                                 <div className="w-4 h-4 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)}</span>
+                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)} / {formatTime(maxTime)}</span>
                             </div>
 
                             <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
