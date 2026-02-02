@@ -196,15 +196,16 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                 onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
                 onEnded={onAudioEnded}
             />
-
-            <div className="flex items-center justify-between">
-                <div>
+                 <div>
                     <h1>
                         Respond To a Situation
                     </h1>
                     <p>Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.
 </p>
                 </div>
+                
+            <div className="flex items-center justify-between">
+               
                 <div className="flex items-center gap-2">
                     <button onClick={() => setActiveSpeechQuestion(false)} className="p-2 hover:bg-slate-100 rounded-full">
                         <ArrowLeft size={20} />

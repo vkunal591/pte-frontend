@@ -207,12 +207,12 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                 onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)} // Use e.target.currentTime directly
                 onEnded={onAudioEnded}
             />
-
-            <div className="flex items-center justify-between">
                 <div>
                     <h1>Answer Short Questions</h1>
                     <p>You will hear a question. Please give a simple and short answer. Often just one or a few words is enough.</p>
                 </div>
+            <div className="flex items-center justify-between">
+                
                 <div className="flex items-center gap-2">
                     <button onClick={() => setActiveSpeechQuestion(false)} className="p-2 hover:bg-slate-100 rounded-full">
                         <ArrowLeft size={20} />

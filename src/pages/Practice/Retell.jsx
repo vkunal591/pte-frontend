@@ -222,9 +222,7 @@ console.log(question)
                 onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
                 onEnded={onAudioEnded}
             />
-
-            <div className="flex items-center justify-between">
-                <div>
+            <div>
                     <h1>
                         Re-Tell Lecture
                     </h1>
@@ -233,6 +231,9 @@ console.log(question)
 
                     </p>
                 </div>
+
+            <div className="flex items-center justify-between">
+                
                 <div className="flex items-center gap-2">
                     <button onClick={() => setActiveSpeechQuestion(false)} className="p-2 hover:bg-slate-100 rounded-full">
                         <ArrowLeft size={20} />
