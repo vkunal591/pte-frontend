@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlice"; // ✅ adjust path if needed
+import logo from "../../assets/logo.png";
 
 const MailIcon = () => (
   <svg
@@ -93,11 +94,11 @@ const SignIn = () => {
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
 
         <div className="relative z-10 text-center">
-          <div className="w-16 h-16 bg-primary-600 rounded-xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-6 shadow-xl shadow-primary-500/20">
-            &lt;
+          <div className="w-24 h-24 mx-auto mb-6">
+            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            PTE Practice
+            Pawan PTE
           </h1>
           <p className="text-slate-500 text-lg max-w-md mx-auto">
             Your gateway to academic excellence.
@@ -109,15 +110,11 @@ const SignIn = () => {
       <div className="flex flex-col justify-center items-center p-8 md:p-16 lg:p-24 bg-white relative">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <span className="text-2xl font-bold text-primary-600">
-              &lt; Gurully
-            </span>
-          </div>
+
 
           <div className="mb-10 text-center">
-            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 mx-auto mb-4 rotate-[-45deg]">
-              <span className="text-2xl font-bold">&lt;</span>
+            <div className="w-20 h-20 mx-auto mb-4">
+              <img src={logo} alt="Pawan PTE Logo" className="w-full h-full object-contain" />
             </div>
             <h2 className="text-3xl font-bold text-slate-900">
               Student <span className="text-primary-600">Sign In</span>

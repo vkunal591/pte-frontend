@@ -10,15 +10,17 @@ const navItems = [
     { name: 'Buy Vouchers', icon: <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z M6 6h12 M6 10h12 M6 14h12" />, path: '/buy-vouchers' },
 ];
 
+import logo from '../../assets/logo.png';
+
 const DashboardSidebar = () => {
     return (
         <div className="w-64 bg-white border-r border-slate-100 min-h-screen p-4 flex flex-col fixed top-0 left-0 bottom-0 z-50">
             {/* Logo */}
-            <div className="flex items-center gap-2 px-4 mb-8">
-                <div className="w-8 h-8 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-primary-600">&lt;</span>
+            <div className="flex items-center gap-3 px-4 mb-8">
+                <div className="w-10 h-10">
+                    <img src={logo} alt="Pawan PTE" className="w-full h-full object-contain" />
                 </div>
-                <span className="text-2xl font-bold text-slate-800">PTE practice</span>
+                <span className="text-xl font-bold text-slate-900">Pawan PTE</span>
             </div>
 
             {/* Navigation */}
