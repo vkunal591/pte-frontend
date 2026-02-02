@@ -20,97 +20,69 @@ import {
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
 import { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api';
 
-/** =========================
- *  Attempt History Component
- *  ========================= */
+
+
+const getCommunityAttempts = async(questionId) => {
+  const response = await axios.get(`/api/attempts/community/${questionId}`)
+  return response?.data;
+};
+
 const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('my_answer'); // 'my_answer' or 'community'
+  const [activeTab, setActiveTab] = useState('my_answer'); // my_answer | community
 
   useEffect(() => {
     if (!questionId) return;
 
-    const fetchHistory = async () => {
+    const fetchAttempts = async () => {
       setLoading(true);
       try {
-        const response = await getReadAloudHistory(questionId);
-        if (response.success) {
-          // Flatten: Each history item is a SpeakingResult, but specifically for this question we extract the relevant score object
-          const mappedHistory = response.data.map(item => {
-            // Find the specific question attempt within the result
-            const scoreItem = item.scores?.find(s => s.questionId === questionId) || item.scores?.[0]; // Fallback to first if mismatch
-            if (!scoreItem) return null;
+        const response =
+          activeTab === 'my_answer'
+            ? await getReadAloudHistory(questionId)
+            : await getCommunityAttempts(questionId);
 
-            return {
-              _id: item._id,
-              date: item.createdAt,
-              userId: item.user,
-              // Calculate /15 score (Sum of 3 params)
-              score: (scoreItem.contentScore || 0) + (scoreItem.pronunciationScore || 0) + (scoreItem.fluencyScore || 0),
-              pronunciation: scoreItem.pronunciationScore || 0,
-              fluency: scoreItem.fluencyScore || 0,
-              content: scoreItem.contentScore || 0,
-              // Add transcript if available in scoreItem
-              transcript: scoreItem.userTranscript || item.transcript, // Fallback
-              wordAnalysis: scoreItem.wordAnalysis
-            };
-          }).filter(Boolean);
+           
 
-          setHistory(mappedHistory);
+        if (Array.isArray(response?.data)) {
+          const mapped = response.data.map(item => ({
+            _id: item._id,
+            date: item.date,
+            userId: item.userId,
+
+            score: item.score || 0,
+            pronunciation: item.pronunciation || 0,
+            fluency: item.fluency || 0,
+            content: item.content || 0,
+
+            transcript: item.transcript,
+            wordAnalysis: item.wordAnalysis,
+            aiFeedback: item.aiFeedback,
+            analysis: item.analysis,
+          }));
+
+          setHistory(mapped);
+        } else {
+          setHistory([]);
         }
       } catch (err) {
-        console.error('Failed to fetch history', err);
+        console.error('Fetch attempt history failed', err);
+        setHistory([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchHistory();
-  }, [questionId, currentAttemptId]);
+    fetchAttempts();
+  }, [questionId, currentAttemptId, activeTab]);
 
-  if (loading) return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+  /* ========================= UI STATES ========================= */
 
-  if (history.length === 0) {
+  if (loading) {
     return (
-      <div className="mt-8 font-sans">
-        {/* Tabs */}
-        <div className="flex items-center gap-6 border-b border-slate-200 mb-6 font-sans">
-          <button
-            onClick={() => setActiveTab('my_answer')}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'my_answer'
-              ? 'border-purple-600 text-purple-600 text-sm'
-              : 'border-slate-200 text-slate-500 text-sm hover:border-purple-200 hover:text-purple-500'
-              }`}
-          >
-            <div className="w-5 h-5 rounded bg-purple-100 flex items-center justify-center text-purple-600">
-              <BarChart2 size={12} />
-            </div>
-            My Answer
-            <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('community')}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'community'
-              ? 'border-purple-600 text-purple-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
-              }`}
-          >
-            <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-slate-500">
-              <Shuffle size={12} />
-            </div>
-            Community Answers
-          </button>
-        </div>
-
-        <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
-            <Info size={20} className="text-slate-300" />
-          </div>
-          <p className="text-sm font-medium">No attempts yet</p>
-          <p className="text-xs mt-1 opacity-70">Complete the exercise to see your history</p>
-        </div>
+      <div className="p-8 text-center text-slate-400">
+        Loading {activeTab === 'community' ? 'community answers' : 'your answers'}...
       </div>
     );
   }
@@ -121,9 +93,10 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
       <div className="flex items-center gap-6 border-b border-slate-200 mb-6">
         <button
           onClick={() => setActiveTab('my_answer')}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'my_answer'
-            ? 'border-purple-600 text-purple-600'
-            : 'border-transparent text-slate-500 hover:text-slate-700'
+          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors
+            ${activeTab === 'my_answer'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
         >
           <div className="w-5 h-5 rounded bg-purple-100 flex items-center justify-center text-purple-600">
@@ -131,15 +104,16 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
           </div>
           My Answer
           <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-            {history.length}
+            {activeTab === 'my_answer' ? history.length : ''}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('community')}
-          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'community'
-            ? 'border-purple-600 text-purple-600'
-            : 'border-transparent text-slate-500 hover:text-slate-700'
+          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors
+            ${activeTab === 'community'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
         >
           <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center text-slate-500">
@@ -149,149 +123,72 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
         </button>
       </div>
 
-      {/* List */}
+      {/* Empty State */}
+      {history.length === 0 && (
+        <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
+            <Info size={20} className="text-slate-300" />
+          </div>
+          <p className="text-sm font-medium">
+            {activeTab === 'community'
+              ? 'No community answers yet'
+              : 'No attempts yet'}
+          </p>
+          <p className="text-xs mt-1 opacity-70">
+            {activeTab === 'community'
+              ? 'Be the first to attempt this question'
+              : 'Complete the exercise to see your history'}
+          </p>
+        </div>
+      )}
+
+      {/* Attempts List */}
       <div className="space-y-4">
-        {history.map((attempt) => (
+        {history.map(attempt => (
           <div
             key={attempt._id}
             onClick={() => onSelectAttempt?.(attempt)}
-            className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow group cursor-pointer"
+            className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm
+                       flex flex-col md:flex-row md:items-center gap-6
+                       hover:shadow-md transition-shadow cursor-pointer"
           >
-            {/* User & Info */}
+            {/* User */}
             <div className="flex items-center gap-4 min-w-[200px]">
-              {/* Avatar */}
-              {attempt.userId?.name ? (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center text-rose-500 font-bold text-lg border-2 border-white shadow-sm shrink-0">
-                  {attempt.userId.name[0].toUpperCase()}
-                </div>
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-lg border-2 border-white shadow-sm shrink-0">
-                  U
-                </div>
-              )}
-
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-100 to-rose-100
+                              flex items-center justify-center text-rose-500 font-bold text-lg">
+                {attempt.userId?.name?.[0]?.toUpperCase() || 'U'}
+              </div>
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-bold text-slate-800 text-sm truncate">{attempt.userId?.name || 'User'}</h4>
-                  <span className="text-[10px] font-bold text-white bg-gradient-to-r from-purple-500 to-indigo-500 px-1.5 py-0.5 rounded shadow-sm shadow-purple-200">
-                    Ai+
-                  </span>
-                </div>
-                <div className="text-xs text-slate-400 font-medium">
-                  {new Date(attempt.date).toLocaleString('en-US', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                <h4 className="font-bold text-slate-800 text-sm">
+                  {attempt.userId?.name || 'User'}
+                </h4>
+                <div className="text-xs text-slate-400">
+                  {new Date(attempt.date).toLocaleString()}
                 </div>
               </div>
             </div>
 
-            {/* Middle Section: Score & Player */}
-            <div className="flex-1 flex flex-col sm:flex-row items-center gap-4 w-full">
-              {/* Score Badge */}
-              <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 w-full sm:w-auto justify-between sm:justify-start">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Score</span>
-                  <div className="flex items-baseline gap-1">
-                    <span
-                      className={`text-xl font-bold ${attempt.score >= 12.5
-                        ? 'text-green-600'
-                        : attempt.score >= 7.5
-                          ? 'text-yellow-600'
-                          : 'text-red-500'
-                        }`}
-                    >
-                      {attempt.score}
-                    </span>
-                    <span className="text-xs text-slate-400">/15</span>
-                  </div>
-                </div>
-
-                <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-
-                {/* Mini Stats */}
-                <div className="flex gap-3 text-xs text-slate-500">
-                  <div title="Pronunciation" className="flex flex-col items-center">
-                    <span className="font-bold text-slate-700">{attempt.pronunciation}</span>
-                    <span className="text-[8px] uppercase">Pron</span>
-                  </div>
-                  <div title="Fluency" className="flex flex-col items-center">
-                    <span className="font-bold text-slate-700">{attempt.fluency}</span>
-                    <span className="text-[8px] uppercase">Flu</span>
-                  </div>
+            {/* Score */}
+            <div className="flex-1 flex items-center gap-4">
+              <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+                <span className="text-xs text-slate-400 font-bold">Score</span>
+                <div className="text-xl font-bold text-purple-600">
+                  {attempt.score} <span className="text-xs text-slate-400">/15</span>
                 </div>
               </div>
 
-              {/* Audio Player (Mock) */}
-              <div className="flex-1 bg-slate-50 px-4 py-2.5 rounded-full border border-slate-100 flex items-center gap-3 w-full group-hover:bg-white group-hover:border-purple-100 transition-colors">
+              <div className="flex-1 bg-slate-50 px-4 py-2 rounded-full border border-slate-100
+                              flex items-center gap-3">
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-white hover:bg-purple-600 hover:border-purple-600 transition-all shadow-sm"
+                  className="w-8 h-8 rounded-full bg-white border
+                             flex items-center justify-center text-slate-600"
                 >
-                  <Play size={12} fill="currentColor" className="ml-0.5" />
+                  <Play size={12} fill="currentColor" />
                 </button>
-                <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="w-1/3 h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
-                </div>
-                <span className="text-[10px] font-bold text-slate-400">0:12 / 0:40</span>
+                <div className="flex-1 h-1.5 bg-slate-200 rounded-full" />
+                <span className="text-[10px] text-slate-400">0:12 / 0:40</span>
               </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // share logic
-                }}
-                className="w-8 h-8 rounded-lg hover:bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-500 transition-colors"
-                title="Share"
-              >
-                <div className="w-4 h-4">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                </div>
-              </button>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // delete logic
-                }}
-                className="w-8 h-8 rounded-lg hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
-                title="Delete"
-              >
-                <div className="w-4 h-4">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="3 6 5 6 21 6" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    <line x1="10" y1="11" x2="10" y2="17" />
-                    <line x1="14" y1="11" x2="14" y2="17" />
-                  </svg>
-                </div>
-              </button>
             </div>
           </div>
         ))}
@@ -299,6 +196,9 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
     </div>
   );
 };
+
+
+
 
 /** =========================
  *  Main Component

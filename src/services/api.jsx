@@ -137,7 +137,7 @@ export const submitReadAloudAttempt = async (attemptData) => {
 
 export const getReadAloudHistory = async (questionId) => {
   try {
-    const response = await api.get(`/question/ra/history/${questionId}`);
+    const response = await api.get(`/attempts/history/${questionId}`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : new Error("Network Error");

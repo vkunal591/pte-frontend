@@ -8,6 +8,11 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout"; // Adjust path as needed
 
+// IMPORTANT: Configure Axios base URL here or in a global setup file.
+// This ensures all relative paths like "/api/..." correctly point to your root API.
+// If your backend is on a different port/domain, replace "http://localhost:5173" with its actual address.
+axios.defaults.baseURL = 'http://localhost:5173'; // Assuming your backend is served from the same origin
+
 const ManageWriteEssays = () => {
   const { user } = useSelector((state) => state.auth);
   const [weSections, setWeSections] = useState([]); // State for Write Essay sections
@@ -32,7 +37,8 @@ const ManageWriteEssays = () => {
   const fetchWESections = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("api/question/we"); // API endpoint for WE
+      // Axios will now use the baseURL: http://localhost:5173/api/question/we
+      const res = await axios.get("/api/question/we");
       setWeSections(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch Write Essay sections:", err);
@@ -44,8 +50,11 @@ const ManageWriteEssays = () => {
   const fetchUnusedQuestions = async () => {
     setUnusedLoading(true);
     try {
-      const res = await axios.get("api/question/we/get/unused"); // Endpoint for unused WE questions
-      setAvailableQuestions(res.data.data || {});
+      // Axios will now use the baseURL: http://localhost:5173/api/question/we/get/unused
+      const res = await axios.get("/api/question/we/get/unused");
+      console.log(res?.data?.data)
+      // The key from the backend is 'writeEssay' as per your controller
+      setAvailableQuestions(res.data.data.writeEssay ? { essay: res.data.data.writeEssay } : {});
     } catch (err) {
       console.error("Failed to fetch unused Write Essay questions:", err);
     } finally {
@@ -62,8 +71,12 @@ const ManageWriteEssays = () => {
   }, [weSections, searchTerm]);
 
   const getAvailableQuestionsKey = (formQuestionType) => {
-    return formQuestionType.replace('Questions', ''); // "essayQuestions" -> "essay"
+    // This function needs to map the form's question type (e.g., "essayQuestions")
+    // to the key used in `availableQuestions` state (e.g., "essay" from backend "writeEssay").
+    // As per your backend, `unusedEssayQuestions` returns `{ writeEssay: [...] }`
+    return formQuestionType === "essayQuestions" ? "essay" : formQuestionType;
   };
+
 
   // --- Handlers for Form and Modal Actions ---
   const handleSave = async (e) => {
@@ -76,9 +89,11 @@ const ManageWriteEssays = () => {
       };
 
       if (editingId) {
-        await axios.put(`api/question/we/${editingId}`, payload);
+        // Axios will now use the baseURL: http://localhost:5173/api/question/we/:id
+        await axios.put(`/api/question/we/${editingId}`, payload);
       } else {
-        await axios.post("api/question/we", payload);
+        // Axios will now use the baseURL: http://localhost:5173/api/question/we
+        await axios.post("/api/question/we", payload);
       }
       setIsModalOpen(false);
       await fetchWESections();
@@ -122,20 +137,23 @@ const ManageWriteEssays = () => {
     setIsModalOpen(true);
     setSubmitLoading(true);
     try {
-      const res = await axios.get(`api/question/we/${section._id}`);
+      // Axios will now use the baseURL: http://localhost:5173/api/question/we/:id
+      const res = await axios.get(`/api/question/we/${section._id}`);
       const detailedSection = res.data.data;
       setForm({
         title: detailedSection.title,
         essayQuestions: detailedSection.essayQuestions || [],
       });
 
-      const unusedRes = await axios.get("api/question/we/get/unused");
-      const fetchedUnusedQuestions = unusedRes.data.data || {};
+      // Axios will now use the baseURL: http://localhost:5173/api/question/we/get/unused
+      const unusedRes = await axios.get("/api/question/we/get/unused");
+      // The key from the backend is 'writeEssay'
+      const fetchedUnusedQuestions = unusedRes.data.data.writeEssay ? { essay: unusedRes.data.data.writeEssay } : {};
 
       const filteredAvailableQuestions = {};
-      const typeKey = getAvailableQuestionsKey("essayQuestions");
+      const typeKey = getAvailableQuestionsKey("essayQuestions"); // This will be "essay"
       if (fetchedUnusedQuestions[typeKey]) {
-          const sectionQuestionIds = new Set(detailedSection[typeKey]?.map(q => q._id.toString()));
+          const sectionQuestionIds = new Set(detailedSection.essayQuestions?.map(q => q._id.toString())); // Use detailedSection.essayQuestions
           filteredAvailableQuestions[typeKey] = fetchedUnusedQuestions[typeKey].filter(
               q => !sectionQuestionIds.has(q._id.toString())
           );
@@ -152,7 +170,8 @@ const ManageWriteEssays = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Write Essay section? This cannot be undone.")) {
       try {
-        await axios.delete(`api/question/we/${id}`);
+        // Axios will now use the baseURL: http://localhost:5173/api/question/we/:id
+        await axios.delete(`/api/question/we/${id}`);
         fetchWESections();
       } catch (err) {
         console.error("Error deleting Write Essay section:", err);
@@ -164,12 +183,12 @@ const ManageWriteEssays = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setForm(initialForm);
-    setAvailableQuestions({});
+    setAvailableQuestions({}); // Clear available questions on close
   };
 
   // --- Render Helper for Question Selection ---
   const renderQuestionSelection = (questionType, Icon) => {
-    const availableKey = getAvailableQuestionsKey(questionType);
+    const availableKey = getAvailableQuestionsKey(questionType); // This will be "essay"
     const questionsToDisplay = availableQuestions[availableKey] || [];
 
     return (
@@ -192,7 +211,7 @@ const ManageWriteEssays = () => {
           )}
         </div>
         {unusedLoading && !editingId ? (
-          <Loader2 className="animate-spin mx-auto text-blue-400" size={24} /> 
+          <Loader2 className="animate-spin mx-auto text-blue-400" size={24} />
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto p-2 border rounded-lg bg-white">
             {questionsToDisplay.length === 0 ? (
@@ -230,7 +249,7 @@ const ManageWriteEssays = () => {
             onClick={() => {
               setEditingId(null);
               setForm(initialForm);
-              fetchUnusedQuestions();
+              fetchUnusedQuestions(); // Fetch unused questions when opening modal for new section
               setIsModalOpen(true);
             }}
             className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-100" // Blue gradient
@@ -252,7 +271,7 @@ const ManageWriteEssays = () => {
         {/* LIST OF WE SECTIONS */}
         <div className="space-y-4">
           {loading ? (
-            <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500" size={40} /></div> 
+            <div className="py-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500" size={40} /></div>
           ) : filteredWESections.length === 0 ? (
             <div className="py-20 text-center text-slate-500">No Write Essay sections found.</div>
           ) : (
@@ -300,7 +319,7 @@ const ManageWriteEssays = () => {
                   />
 
                   {submitLoading ? (
-                     <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500" size={32}/></div> 
+                     <div className="py-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-500" size={32}/></div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                       {renderQuestionSelection("essayQuestions", FileText)} {/* FileText for content of essay */}
@@ -342,8 +361,8 @@ const ManageWriteEssays = () => {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {viewData[type].map(q => (
-                            <div key={q} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                              <p className="font-semibold text-slate-700">{q.text || `Question ID: ${q}`}</p>
+                            <div key={q._id || q} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
+                              <p className="font-semibold text-slate-700">{q.text || `Question ID: ${q._id || q}`}</p>
                             </div>
                           ))}
                         </div>
