@@ -18,6 +18,11 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
     const audioChunks = useRef([]);
     const { transcript, resetTranscript } = useSpeechRecognition();
 
+    // Reset session when question changes
+    useEffect(() => {
+        resetSession();
+    }, [question]);
+
     useEffect(() => {
         let interval;
         const activeStates = ['prep', 'recording', 'prep_start'];
