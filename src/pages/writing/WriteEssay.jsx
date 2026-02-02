@@ -34,7 +34,7 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-   const handleSelectAttempt = (attempt) => {
+  const handleSelectAttempt = (attempt) => {
     setResult(attempt);
     setStatus("result");
   };
@@ -94,6 +94,8 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
         >
           <ArrowLeft size={20} />
         </button>
+
+
 
         <h1 className="text-xl font-bold text-slate-800">
           Write Essay <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded font-bold">AI+</span>
@@ -226,17 +228,17 @@ const WriteEssay = ({ question, setActiveSpeechQuestion }) => {
 
       </div>
 
-            {/* ---------------- LAST ATTEMPTS HISTORY ---------------- */}
-            {question.lastAttempts && question.lastAttempts.length > 0 && (
-              <div className="mt-12">
-                <h3 className="font-bold text-lg mb-4">Previous Attempts</h3>
-                <WrittenAttemptHistory
-                  question={question}
-                  module="summarize"
-                  onSelectAttempt={handleSelectAttempt}
-                />
-              </div>
-            )}
+      {/* ---------------- LAST ATTEMPTS HISTORY ---------------- */}
+      {question.lastAttempts && question.lastAttempts.length > 0 && (
+        <div className="mt-12">
+          <h3 className="font-bold text-lg mb-4">Previous Attempts</h3>
+          <WrittenAttemptHistory
+            question={question}
+            module="summarize"
+            onSelectAttempt={handleSelectAttempt}
+          />
+        </div>
+      )}
     </div>
   );
 };

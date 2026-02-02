@@ -18,7 +18,7 @@ import {
   Sparkles as InventoryIcon,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import { submitReadAloudAttempt } from '../../services/api';
+import { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api';
 
 /** =========================
  *  Attempt History Component
@@ -34,9 +34,30 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/api/attempts?paragraphId=${questionId}`);
-        if (response.data.success) {
-          setHistory(response.data.data);
+        const response = await getReadAloudHistory(questionId);
+        if (response.success) {
+          // Flatten: Each history item is a SpeakingResult, but specifically for this question we extract the relevant score object
+          const mappedHistory = response.data.map(item => {
+            // Find the specific question attempt within the result
+            const scoreItem = item.scores?.find(s => s.questionId === questionId) || item.scores?.[0]; // Fallback to first if mismatch
+            if (!scoreItem) return null;
+
+            return {
+              _id: item._id,
+              date: item.createdAt,
+              userId: item.user,
+              // Calculate /15 score (Sum of 3 params)
+              score: (scoreItem.contentScore || 0) + (scoreItem.pronunciationScore || 0) + (scoreItem.fluencyScore || 0),
+              pronunciation: scoreItem.pronunciationScore || 0,
+              fluency: scoreItem.fluencyScore || 0,
+              content: scoreItem.contentScore || 0,
+              // Add transcript if available in scoreItem
+              transcript: scoreItem.userTranscript || item.transcript, // Fallback
+              wordAnalysis: scoreItem.wordAnalysis
+            };
+          }).filter(Boolean);
+
+          setHistory(mappedHistory);
         }
       } catch (err) {
         console.error('Failed to fetch history', err);
@@ -297,10 +318,10 @@ const ReadAloudSession = () => {
 
   // Session State
   const [status, setStatus] = useState('prep'); // prep, recording, submitting, result
-  const [timeLeft, setTimeLeft] = useState(35);
-  const [maxTime, setMaxTime] = useState(35);
+  const [timeLeft, setTimeLeft] = useState(3);
+  const [maxTime, setMaxTime] = useState(3);
   const [result, setResult] = useState(null);
-  const [isStarted, setIsStarted] = useState(false);
+  const [isStarted, setIsStarted] = useState(true);
 
   // NEW: modal state (for current + previous attempts)
   const [isResultOpen, setIsResultOpen] = useState(false);
@@ -359,10 +380,10 @@ const ReadAloudSession = () => {
     setSelectedAttempt(null);
 
     setStatus('prep');
-    setTimeLeft(35);
-    setMaxTime(35);
+    setTimeLeft(3); // User requested 3s timer
+    setMaxTime(3);
     setResult(null);
-    setIsStarted(false);
+    setIsStarted(true); // Auto-start
 
     resetTranscript();
     window.speechSynthesis.cancel();
@@ -439,6 +460,7 @@ const ReadAloudSession = () => {
           transcript: finalTranscript,
           audioUrl: "mock-audio.mp3" // Placeholder or implement upload
         }],
+
         userId: "user_from_auth_if_needed"
       };
 
@@ -446,43 +468,40 @@ const ReadAloudSession = () => {
 
       if (res.success) {
         // Map backend SpeakingResult to frontend 'result' object
-        // Backend: { overallScore, sectionScores: { fluency, ... } }
-        const data = res.data;
-        const mappedResult = {
-          score: data.overallScore, // Overall score (0-90)
-          // Flatten section scores to top level as Expected by View
-          fluency: data.sectionScores?.fluency || 0,
-          pronunciation: data.sectionScores?.pronunciation || 0,
-          content: data.sectionScores?.content || 0,
-          transcript: finalTranscript,
-          _id: data._id // Result ID
-        };
+        const data = res.data; // SpeakingResult document
+        // Extract the specific question score
+        const qScore = data.scores?.find(s => s.questionId === (question._id || question.id)) || data.scores?.[0];
 
-        setResult(mappedResult);
-        setSelectedAttempt(mappedResult);
-        setIsResultOpen(true);
-        setStatus('result');
+        if (qScore) {
+          const mappedResult = {
+            score: (qScore.contentScore || 0) + (qScore.pronunciationScore || 0) + (qScore.fluencyScore || 0),
+            fluency: qScore.fluencyScore || 0,
+            pronunciation: qScore.pronunciationScore || 0,
+            content: qScore.contentScore || 0,
+            transcript: qScore.userTranscript || finalTranscript,
+            _id: data._id,
+            wordAnalysis: qScore.wordAnalysis // Ensure granular analysis is available
+          };
+
+          setResult(mappedResult);
+          setSelectedAttempt(mappedResult);
+          setIsResultOpen(true);
+          setStatus('result');
+          // Refresh history? Ideally yes, but for now user can refresh page
+        }
       }
     } catch (err) {
       console.error('Submission error', err);
 
       // Check if it's the practice limit error
       if (err.response && err.response.status === 403 && err.response.data.message === "PRACTICE_LIMIT_REACHED") {
-        setStatus('prep'); // Reset to prep or handle as needed, but don't show result
+        alert("Practice limit reached! Please upgrade to continue."); // Simple alert for now
+        setStatus('prep');
         return;
       }
 
-      const fallback = {
-        score: 12.5,
-        pronunciation: 4.5,
-        fluency: 3.8,
-        content: 4.2,
-        transcript: finalTranscript,
-      };
-      setResult(fallback);
-      setSelectedAttempt(fallback);
-      setIsResultOpen(true);
-      setStatus('result');
+      alert(`Submission failed: ${err.response?.data?.message || err.message}`);
+      setStatus('prep');
     }
   };
 
@@ -564,17 +583,6 @@ const ReadAloudSession = () => {
             <div className="relative py-8">
               {status === 'prep' && (
                 <div className="flex flex-col items-center justify-center space-y-4">
-                  {!isStarted ? (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm rounded-xl">
-                      <button onClick={() => setIsStarted(true)} className="group relative">
-                        <div className="absolute inset-0 bg-blue-600 rounded-full animate-ping opacity-25"></div>
-                        <div className="relative bg-blue-600 text-white w-20 h-20 rounded-full flex items-center justify-center shadow-lg shadow-blue-200 hover:scale-105 transition-transform cursor-pointer">
-                          <Play size={40} fill="currentColor" className="ml-2" />
-                        </div>
-                      </button>
-                      <span className="mt-4 font-bold text-slate-800 text-lg">Click To Start</span>
-                    </div>
-                  ) : null}
 
                   <div className="w-full max-w-2xl h-1 bg-slate-200 rounded-full relative">
                     <div

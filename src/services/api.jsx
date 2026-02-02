@@ -125,10 +125,19 @@ export const submitRespondSituationAttempt = async (formData) => {
 
 export const submitReadAloudAttempt = async (attemptData) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/read-aloud/submit`,
+    const response = await api.post(
+      `/question/ra/submit`,
       attemptData
     );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getReadAloudHistory = async (questionId) => {
+  try {
+    const response = await api.get(`/question/ra/history/${questionId}`);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : new Error("Network Error");

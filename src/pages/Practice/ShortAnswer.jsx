@@ -11,10 +11,10 @@ import { useSelector } from 'react-redux';
 const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const navigate = useNavigate();
     const transcriptRef = useRef("");
-     const {user} = useSelector((state)=>state.auth)
-    const [status, setStatus] = useState('idle'); 
-    const [timeLeft, setTimeLeft] = useState(0);
-    const [maxTime, setMaxTime] = useState(0);
+    const { user } = useSelector((state) => state.auth)
+    const [status, setStatus] = useState('prep');
+    const [timeLeft, setTimeLeft] = useState(3);
+    const [maxTime, setMaxTime] = useState(3);
     const [result, setResult] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
@@ -62,10 +62,10 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
     };
 
 
-      const handleSelectAttempt = (attempt) => {
-    setResult(attempt);
-    setStatus('result');
-  };
+    const handleSelectAttempt = (attempt) => {
+        setResult(attempt);
+        setStatus('result');
+    };
 
 
     const onAudioEnded = () => {
@@ -125,7 +125,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
         const formData = new FormData();
         const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
         formData.append("questionId", question?._id);
-        formData.append("transcript", finalTranscript); 
+        formData.append("transcript", finalTranscript);
         formData.append("audio", audioBlob);
         formData.append("userId", user?._id);
         try {
@@ -143,14 +143,16 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
         setResult({
             ...attempt,
             // Ensure wordAnalysis exists for the results view to map over
-            wordAnalysis: attempt.wordAnalysis || [] 
+            wordAnalysis: attempt.wordAnalysis || []
         });
         setStatus('result');
     };
 
     const resetSession = () => {
         setResult(null);
-        setStatus('idle');
+        setStatus('prep');
+        setTimeLeft(3);
+        setMaxTime(3);
         resetTranscript();
         transcriptRef.current = "";
     };
@@ -159,7 +161,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
-           <audio
+            <audio
                 ref={questionAudioRef}
                 src={question.audioUrl}
                 className="hidden"
@@ -191,30 +193,9 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                 </div>
 
                 <div className="flex-1 p-8 flex flex-col items-center justify-center">
-                    
-                    {/* 1. IDLE STATE WITH HISTORY */}
-                    {status === 'idle' && (
-                        <div className="w-full max-w-2xl text-center space-y-8">
-                            <div className="space-y-6">
-                                <div className="w-20 h-20 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                                    <PlayCircle size={48} />
-                                </div>
-                                <div className="space-y-2">
-                                    <h2 className="text-2xl font-bold text-slate-800">Ready to start?</h2>
-                                    <p className="text-slate-500">The audio will play after the preparation timer.</p>
-                                </div>
-                                <button 
-                                    onClick={handleStartClick}
-                                    className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-3 rounded-full font-bold transition-all shadow-lg hover:shadow-primary-200 active:scale-95"
-                                >
-                                    Start Practice
-                                </button>
-                            </div>
 
-                            {/* LAST ATTEMPTS SECTION */}
-                            
-                        </div>
-                    )}
+                    {/* 1. IDLE STATE WITH HISTORY */}
+                    {/* Auto-start enabled */}
 
                     {/* 2. PREP STATE */}
                     {status === 'prep' && (
@@ -270,7 +251,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                     {status === 'result' && result && (
                         <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             {/* Alert Banner */}
-                             {(() => {
+                            {(() => {
                                 const suggestion = getAISuggestion(result.score);
                                 return (
                                     <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
@@ -309,11 +290,11 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                                     </div>
                                 </div>
 
-                                    {/* AUDIO PLAYERS */}
-                            <div className="grid grid-rows-2 gap-6 col-span-12 md:col-span-8">
-                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
-                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
-                            </div>
+                                {/* AUDIO PLAYERS */}
+                                <div className="grid grid-rows-2 gap-6 col-span-12 md:col-span-8">
+                                    <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
+                                    <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
+                                </div>
 
 
                                 {/* <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
@@ -328,14 +309,14 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                                 </div> */}
                             </div>
 
-                             <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                                                  <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
-                                                  <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
-                                                      {question?.answer}
-                                                  </p>
-                                              </div>
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
+                                <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                    {question?.answer}
+                                </p>
+                            </div>
 
-                        
+
                             {/* TRANSCRIPT AREA */}
                             <div className="bg-white rounded-3xl border border-slate-100 p-8">
                                 <h3 className="font-bold text-slate-700 mb-4">Transcript Analysis</h3>
@@ -354,21 +335,21 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-center gap-6 pb-10">
-                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton}/>
+                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton} />
                 <ControlBtn icon={<RefreshCw size={18} />} label="Redo" onClick={resetSession} />
                 <button className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
                     <CheckCircle size={24} />
                 </button>
-                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton}/>
-                <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton}/>
+                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton} />
+                <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton} />
             </div>
             {question.lastAttempts && question.lastAttempts.length > 0 && (
-                        <ImageAttemptHistory 
-            question={question} 
-            onSelectAttempt={handleSelectAttempt} 
-            module={"short-answer"}
-          />
-         )}
+                <ImageAttemptHistory
+                    question={question}
+                    onSelectAttempt={handleSelectAttempt}
+                    module={"short-answer"}
+                />
+            )}
         </div>
     );
 };
@@ -376,17 +357,17 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
 // ... Sub-components (ControlBtn, ParameterCard, AudioPlayerCard) remain the same as your original file
 
 const ControlBtn = ({ icon, label, onClick, className = "" }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl 
+    return (
+        <button
+            onClick={onClick}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl 
       bg-slate-100 text-slate-700 font-semibold shadow-sm 
       hover:bg-slate-800 hover:text-white transition-all ${className}`}
-    >
-      {icon}
-      <span className="font-bold">{label}</span>
-    </button>
-  );
+        >
+            {icon}
+            <span className="font-bold">{label}</span>
+        </button>
+    );
 };
 
 

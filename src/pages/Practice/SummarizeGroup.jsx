@@ -13,11 +13,11 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
     const navigate = useNavigate();
     const transcriptRef = useRef("");
     const { user } = useSelector((state) => state.auth);
-    
+
     // Statuses: idle -> prep_start -> playing -> prep_record -> recording -> submitting -> result
-    const [status, setStatus] = useState('idle');
-    const [timeLeft, setTimeLeft] = useState(0);
-    const [maxTime, setMaxTime] = useState(0);
+    const [status, setStatus] = useState('prep_start');
+    const [timeLeft, setTimeLeft] = useState(3);
+    const [maxTime, setMaxTime] = useState(3);
     const [result, setResult] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
@@ -36,7 +36,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
     useEffect(() => {
         let interval;
         const activeStates = ['prep_start', 'prep_record', 'recording'];
-        
+
         if (activeStates.includes(status) && timeLeft > 0) {
             interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
         } else if (timeLeft === 0) {
@@ -89,27 +89,27 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
     };
 
 
-     const getAISuggestion = (score) => {
-            if (score >= 11) {
-                return {
-                    text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
-                    color: "text-green-700 bg-green-50 border-green-100",
-                    icon: <CheckCircle className="w-5 h-5 text-green-600" />
-                };
-            } else if (score >= 7) {
-                return {
-                    text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
-                    color: "text-amber-700 bg-amber-50 border-amber-100",
-                    icon: <Target className="w-5 h-5 text-amber-600" />
-                };
-            } else {
-                return {
-                    text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
-                    color: "text-red-700 bg-red-50 border-red-100",
-                    icon: <Info className="w-5 h-5 text-red-600" />
-                };
-            }
-        };
+    const getAISuggestion = (score) => {
+        if (score >= 11) {
+            return {
+                text: "Excellent work! You captured the main ideas and spoke with high clarity. Keep maintaining this pace.",
+                color: "text-green-700 bg-green-50 border-green-100",
+                icon: <CheckCircle className="w-5 h-5 text-green-600" />
+            };
+        } else if (score >= 7) {
+            return {
+                text: "Good attempt. Try to focus more on key supporting details and maintain a smoother flow to boost your score.",
+                color: "text-amber-700 bg-amber-50 border-amber-100",
+                icon: <Target className="w-5 h-5 text-amber-600" />
+            };
+        } else {
+            return {
+                text: "Focus on capturing more keywords from the audio and work on your pronunciation to ensure the AI detects more words correctly.",
+                color: "text-red-700 bg-red-50 border-red-100",
+                icon: <Info className="w-5 h-5 text-red-600" />
+            };
+        }
+    };
 
 
     const startRecording = async () => {
@@ -118,7 +118,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
         setStatus('recording');
         setTimeLeft(120); // 2 Minutes
         setMaxTime(120);
-        
+
         SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -164,7 +164,9 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
 
     const resetSession = () => {
         setResult(null);
-        setStatus('idle');
+        setStatus('prep_start');
+        setTimeLeft(3);
+        setMaxTime(3);
         resetTranscript();
         transcriptRef.current = "";
     };
@@ -210,19 +212,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                 <div className="flex-1 p-8 flex flex-col items-center justify-center">
 
                     {/* 1. IDLE STATE */}
-                    {status === 'idle' && (
-                        <div className="w-full max-w-2xl text-center space-y-8">
-                            <div className="space-y-6">
-                                <div className="w-20 h-20 bg-primary-50 text-primary-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                                    <PlayCircle size={48} />
-                                </div>
-                                <h2 className="text-2xl font-bold text-slate-800">Ready to start?</h2>
-                                <button onClick={handleStartClick} className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-3 rounded-full font-bold shadow-lg active:scale-95">
-                                    Start Practice
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Auto-start enabled */}
 
                     {/* 2. PREP START (4s) */}
                     {status === 'prep_start' && (
@@ -238,14 +228,14 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center animate-pulse">
                                 <Volume2 size={40} />
                             </div>
-                            
+
                             <div className="w-full space-y-2">
                                 <div className="flex justify-between text-sm font-mono text-blue-600 font-bold">
                                     <span>{formatTime(audioCurrentTime)}</span>
                                     <span>{formatTime(audioDuration)}</span>
                                 </div>
                                 {/* INTERACTIVE SLIDER */}
-                                <input 
+                                <input
                                     type="range"
                                     min="0"
                                     max={audioDuration || 0}
@@ -264,7 +254,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                         <div className="text-center space-y-6">
                             <div className="text-slate-400 font-semibold uppercase tracking-widest text-sm">Prepare to summarize</div>
                             <div className="text-6xl font-black text-slate-800">{timeLeft}s</div>
-                            <button 
+                            <button
                                 onClick={startRecording}
                                 className="flex items-center gap-2 mx-auto px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
                             >
@@ -280,7 +270,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                                 <div className="w-4 h-4 bg-red-600 rounded-full animate-ping" />
                                 <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)}</span>
                             </div>
-                            
+
                             <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
                                 <div className="h-full bg-red-500 transition-all duration-1000 linear" style={{ width: `${progressPercent}%` }} />
                             </div>
@@ -306,7 +296,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                     {/* 7. RESULT STATE */}
                     {status === 'result' && result && (
                         <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 bg-white">
-                             {(() => {
+                            {(() => {
                                 const suggestion = getAISuggestion(result.score);
                                 return (
                                     <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
@@ -318,80 +308,80 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                                     </div>
                                 );
                             })()}
-                                              <div className="grid grid-cols-12 gap-6">
-                                                  {/* Score Gauge - Calculating out of 16 as per your controller */}
-                                                  <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center shadow-sm">
-                                                      <h3 className="font-bold text-slate-700 mb-6 uppercase tracking-widest text-[10px]">Your Score</h3>
-                                                      <div className="relative flex justify-center items-center h-32 w-full">
-                                                          <svg className="w-56 h-28">
-                                                              <path d="M 10 90 A 80 80 0 0 1 210 90" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
-                                                              <path d="M 10 90 A 80 80 0 0 1 210 90" fill="none" stroke="url(#blueGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="314" strokeDashoffset={314 - (314 * (result.score / 16))} className="transition-all duration-1000 ease-out" />
-                                                              <defs>
-                                                                  <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                                      <stop offset="0%" stopColor="#8b5cf6" />
-                                                                      <stop offset="100%" stopColor="#ec4899" />
-                                                                  </linearGradient>
-                                                              </defs>
-                                                          </svg>
-                                                          <div className="absolute bottom-2 flex flex-col items-center">
-                                                              <span className="text-5xl font-black text-slate-800">{result.score}</span>
-                                                          </div>
-                                                      </div>
-                                                      <div className="w-full mt-4 flex justify-between px-2 text-[10px] font-bold text-slate-300">
-                                                          <span>0</span><span>16</span>
-                                                      </div>
-                                                  </div>
-                      
-                                                  <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                                                      <h3 className="font-bold text-slate-700 mb-8 flex items-center gap-2"><BarChart2 size={16}/> Scoring Parameters</h3>
-                                                      <div className="grid grid-cols-3 gap-6">
-                                                          <ParameterCard label="Content" score={result.content} max={6} color="#3b82f6" />
-                                                          <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} color="#ec4899" />
-                                                          <ParameterCard label="Oral Fluency" score={result.fluency} max={5} color="#8b5cf6" />
-                                                      </div>
-                                                  </div>
-                                              </div>
-                      
-                                              {/* Player for recorded audio */}
-                                              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex items-center gap-6 shadow-sm">
-                                                  <span className="text-xs font-bold text-slate-400 uppercase w-20">My Answer</span>
-                                                  <audio src={result.studentAudio?.url} controls className="flex-1 h-10" />
-                                              </div>
+                            <div className="grid grid-cols-12 gap-6">
+                                {/* Score Gauge - Calculating out of 16 as per your controller */}
+                                <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border border-slate-200 p-8 flex flex-col items-center shadow-sm">
+                                    <h3 className="font-bold text-slate-700 mb-6 uppercase tracking-widest text-[10px]">Your Score</h3>
+                                    <div className="relative flex justify-center items-center h-32 w-full">
+                                        <svg className="w-56 h-28">
+                                            <path d="M 10 90 A 80 80 0 0 1 210 90" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
+                                            <path d="M 10 90 A 80 80 0 0 1 210 90" fill="none" stroke="url(#blueGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="314" strokeDashoffset={314 - (314 * (result.score / 16))} className="transition-all duration-1000 ease-out" />
+                                            <defs>
+                                                <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#8b5cf6" />
+                                                    <stop offset="100%" stopColor="#ec4899" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div className="absolute bottom-2 flex flex-col items-center">
+                                            <span className="text-5xl font-black text-slate-800">{result.score}</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-full mt-4 flex justify-between px-2 text-[10px] font-bold text-slate-300">
+                                        <span>0</span><span>16</span>
+                                    </div>
+                                </div>
 
-                                               <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                                                  <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
-                                                  <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
-                                                      {question.answer}
-                                                  </p>
-                                              </div>
-                      
-                                              {/* Transcript Display */}
-                                              <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                                                  <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Transcript Analysis</h3>
-                                                  <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
-                                                      "{result.transcript}"
-                                                  </p>
-                                              </div>
-                                          </div>
+                                <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                    <h3 className="font-bold text-slate-700 mb-8 flex items-center gap-2"><BarChart2 size={16} /> Scoring Parameters</h3>
+                                    <div className="grid grid-cols-3 gap-6">
+                                        <ParameterCard label="Content" score={result.content} max={6} color="#3b82f6" />
+                                        <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} color="#ec4899" />
+                                        <ParameterCard label="Oral Fluency" score={result.fluency} max={5} color="#8b5cf6" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Player for recorded audio */}
+                            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5 flex items-center gap-6 shadow-sm">
+                                <span className="text-xs font-bold text-slate-400 uppercase w-20">My Answer</span>
+                                <audio src={result.studentAudio?.url} controls className="flex-1 h-10" />
+                            </div>
+
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
+                                <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                    {question.answer}
+                                </p>
+                            </div>
+
+                            {/* Transcript Display */}
+                            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Transcript Analysis</h3>
+                                <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                    "{result.transcript}"
+                                </p>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-center gap-6 pb-10">
-                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton} className="text-slate-400 hover:text-primary-600 transition-colors"/>
+                <ControlBtn icon={<ChevronLeft />} label="Previous" onClick={previousButton} className="text-slate-400 hover:text-primary-600 transition-colors" />
                 <ControlBtn icon={<RefreshCw size={18} />} label="Redo" onClick={resetSession} />
                 <button className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center text-slate-400 shadow-inner">
                     <CheckCircle size={24} />
                 </button>
-                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton}/>
+                <ControlBtn icon={<Shuffle size={18} />} label="Shuffle" onClick={shuffleButton} />
                 <ControlBtn icon={<ChevronRight />} label="Next" onClick={nextButton} />
             </div>
 
             {question.lastAttempts && question.lastAttempts.length > 0 && status === 'idle' && (
-                <ImageAttemptHistory 
-                    question={question} 
-                    onSelectAttempt={(attempt) => { setResult(attempt); setStatus('result'); }} 
+                <ImageAttemptHistory
+                    question={question}
+                    onSelectAttempt={(attempt) => { setResult(attempt); setStatus('result'); }}
                 />
             )}
         </div>
@@ -401,17 +391,17 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
 // Sub-components
 // Sub-components
 const ControlBtn = ({ icon, label, onClick, className = "" }) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl 
+    return (
+        <button
+            onClick={onClick}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl 
       bg-slate-100 text-slate-700 font-semibold shadow-sm 
       hover:bg-slate-800 hover:text-white transition-all ${className}`}
-    >
-      {icon}
-      <span className="font-bold">{label}</span>
-    </button>
-  );
+        >
+            {icon}
+            <span className="font-bold">{label}</span>
+        </button>
+    );
 };
 
 const ParameterCard = ({ label, score, max }) => (

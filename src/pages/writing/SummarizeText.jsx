@@ -41,19 +41,19 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
   };
 
   /* ---------------- SUBMIT ---------------- */
- const handleSubmit = async () => {
-  const timeTaken = MAX_TIME - timeLeft;
+  const handleSubmit = async () => {
+    const timeTaken = MAX_TIME - timeLeft;
 
-  const res = await submitSummarizeWrittenAttempt({
-    questionId: question._id,
-    summaryText: answer,
-    userId: user._id,
-    timeTaken,
-  });
+    const res = await submitSummarizeWrittenAttempt({
+      questionId: question._id,
+      summaryText: answer,
+      userId: user._id,
+      timeTaken,
+    });
 
-  setResult(res.data);
-  setStatus("result");
-};
+    setResult(res.data);
+    setStatus("result");
+  };
 
   /* ---------------- SELECT LAST ATTEMPT ---------------- */
   const handleSelectAttempt = (attempt) => {
@@ -72,6 +72,7 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion }) => {
         >
           <ArrowLeft size={20} />
         </button>
+
         <h1 className="text-xl font-bold text-slate-800">
           Summarize Written Text{" "}
           <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded font-bold">
