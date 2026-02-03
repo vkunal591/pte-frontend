@@ -13,17 +13,22 @@ import {
   RotateCcw,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   History,
   Share2,
   Trash2,
-  X
+  X,
+  Languages,
+  Eye,
+  RefreshCw
 } from "lucide-react";
+
 import { useSelector } from "react-redux";
 import { submitHighlightAttempt } from "../../services/api";
 
 const PREP_TIME = 3;
 
-export default function HCS({ question, setActiveSpeechQuestion }) {
+export default function HCS({ question, setActiveSpeechQuestion, nextButton, previousButton }) {
   const { user } = useSelector((state) => state.auth);
 
   const audioRef = useRef(null);
@@ -61,7 +66,7 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
     setTimeout(() => {
       if (!audioRef.current) return;
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
     }, 300);
   };
 
@@ -71,7 +76,7 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => {});
+      audioRef.current.play().catch(() => { });
     }
   };
 
@@ -88,6 +93,13 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
     const m = Math.floor(t / 60);
     const s = Math.floor(t % 60);
     return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const resetSession = () => {
+    setStatus("countdown");
+    setPrepTimer(PREP_TIME);
+    setSelectedOption(null);
+    setAudioFinished(false);
   };
 
   /* ---------------- SUBMIT ---------------- */
@@ -195,34 +207,66 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
                 </div>
               ))}
             </div>
+
+
+            {/* SUBMIT BUTTON - MOVED INSIDE CARD */}
+            <div className="px-8 pb-8">
+              <button
+                onClick={handleSubmit}
+                disabled={selectedOption === null}
+                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg disabled:bg-slate-300 shadow-lg shadow-blue-200 disabled:shadow-none transition-all hover:bg-blue-700 flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 size={24} /> Submit Answer
+              </button>
+            </div>
           </div>
         )}
 
-        {/* FOOTER */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-2xl border">
-          <button
-            onClick={() => {
-              setStatus("countdown");
-              setPrepTimer(PREP_TIME);
-              setSelectedOption(null);
-              setAudioFinished(false);
-            }}
-            className="flex items-center gap-2 text-slate-400 font-bold"
-          >
-            <RotateCcw /> Redo
-          </button>
+        {/* FOOTER CONTROLS - REPLACED WITH SST STYLE */}
+        <div className="flex items-center justify-between pb-6 mt-6">
+          {/* LEFT SIDE: Translate, Answer, Redo */}
+          <div className="flex items-center gap-4">
+            {/* Translate (Static) */}
+            <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default">
+              <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                <Languages size={18} />
+              </div>
+              <span className="text-xs font-medium">Translate</span>
+            </button>
 
-          <button
-            onClick={handleSubmit}
-            disabled={selectedOption === null}
-            className="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black disabled:bg-slate-300"
-          >
-            <CheckCircle2 /> Submit
-          </button>
+            {/* Answer (Static) */}
+            <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default text-opacity-50">
+              <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                <Eye size={18} />
+              </div>
+              <span className="text-xs font-medium">Answer</span>
+            </button>
 
-          <button className="flex items-center gap-2 text-blue-600 font-bold">
-            Next <ChevronRight />
-          </button>
+            {/* Redo */}
+            <button onClick={resetSession} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+              <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                <RefreshCw size={18} />
+              </div>
+              <span className="text-xs font-medium">Redo</span>
+            </button>
+          </div>
+
+          {/* RIGHT SIDE: Prev, Next */}
+          <div className="flex items-center gap-4">
+            <button onClick={previousButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+              <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                <ChevronLeft size={20} />
+              </div>
+              <span className="text-xs font-medium">Previous</span>
+            </button>
+
+            <button onClick={nextButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+              <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                <ChevronRight size={20} />
+              </div>
+              <span className="text-xs font-medium">Next</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -242,18 +286,20 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
       />
 
       {/* RESULT */}
-      {status === "result" && result && (
-        <HCSResultModal
-          result={result}
-          onClose={() => setStatus("idle")}
-          onRedo={() => {
-            setStatus("countdown");
-            setPrepTimer(PREP_TIME);
-            setSelectedOption(null);
-          }}
-        />
-      )}
-    </div>
+      {
+        status === "result" && result && (
+          <HCSResultModal
+            result={result}
+            onClose={() => setStatus("idle")}
+            onRedo={() => {
+              setStatus("countdown");
+              setPrepTimer(PREP_TIME);
+              setSelectedOption(null);
+            }}
+          />
+        )
+      }
+    </div >
   );
 }
 
