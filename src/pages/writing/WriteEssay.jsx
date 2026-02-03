@@ -188,7 +188,7 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
                 >
                   Submit
                 </button>
-                <p className="text-xs text-slate-400 text-center">{MIN_WORDS}–{MAX_WORDS} words</p>
+                <p className="text-xs text-slate-400 text-center">200–300 words</p>
               </div>
             </div>
           </>
@@ -231,8 +231,8 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
                     <ScoreBox label="Spelling" value={`${result.spelling}/2`} />
                     <ScoreBox label="Vocabulary" value={`${result.vocabulary}/2`} />
                     <ScoreBox label="Form" value={`${result.form}/2`} />
-                    <ScoreBox label="Structure" value={`${result.structure}/6`} />
-                    <ScoreBox label="General" value={`${result.general}/6`} />
+                    <ScoreBox label="Development" value={`${result.structure}/2`} />
+                    <ScoreBox label="General Linguistic Range" value={`${result.general}/2`} />
                   </div>
                 </div>
               </div>
