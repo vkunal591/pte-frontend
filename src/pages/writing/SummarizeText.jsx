@@ -21,6 +21,11 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
   const [result, setResult] = useState(null);
   const [showAnswerModal, setShowAnswerModal] = useState(false);
 
+  // Translation State
+  const [translation, setTranslation] = useState("");
+  const [loadingTranslation, setLoadingTranslation] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
   /* ---------------- TIMER ---------------- */
   // Reset session when question changes
   useEffect(() => {
@@ -81,6 +86,33 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
     setTimeLeft(3);
     setAnswer("");
     setResult(null);
+    setTranslation("");
+    setShowToast(false);
+  };
+
+  /* ---------------- TRANSLATION ---------------- */
+  const handleTranslate = async () => {
+    if (translation) {
+      setShowToast(true);
+      return;
+    }
+
+    setLoadingTranslation(true);
+    try {
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(question.paragraph)}&langpair=en|hi`
+      );
+      const data = await response.json();
+      if (data.responseData && data.responseData.translatedText) {
+        setTranslation(data.responseData.translatedText);
+        setShowToast(true);
+      }
+    } catch (error) {
+      console.error("Translation error:", error);
+      // Optional: Show error toast or alert
+    } finally {
+      setLoadingTranslation(false);
+    }
   };
 
   /* ---------------- UI ---------------- */
@@ -260,12 +292,16 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
       <div className="flex items-center justify-between pb-10">
         {/* LEFT SIDE: Translate, Answer, Redo */}
         <div className="flex items-center gap-4">
-          {/* Translate (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
-            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+          {/* Translate */}
+          <button
+            onClick={handleTranslate}
+            disabled={loadingTranslation}
+            className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+          >
+            <div className={`w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm ${loadingTranslation ? "animate-pulse" : ""}`}>
               <Languages size={18} />
             </div>
-            <span className="text-xs font-medium">Translate</span>
+            <span className="text-xs font-medium">{loadingTranslation ? "..." : "Translate"}</span>
           </button>
 
           {/* Answer (Static) */}
@@ -342,6 +378,27 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
           </div>
         </div>
       )}
+      {/* ---------------- TRANSLATION TOAST ---------------- */}
+      {showToast && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-white text-slate-800 border border-slate-200 px-6 py-4 rounded-xl shadow-2xl max-w-2xl flex items-start gap-4">
+            <Languages className="shrink-0 mt-1 text-purple-600" size={20} />
+            <div className="space-y-1">
+              <h4 className="font-bold text-sm text-purple-700">Hindi Translation</h4>
+              <p className="text-sm leading-relaxed text-slate-700 max-h-40 overflow-y-auto pr-2">
+                {translation}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowToast(false)}
+              className="hover:bg-slate-100 p-1 rounded-full transition-colors"
+            >
+              <X size={16} className="text-slate-500" />
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
