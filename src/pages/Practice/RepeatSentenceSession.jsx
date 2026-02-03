@@ -245,7 +245,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                     )}
 
                     {/* 3. LISTENING STATE */}
-                    {status === 'listening' && (
+                    {(status === 'listening' || status === 'recording')  && (
                         <div className="flex flex-col items-center gap-6">
                             <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center animate-pulse">
                                 <Volume2 size={40} />

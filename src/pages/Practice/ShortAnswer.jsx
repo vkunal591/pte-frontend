@@ -272,7 +272,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                     )}
 
                     {/* 3. LISTENING STATE (Interactive Audio Player) */}
-                    {status === 'listening' && (
+                    {(status === 'listening' || status === 'recording')  && (
                         <div className="flex flex-col items-center gap-8 w-full max-w-lg">
                             <div className="flex items-center gap-4">
                                 <button
