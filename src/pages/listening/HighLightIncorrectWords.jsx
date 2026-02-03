@@ -21,6 +21,7 @@ import {
 import { submitHIWAttempt } from "../../services/api";
 
 export default function HighlightIncorrectWords({ question, setActiveSpeechQuestion, nextButton, previousButton }) {
+  console.log(question)
   const [status, setStatus] = useState("countdown");
   const [prepTimer, setPrepTimer] = useState(3);
   const [selectedIndices, setSelectedIndices] = useState([]);
