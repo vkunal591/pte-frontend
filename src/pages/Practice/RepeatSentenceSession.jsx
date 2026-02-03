@@ -200,25 +200,14 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                 onTimeUpdate={(e) => setAudioCurrentTime(Math.ceil(e.target.currentTime))}
                 onEnded={onAudioEnded}
             />
-<<<<<<< Updated upstream
+            <div>
+                <h1>Repeat Sentence</h1>
+                <p>
+                    You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once
+                </p>
+            </div>
+            <div className="flex items-center justify-between">
 
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1>Repeat Sentence</h1>
-                    <p>
-                        You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once
-                    </p>
-                </div>
-=======
- <div>
-                        <h1>Repeat Sentence</h1>
-                        <p>
-                        You will hear a sentence. Please repeat the sentence exactly as you hear it. You will hear the sentence only once
-                        </p>
-                    </div>
-            <div className="flex items-center justify-between">
-                
->>>>>>> Stashed changes
                 <div className="flex items-center gap-2">
                     <button onClick={() => setActiveSpeechQuestion(false)} className="p-2 hover:bg-slate-100 rounded-full">
                         <ArrowLeft size={20} />
@@ -239,27 +228,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                     <div className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
                         {question.difficulty || 'Medium'}
                     </div>
-<<<<<<< Updated upstream
-                    <button
-                        onClick={handleToggleTranscript}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
-                    >
-                        <Eye size={18} /> {showTranscript ? "Hide Transcript" : "Show Transcript"}
-                    </button>
+
                 </div>
-
-                {showTranscript && (
-                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
-                        {question.transcript}
-                    </div>
-                )}
-
-=======
-                     
-                                </div>
-                               
-             
->>>>>>> Stashed changes
 
                 <div className="flex-1 p-8 flex flex-col items-center justify-center">
 
@@ -401,18 +371,18 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                 </div>
             </div>
 
-                        <div> 
-                                  <button
-                                        onClick={handleToggleTranscript}
-                                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
-                                    >
-                                        <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
-                                    </button>
-                                {showTranscript && (
-                                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
-                                        {question.transcript}
-                                    </div>
-                                )}</div>
+            <div>
+                <button
+                    onClick={handleToggleTranscript}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
+                >
+                    <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
+                </button>
+                {showTranscript && (
+                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
+                        {question.transcript}
+                    </div>
+                )}</div>
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-between pb-10">

@@ -21,12 +21,8 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
     const [result, setResult] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
-<<<<<<< Updated upstream
     const [showFlashAnswer, setShowFlashAnswer] = useState(false); // Answer Flash State
-
-=======
-    const [showTranscript, setShowTranscript] =useState(false)
->>>>>>> Stashed changes
+    const [showTranscript, setShowTranscript] = useState(false);
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
@@ -213,7 +209,6 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                 onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
                 onEnded={onAudioEnded}
             />
-<<<<<<< Updated upstream
             <div>
                 <h1>
                     Respond To a Situation
@@ -221,15 +216,6 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                 <p>Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.
                 </p>
             </div>
-=======
-                 <div>
-                    <h1>
-                        Respond To a Situation
-                    </h1>
-                    <p>Listen to and read a description of a situation. You will have 10 seconds to think about your answer. Then you will hear a beep. You will have 40 seconds to answer the question. Please answer as completely as you can.
-</p>
-                </div>
->>>>>>> Stashed changes
 
             <div className="flex items-center justify-between">
 
@@ -411,21 +397,21 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                 </div>
             </div>
 
-              <div>
-                                        <button
-                                                onClick={()=>setShowTranscript(!showTranscript)}
-                                                className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
-                                            >
-                                                <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
-                                            </button>
-                                        
-                        
-                                        {showTranscript && (
-                                            <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
-                                                {question?.answer}
-                                            </div>
-                                        )}
-                                        </div>
+            <div>
+                <button
+                    onClick={() => setShowTranscript(!showTranscript)}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
+                >
+                    <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
+                </button>
+
+
+                {showTranscript && (
+                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
+                        {question?.answer}
+                    </div>
+                )}
+            </div>
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-between pb-10">
