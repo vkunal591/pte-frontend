@@ -82,6 +82,10 @@ export default function HCS({ question, setActiveSpeechQuestion }) {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-8">
+      <div>
+        <h1>Highlight Correct Summary</h1>
+        <p>You will hear a recording. Click on the paragraph that best relates to the recording</p>
+      </div>
       <div className="max-w-7xl mx-auto  gap-8">
 
         {/* LEFT COLUMN: MAIN TASK */}

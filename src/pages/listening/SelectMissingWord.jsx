@@ -84,6 +84,10 @@ export default function SelectMissingWord({ question, setActiveSpeechQuestion, n
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-8">
+      <div>
+        <h1>Select Missing Words</h1>
+        <p>You will hear a recording about fiction writing. At the end of the recording the lost word or group of words has been replaced by a beep. Select the correct option to complete the recording.</p>
+      </div>
       <div className="max-w-7xl mx-auto  gap-8">
 
         {/* LEFT COLUMN: MAIN TASK */}

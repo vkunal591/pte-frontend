@@ -214,6 +214,11 @@ const ListeningMultiChoiceMultiAnswer = ({ question, setActiveSpeechQuestion, ne
     return (
         <div className="max-w-5xl mx-auto space-y-6 font-sans">
 
+            <div>
+                <h1>Mulitple Choice (Multiple)</h1>
+                <p>Listen to the recording and answer the question by selecting all the correct responses. You will need to select more than one response.</p>
+            </div>
+
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

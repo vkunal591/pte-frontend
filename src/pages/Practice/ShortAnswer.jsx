@@ -19,8 +19,12 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false); // New state for play/pause
+<<<<<<< Updated upstream
     const [showFlashAnswer, setShowFlashAnswer] = useState(false); // Answer Flash State
 
+=======
+      const [showTranscript, setShowTranscript] = useState(false);
+>>>>>>> Stashed changes
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
@@ -312,7 +316,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                                 <div className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
                                 <span className="font-bold text-2xl">Recording... {timeLeft} / {maxTime}</span>
 
-                                <span className="font-bold text-2xl">Recording... {formatTime(timeLeft)}</span> {/* Use formatTime here */}
+                           
 
                             </div>
                             <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
@@ -402,6 +406,22 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                     )}
                 </div>
             </div>
+
+             <div>
+                            <button
+                                    onClick={()=>setShowTranscript(!showTranscript)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
+                                >
+                                    <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
+                                </button>
+                            
+            
+                            {showTranscript && (
+                                <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
+                                    {question?.answer}
+                                </div>
+                            )}
+                            </div>
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-between pb-10">

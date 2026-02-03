@@ -81,6 +81,11 @@ export default function WriteFromDictation({ question, setActiveSpeechQuestion, 
 
     return (
         <div className="max-w-6xl mx-auto space-y-6 p-4">
+            <div>
+                <h1>Write From Dictation</h1>
+                <p>You will hear a sentence. Type the sentence in the box below exactly as you hear it. Write as much of the sentence as you can. You will hear the sentence only once.
+</p>
+            </div>
             {/* HEADER */}
             <div className="flex items-center gap-2">
                 <button onClick={() => setActiveSpeechQuestion(false)} className="hover:bg-gray-100 p-2 rounded-full transition">

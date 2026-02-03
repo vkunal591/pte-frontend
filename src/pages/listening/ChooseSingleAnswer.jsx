@@ -85,6 +85,10 @@ export default function ChooseSingleAnswer({ question, setActiveSpeechQuestion, 
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 lg:p-8">
+      <div>
+        <h1>Multiple Choice (Single)</h1>
+        <p>Listen to the recording and answer the single-choice question by selectingthe correct response . Only one response is correct.</p>
+      </div>
       <div className="max-w-7xl mx-auto  gap-8">
 
         {/* LEFT COLUMN: MAIN TASK */}

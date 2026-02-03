@@ -266,19 +266,7 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                         <span className="font-bold text-slate-700">#{question?._id?.slice(-5)?.toUpperCase()}</span>
                         <span className="text-slate-500 text-sm">{question?.title}</span>
                     </div>
-                    <button
-                        onClick={handleToggleTranscript}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
-                    >
-                        <Eye size={18} /> {showTranscript ? "Hide Transcript" : "Show Transcript"}
-                    </button>
                 </div>
-
-                {showTranscript && (
-                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
-                        {question.transcript}
-                    </div>
-                )}
 
                 <div className="flex-1 p-8 flex flex-col items-center justify-center">
 
@@ -451,6 +439,21 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                     )}
                 </div>
             </div>
+            <div>
+                <button
+                        onClick={handleToggleTranscript}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
+                    >
+                        <Eye size={18} /> {showTranscript ? "Hide Answer" : "Show Answer"}
+                    </button>
+                
+
+                {showTranscript && (
+                    <div className="p-4 bg-slate-100 border-b border-slate-200 text-slate-700 italic">
+                        {question.transcript}
+                    </div>
+                )}
+                </div>
 
             {/* Bottom Controls */}
             <div className="flex items-center justify-between pb-10">

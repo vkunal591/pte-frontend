@@ -77,6 +77,10 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
 
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div>
+            <h1>Highlight Incorrect Words</h1>
+            <p>You will hear a recording. Below is a transcription of the recording. Some words in the transcription differ from what the speaker said. Please click on the words that are different.</p>
+          </div>
         <div className="bg-white rounded-[2.5rem] w-full max-w-5xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-300">
 
           {/* Header */}
