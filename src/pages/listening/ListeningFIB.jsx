@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Play, Pause, ChevronRight, CheckCircle, Volume2, Hash, RefreshCw, Shuffle, X, Info, BarChart2, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Play, Pause, ChevronRight, CheckCircle, Volume2, Hash, RefreshCw, Shuffle, X, Info, BarChart2, ChevronLeft, Languages, Eye } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { submitListeningFIBAttempt } from '../../services/api';
 
@@ -336,7 +336,7 @@ export default function ListeningFIB({ question, setActiveSpeechQuestion, nextBu
             <div>
                 <h1>Fill in the Blanks</h1>
                 <p>
-You will hear a recording. Type the missing words in each blank.</p>
+                    You will hear a recording. Type the missing words in each blank.</p>
             </div>
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -433,6 +433,53 @@ You will hear a recording. Type the missing words in each blank.</p>
                 </div>
             )}
 
+            {/* Footer Nav */}
+            <div className="flex items-center justify-between pb-6 mt-6">
+                {/* LEFT SIDE: Translate, Answer, Redo */}
+                <div className="flex items-center gap-4">
+                    {/* Translate (Static) */}
+                    <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default">
+                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                            <Languages size={18} />
+                        </div>
+                        <span className="text-xs font-medium">Translate</span>
+                    </button>
+
+                    {/* Answer (Static) */}
+                    <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default text-opacity-50">
+                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                            <Eye size={18} />
+                        </div>
+                        <span className="text-xs font-medium">Answer</span>
+                    </button>
+
+                    {/* Redo */}
+                    <button onClick={handleRedo} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                            <RefreshCw size={18} />
+                        </div>
+                        <span className="text-xs font-medium">Redo</span>
+                    </button>
+                </div>
+
+                {/* RIGHT SIDE: Prev, Next */}
+                <div className="flex items-center gap-4">
+                    <button onClick={previousButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                            <ChevronLeft size={20} />
+                        </div>
+                        <span className="text-xs font-medium">Previous</span>
+                    </button>
+
+                    <button onClick={nextButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+                        <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+                            <ChevronRight size={20} />
+                        </div>
+                        <span className="text-xs font-medium">Next</span>
+                    </button>
+                </div>
+            </div>
+
             {/* History Section */}
             {question && (
                 <AttemptHistory
@@ -441,25 +488,7 @@ You will hear a recording. Type the missing words in each blank.</p>
                 />
             )}
 
-            {/* Footer Nav */}
-            <div className="flex items-center justify-center gap-6 py-6">
-                <button onClick={previousButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-primary-600 transition-colors group">
-                    <div className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center bg-white shadow-sm group-hover:border-primary-200 group-hover:shadow-md transition-all"><ChevronLeft size={24} /></div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Previous</span>
-                </button>
-                <button onClick={handleRedo} className="flex flex-col items-center gap-1 text-slate-400 hover:text-primary-600 transition-colors group">
-                    <div className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center bg-white shadow-sm group-hover:border-primary-200 group-hover:shadow-md transition-all"><RefreshCw size={20} /></div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Redo</span>
-                </button>
-                <button onClick={shuffleButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-primary-600 transition-colors group">
-                    <div className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center bg-white shadow-sm group-hover:border-primary-200 group-hover:shadow-md transition-all"><Shuffle size={20} /></div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Shuffle</span>
-                </button>
-                <button onClick={nextButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-primary-600 transition-colors group">
-                    <div className="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center bg-white shadow-sm group-hover:border-primary-200 group-hover:shadow-md transition-all"><ChevronRight size={24} /></div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Next</span>
-                </button>
-            </div>
+
 
             {/* RESULT MODAL */}
             {isResultOpen && viewAttempt && (
