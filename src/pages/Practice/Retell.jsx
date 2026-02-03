@@ -286,7 +286,7 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                     )}
 
                     {/* 3. PLAYING AUDIO WITH SLIDER & PLAY/PAUSE */}
-                    {status === 'playing' && (
+                    {(status === 'playing' || status === 'recording') && (
                         <div className="flex flex-col items-center gap-8 w-full max-w-lg">
                             <div className="flex items-center gap-4">
                                 <button
