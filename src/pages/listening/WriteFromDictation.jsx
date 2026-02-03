@@ -23,8 +23,6 @@ import {
 } from "lucide-react";
 
 
-
-
 export default function WriteFromDictation({
   question,
   setActiveSpeechQuestion,

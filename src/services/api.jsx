@@ -317,7 +317,7 @@ export const submitSummarizeSpokenAttempt = async (attemptData) => {
 export const submitHighlightAttempt = async (attemptData) => {
   try {
     const response = await axios.post(
-      `${API_BASE_URL}/hsc/submit`,
+      `${API_BASE_URL}/hcs/submit`,
       attemptData
     );
     return response.data;
@@ -355,6 +355,7 @@ export const submitHIWAttempt = async (attemptData) => {
       `${API_BASE_URL}/hiw/submit`,
       attemptData
     );
+    console.log(response)
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : new Error("Network Error");

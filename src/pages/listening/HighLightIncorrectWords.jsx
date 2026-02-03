@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
+import { submitHIWAttempt } from "../../services/api";
 
 export default function HighlightIncorrectWords({ question, setActiveSpeechQuestion }) {
   const [status, setStatus] = useState("countdown");
@@ -94,7 +95,7 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
     setShowModal(true);
 
     // Optional: call API to submit attempt
-    // await submitHIWAttempt(user.id, question.id, selectedIndices);
+     await submitHIWAttempt(user.id, question.id, selectedIndices);
   };
 
   /* ================= RESET ON QUESTION CHANGE ================= */

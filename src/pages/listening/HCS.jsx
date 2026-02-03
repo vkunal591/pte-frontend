@@ -15,7 +15,8 @@ import {
   ChevronRight,
   History,
   Share2,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { submitHighlightAttempt } from "../../services/api";
