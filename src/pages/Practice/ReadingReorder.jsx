@@ -1,104 +1,227 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, CheckCircle, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Hash, BarChart2, Info, X, GripVertical, ArrowRight, Eye, Languages } from 'lucide-react';
 import { submitReadingReorderAttempt, getReadingReorderAttempts } from '../../services/api';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
+export const getReadingReorderCommunityAttempts = (questionId) =>
+  axios.get(
+    `/api/reading-reorder/${questionId}/community`
+  );
+
 
 const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
-    const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("my"); // my | community
+  const [myAttempts, setMyAttempts] = useState([]);
+  const [communityAttemptsRaw, setCommunityAttemptsRaw] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (!questionId) return;
+  /* ================= MY ATTEMPTS ================= */
+  useEffect(() => {
+    if (!questionId || activeTab !== "my") return;
 
-        const fetchHistory = async () => {
-            setLoading(true);
-            try {
-                const res = await getReadingReorderAttempts(questionId);
-                if (res.success) {
-                    setHistory(res.data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch history', err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchMyAttempts = async () => {
+      setLoading(true);
+      try {
+        const res = await getReadingReorderAttempts(questionId);
 
-        fetchHistory();
-    }, [questionId, currentAttemptId]);
+        if (res?.success) {
+          // Sort by latest first
+          const sortedAttempts = (res.data || []).sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setMyAttempts(sortedAttempts);
+        }
+      } catch (err) {
+        console.error("Failed to fetch my attempts", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+    fetchMyAttempts();
+  }, [questionId, currentAttemptId, activeTab]);
 
-    if (history.length === 0) {
-        return (
-            <div className="mt-8 font-sans">
-                <div className="flex items-center gap-2 mb-4">
-                    <BarChart2 className="text-purple-600" size={20} />
-                    <h3 className="font-bold text-slate-800">Your Attempts</h3>
-                </div>
-                <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
-                        <Info size={20} className="text-slate-300" />
-                    </div>
-                    <p className="text-sm font-medium">No attempts yet</p>
-                    <p className="text-xs mt-1 opacity-70">Complete the exercise to see your history</p>
-                </div>
-            </div>
-        );
-    }
+  /* ================= COMMUNITY ATTEMPTS ================= */
+  useEffect(() => {
+    if (!questionId || activeTab !== "community" || communityAttemptsRaw.length)
+      return;
 
-    return (
-        <div className="mt-12 font-sans">
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-200 pb-4">
-                <BarChart2 className="text-purple-600" size={20} />
-                <h3 className="font-bold text-slate-800">History ({history.length})</h3>
-            </div>
+    const fetchCommunityAttempts = async () => {
+      setLoading(true);
+      try {
+        const res = await getReadingReorderCommunityAttempts(questionId); // Using the new API for community attempts
 
-            <div className="space-y-4">
-                {history.map((attempt) => (
-                    <div
-                        key={attempt._id}
-                        onClick={() => onSelectAttempt?.(attempt)}
-                        className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow group cursor-pointer"
-                    >
-                        <div className="min-w-[150px]">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Date</span>
-                            <div className="text-sm font-semibold text-slate-700">
-                                {new Date(attempt.createdAt).toLocaleString('en-US', {
-                                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                                })}
-                            </div>
-                        </div>
+        if (res?.data.success) {
+          setCommunityAttemptsRaw(res.data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch community attempts", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-                        <div className="flex-1">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Score</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className={`text-xl font-bold ${attempt.score === attempt.maxScore ? 'text-green-600' :
-                                    attempt.score > (attempt.maxScore / 2) ? 'text-blue-600' : 'text-red-500'
-                                    }`}>
-                                    {attempt.score}
-                                </span>
-                                <span className="text-sm text-slate-400 font-medium">/ {attempt.maxScore}</span>
-                            </div>
-                        </div>
+    fetchCommunityAttempts();
+  }, [questionId, activeTab, communityAttemptsRaw.length]);
 
-                        <div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${attempt.score === attempt.maxScore ? 'bg-green-100 text-green-700' :
-                                'bg-slate-100 text-slate-600'
-                                }`}>
-                                {attempt.score === attempt.maxScore ? 'Perfect' : 'Completed'}
-                            </span>
-                        </div>
-
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 font-bold text-sm">
-                            View Result &rarr;
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+  /* ================= FLATTEN & SORT COMMUNITY ATTEMPTS ================= */
+  const flattenedCommunityAttempts = useMemo(() => {
+    const flattened = communityAttemptsRaw.flatMap((user) =>
+      user.attempts.map((attempt) => ({
+        ...attempt,
+        communityUserId: user.userId,
+      }))
     );
+    // Sort by latest first
+    return flattened.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [communityAttemptsRaw]);
+
+  const list = activeTab === "my" ? myAttempts : flattenedCommunityAttempts;
+
+  /* ================= LOADING ================= */
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-slate-500">Loading history...</div>
+    );
+  }
+
+  return (
+    <div className="mt-12 font-sans">
+      {/* ================= HEADER + TABS ================= */}
+      <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
+        <div className="flex items-center gap-2">
+          <BarChart2 className="text-purple-600" size={20} />
+          <h3 className="font-bold text-slate-800">
+            {activeTab === "my" ? "Your Attempts" : "Community Attempts"}
+          </h3>
+        </div>
+
+        <div className="flex bg-slate-100 rounded-xl p-1">
+          <button
+            onClick={() => setActiveTab("my")}
+            className={`px-4 py-1.5 text-sm font-bold rounded-lg transition ${
+              activeTab === "my"
+                ? "bg-white shadow text-purple-600"
+                : "text-slate-500"
+            }`}
+          >
+            My
+          </button>
+          <button
+            onClick={() => setActiveTab("community")}
+            className={`px-4 py-1.5 text-sm font-bold rounded-lg transition ${
+              activeTab === "community"
+                ? "bg-white shadow text-purple-600"
+                : "text-slate-500"
+            }`}
+          >
+            Community
+          </button>
+        </div>
+      </div>
+
+      {/* ================= EMPTY STATE ================= */}
+      {list.length === 0 && (
+        <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border">
+            <Info size={20} className="text-slate-300" />
+          </div>
+          <p className="text-sm font-medium">
+            {activeTab === "my"
+              ? "No attempts yet"
+              : "No community attempts yet"}
+          </p>
+          <p className="text-xs mt-1 opacity-70">
+            Complete the exercise to see your history
+          </p>
+        </div>
+      )}
+
+      {/* ================= LIST ================= */}
+      <div className="space-y-4">
+        {list.map((attempt) => (
+          <div
+            key={attempt._id}
+            onClick={() => onSelectAttempt?.(attempt)}
+            className={`bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 transition cursor-pointer ${
+              activeTab === "my" ? "hover:shadow-md group" : ""
+            }`}
+          >
+            {/* 👤 COMMUNITY USER (only for community tab) */}
+            {activeTab === "community" && attempt.communityUserId && (
+              <div className="min-w-[160px]">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                  User
+                </span>
+                <div className="text-sm font-semibold text-slate-700 truncate">
+                  {attempt.communityUserId.slice(-6)} {/* Display last 6 chars */}
+                </div>
+              </div>
+            )}
+
+            {/* 📅 DATE */}
+            <div className="min-w-[150px]">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Date
+              </span>
+              <div className="text-sm font-semibold text-slate-700">
+                {new Date(attempt.createdAt).toLocaleString("en-US", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+
+            {/* 📊 SCORE */}
+            <div className="flex-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Score
+              </span>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={`text-xl font-bold ${
+                    attempt.score === attempt.maxScore
+                      ? "text-green-600"
+                      : attempt.score > attempt.maxScore / 2
+                      ? "text-blue-600" // Mid-range score
+                      : "text-red-500"
+                  }`}
+                >
+                  {attempt.score}
+                </span>
+                <span className="text-sm text-slate-400 font-medium">
+                  / {attempt.maxScore}
+                </span>
+              </div>
+            </div>
+
+            {/* ✅ STATUS */}
+            <div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  attempt.score === attempt.maxScore
+                    ? "bg-green-100 text-green-700"
+                    : "bg-slate-100 text-slate-600" // For completed but not perfect
+                }`}
+              >
+                {attempt.score === attempt.maxScore ? "Perfect" : "Completed"}
+              </span>
+            </div>
+
+            {/* ACTION */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 font-bold text-sm">
+              View Result →
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
+
 
 const ReadingReorder = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const { user } = useSelector((state) => state.auth);

@@ -2,111 +2,243 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Hash, BarChart2, Info, X, Eye, Languages } from 'lucide-react';
 import { submitReadingMultiChoiceMultiAnswerAttempt, getReadingMultiChoiceMultiAnswerAttempts } from '../../services/api';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
+
+
+const getReadingMultiChoiceMultiAnswerCommunityAttempts = (questionId) =>
+  axios.get(`/api/reading-multi-choice-multi-answer/${questionId}/community`);
 
 const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
-    const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("my"); // my | community
+  const [history, setHistory] = useState([]);
+  const [community, setCommunity] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (!questionId) return;
+  /* ================= MY ATTEMPTS ================= */
+  useEffect(() => {
+    if (!questionId || activeTab !== "my") return;
 
-        const fetchHistory = async () => {
-            setLoading(true);
-            try {
-                const res = await getReadingMultiChoiceMultiAnswerAttempts(questionId);
-                if (res.success) {
-                    setHistory(res.data);
-                }
-            } catch (err) {
-                console.error('Failed to fetch history', err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const res = await getReadingMultiChoiceMultiAnswerAttempts(questionId);
+        if (res?.data) {
+          setHistory(res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch history", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        fetchHistory();
-    }, [questionId, currentAttemptId]);
+    fetchHistory();
+  }, [questionId, currentAttemptId, activeTab]);
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading history...</div>;
+  /* ================= COMMUNITY ================= */
+  useEffect(() => {
+    if (!questionId || activeTab !== "community") return;
 
-    if (history.length === 0) {
-        return (
-            <div className="mt-8 font-sans">
-                <div className="flex items-center gap-2 mb-4">
-                    <BarChart2 className="text-purple-600" size={20} />
-                    <h3 className="font-bold text-slate-800">Your Attempts</h3>
-                </div>
-                <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
-                        <Info size={20} className="text-slate-300" />
-                    </div>
-                    <p className="text-sm font-medium">No attempts yet</p>
-                    <p className="text-xs mt-1 opacity-70">Complete the exercise to see your history</p>
-                </div>
-            </div>
-        );
-    }
+    const fetchCommunity = async () => {
+      setLoading(true);
+      try {
+        const res =
+          await getReadingMultiChoiceMultiAnswerCommunityAttempts(questionId);
+          console.log(res?.data)
+        if (res?.data?.success) {
+          setCommunity(res.data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch community", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCommunity();
+  }, [questionId, activeTab]);
+
+  if (loading) {
     return (
-        <div className="mt-12 font-sans">
-            <div className="flex items-center gap-2 mb-6 border-b border-slate-200 pb-4">
-                <BarChart2 className="text-purple-600" size={20} />
-                <h3 className="font-bold text-slate-800">History ({history.length})</h3>
-            </div>
-
-            <div className="space-y-4">
-                {history.map((attempt) => (
-                    <div
-                        key={attempt._id}
-                        onClick={() => onSelectAttempt?.(attempt)}
-                        className="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow group cursor-pointer"
-                    >
-                        {/* Date */}
-                        <div className="min-w-[150px]">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Date</span>
-                            <div className="text-sm font-semibold text-slate-700">
-                                {new Date(attempt.createdAt).toLocaleString('en-US', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Score */}
-                        <div className="flex-1">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Score</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className={`text-xl font-bold ${attempt.score === attempt.maxScore ? 'text-green-600' :
-                                    attempt.score > 0 ? 'text-blue-600' : 'text-slate-500'
-                                    }`}>
-                                    {attempt.score}
-                                </span>
-                                <span className="text-sm text-slate-400 font-medium">/ {attempt.maxScore}</span>
-                            </div>
-                        </div>
-
-                        {/* Status/Badge */}
-                        <div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${attempt.score === attempt.maxScore ? 'bg-green-100 text-green-700' :
-                                'bg-slate-100 text-slate-600'
-                                }`}>
-                                {attempt.score === attempt.maxScore ? 'Perfect' : 'Completed'}
-                            </span>
-                        </div>
-
-                        {/* View Action */}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 font-bold text-sm">
-                            View Result &rarr;
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
+      <div className="p-8 text-center text-slate-500">
+        Loading history...
+      </div>
     );
+  }
+
+  return (
+    <div className="mt-12 font-sans">
+      {/* ================= HEADER + TABS ================= */}
+      <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
+        <div className="flex items-center gap-2">
+          <BarChart2 className="text-purple-600" size={20} />
+          <h3 className="font-bold text-slate-800">
+            {activeTab === "my" ? "Your Attempts" : "Community Attempts"}
+          </h3>
+        </div>
+
+        <div className="flex bg-slate-100 rounded-xl p-1">
+          <button
+            onClick={() => setActiveTab("my")}
+            className={`px-4 py-1.5 text-sm font-bold rounded-lg transition ${
+              activeTab === "my"
+                ? "bg-white shadow text-purple-600"
+                : "text-slate-500"
+            }`}
+          >
+            My
+          </button>
+
+          <button
+            onClick={() => setActiveTab("community")}
+            className={`px-4 py-1.5 text-sm font-bold rounded-lg transition ${
+              activeTab === "community"
+                ? "bg-white shadow text-purple-600"
+                : "text-slate-500"
+            }`}
+          >
+            Community
+          </button>
+        </div>
+      </div>
+
+      {/* ================= EMPTY STATES ================= */}
+      {activeTab === "my" && history.length === 0 && (
+        <EmptyState text="No attempts yet" />
+      )}
+
+      {activeTab === "community" && community.length === 0 && (
+        <EmptyState text="No community attempts yet" />
+      )}
+
+      {/* ================= MY ATTEMPTS ================= */}
+      {activeTab === "my" && (
+        <div className="space-y-4">
+          {history.map((attempt) => (
+            <AttemptCard
+              key={attempt._id}
+              attempt={attempt}
+              onClick={() => onSelectAttempt?.(attempt)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ================= COMMUNITY ================= */}
+      {activeTab === "community" && (
+        <div className="space-y-8">
+          {community.map((group) => (
+            <div key={group.userId}>
+              {/* USER NAME */}
+              <div className="mb-3 text-sm font-bold text-slate-700">
+                👤 {group.user?.name || "User"}
+              </div>
+
+              <div className="space-y-4">
+                {group.attempts.map((attempt) => (
+                  <AttemptCard
+                    key={attempt._id}
+                    attempt={attempt}
+                    onClick={() => onSelectAttempt?.(attempt)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
+
+/* ================= ATTEMPT CARD ================= */
+const AttemptCard = ({ attempt, onClick }) => {
+  const isPerfect = attempt.score === attempt.maxScore;
+
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow group ${
+        onClick ? "cursor-pointer" : ""
+      }`}
+    >
+      {/* DATE */}
+      <div className="min-w-[150px]">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          Date
+        </span>
+        <div className="text-sm font-semibold text-slate-700">
+          {new Date(attempt.createdAt).toLocaleString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </div>
+      </div>
+
+      {/* SCORE */}
+      <div className="flex-1">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+          Score
+        </span>
+        <div className="flex items-baseline gap-1">
+          <span
+            className={`text-xl font-bold ${
+              isPerfect
+                ? "text-green-600"
+                : attempt.score > 0
+                ? "text-blue-600"
+                : "text-slate-500"
+            }`}
+          >
+            {attempt.score}
+          </span>
+          <span className="text-sm text-slate-400 font-medium">
+            / {attempt.maxScore}
+          </span>
+        </div>
+      </div>
+
+      {/* STATUS */}
+      <div>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-bold ${
+            isPerfect
+              ? "bg-green-100 text-green-700"
+              : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {isPerfect ? "Perfect" : "Completed"}
+        </span>
+      </div>
+
+      {/* ACTION */}
+      {onClick && (
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 font-bold text-sm">
+          View Result →
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ================= EMPTY ================= */
+const EmptyState = ({ text }) => (
+  <div className="text-center py-12 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-slate-100">
+      <Info size={20} className="text-slate-300" />
+    </div>
+    <p className="text-sm font-medium">{text}</p>
+    <p className="text-xs mt-1 opacity-70">
+      Complete the exercise to see history
+    </p>
+  </div>
+);
+
+
+
 
 const ReadingMultiChoiceMultiAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const { user } = useSelector((state) => state.auth);
