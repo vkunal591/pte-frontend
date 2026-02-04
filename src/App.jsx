@@ -152,14 +152,6 @@ function App() {
           <Route path="practice/reading/reorder" element={<ManageReadingReorder />} />
           <Route path="practice/listening/sst" element={<ManageSST />} />
 
-          <Route path="practice/speaking/asq" element={<ManageShortAnswer />} />
-          <Route path="practice/speaking/sgd" element={<SummarizeGroupManage />} />
-          <Route path="practice/speaking/rts" element={<ManageRespondSituation />} />
-          <Route path="practice/writing/we" element={<ManageWriteEssay />} />
-          <Route path="practice/writing/swt" element={<ManageSummarizeText />} />
-          <Route path="practice/reading/fibrw" element={<ManageReadingFIBDropdown />} />
-          <Route path="practice/listening/sst" element={<ManageSST />} />
-          <Route path="practice/listening/hcs" element={<ManageHighlightSummary />} />
           <Route path="practice/listening/hiw" element={<ManageHIW />} />
           <Route path="practice/listening/smw" element={<ManageSelectMissingWord />} />
           <Route path="practice/listening/wfd" element={<ManageWriteFromDictation />} />
@@ -169,8 +161,6 @@ function App() {
           <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
           <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
 
-          <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
-          <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
 
           <Route path='mock/sectional/listening' element={<ManageListening />} />
           <Route path='mock/sectional/speaking' element={<ManageSpeaking />} />

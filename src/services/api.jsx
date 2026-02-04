@@ -252,7 +252,8 @@ export const submitReadingFIBDragDropAttempt = async (data) => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/reading-fib-drag-drop/submit`,
-      data
+      data,
+      { withCredentials: true }
     );
     console.log("submitReadingFIBDragDropAttempt response:", response.data);
     return response.data;
