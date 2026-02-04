@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import {
     ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Square, Mic, Info, BarChart2, CheckCircle, Volume2, PlayCircle, History, Eye, SkipForward,
-    Target, Languages
+    Target, Languages,
+    Pause
 } from 'lucide-react';
 import { submitRespondSituationAttempt, submitSummarizeGroupAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
@@ -78,17 +79,20 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
     };
 
     const handleStartAudio = () => {
-        setStatus('playing');
-        setAudioCurrentTime(0);
-        if (questionAudioRef.current) {
-            questionAudioRef.current.currentTime = 0;
-            questionAudioRef.current.play().catch(err => {
-                console.error("Playback blocked", err);
-                moveToPrepRecord();
-            });
-        }
-    };
+  setStatus("playing");
+  setAudioCurrentTime(0);
 
+  if (questionAudioRef.current) {
+    questionAudioRef.current.currentTime = 0;
+    questionAudioRef.current
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch(err => {
+        console.error("Playback blocked", err);
+        moveToPrepRecord();
+      });
+  }
+};
     // New: Handle Slider Interaction
     const handleSliderChange = (e) => {
         const time = parseFloat(e.target.value);
@@ -190,15 +194,41 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         resetTranscript();
         transcriptRef.current = "";
     };
+    useEffect(() => {
+  const audio = questionAudioRef.current;
+  if (!audio) return;
+
+  const onPlay = () => setIsPlaying(true);
+  const onPause = () => setIsPlaying(false);
+
+  audio.addEventListener("play", onPlay);
+  audio.addEventListener("pause", onPause);
+
+  return () => {
+    audio.removeEventListener("play", onPlay);
+    audio.removeEventListener("pause", onPause);
+  };
+}, []);
+
+
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
-     const handleTogglePlayPause = () => {
-        setIsPlaying((prev) => !prev);
-    };
+    const handleTogglePlayPause = () => {
+  if (!questionAudioRef.current) return;
+
+  if (questionAudioRef.current.paused) {
+    questionAudioRef.current.play();
+    setIsPlaying(true);
+  } else {
+    questionAudioRef.current.pause();
+    setIsPlaying(false);
+  }
+};
+
 
     const progressPercent = (timeLeft / maxTime) * 100;
 
@@ -254,44 +284,76 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                     )}
 
                     {/* 3. PLAYING AUDIO WITH SLIDER */}
-                    {status === 'playing' && (
-                        <div className="flex flex-col items-center gap-8 w-full max-w-lg">
+                   {(status === "playing" || status === "recording") && (
+                    <div className="relative w-full max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
 
-                            <div>{question.transcript}</div>
-                            <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center animate-pulse">
-                                <Volume2 size={40} />
-                            </div>
-                           <button onClick={()=>{setStatus("prep_record"); handleTogglePlayPause()}} className={`p-4 m-2 bg-blue-400 text-white ${status === 'recording'? "hidden":""}`}>Skip Audio</button>
-                             <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleTogglePlayPause}
-                                    className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors"
-                                >
-                                    {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
-                                </button>
-                                <div className="text-slate-500 text-sm font-medium">
-                                    {isPlaying ? "Playing Speaker Audio..." : "Audio Paused"}
-                                </div>
-                            </div>
-                            <div className="w-full space-y-2">
-                                <div className="flex justify-between text-sm font-mono text-blue-600 font-bold">
-                                    <span>{formatTime(audioCurrentTime)}</span>
-                                    <span>{formatTime(audioDuration)}</span>
-                                </div>
-                                {/* INTERACTIVE SLIDER */}
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={audioDuration || 0}
-                                    step="0.1"
-                                    value={audioCurrentTime}
-                                    onChange={handleSliderChange}
-                                    className="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
-                                />
-                                <p className="text-center text-slate-500 text-sm font-medium">Listening to Speaker...</p>
-                            </div>
+                        {/* Skip */}
+                       <button
+                        onClick={() => {
+                            if (questionAudioRef.current) {
+                            questionAudioRef.current.pause();
+                            questionAudioRef.current.currentTime = 0;
+                            }
+                            setIsPlaying(false);
+                            setStatus("prep_record");
+                        }}
+                        className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                        Skip Audio
+                        </button>
+
+
+                        {/* Question Text */}
+                        <div className="text-center text-slate-600 text-sm leading-relaxed italic max-h-28 overflow-y-auto px-4">
+                        {question.transcript}
                         </div>
+
+                        {/* Speaker */}
+                        <div className="flex justify-center">
+                        <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center animate-pulse">
+                            <Volume2 size={36} />
+                        </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="flex flex-col items-center gap-3">
+                        <button
+                            onClick={handleTogglePlayPause}
+                            className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200"
+                        >
+                            {isPlaying ? <Pause size={30} /> : <Play size={30} />}
+                        </button>
+
+                        <p className="text-sm text-slate-500">
+                            {isPlaying ? "Playing speaker audio..." : "Audio paused"}
+                        </p>
+                        </div>
+
+                        {/* Progress */}
+                        <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono text-slate-500">
+                            <span>{formatTime(audioCurrentTime)}</span>
+                            <span>{formatTime(audioDuration)}</span>
+                        </div>
+
+                        <input
+                            type="range"
+                            min="0"
+                            max={audioDuration || 0}
+                            step="0.1"
+                            value={audioCurrentTime}
+                            onChange={handleSliderChange}
+                            className="w-full accent-blue-600 cursor-pointer"
+                        />
+
+                        <p className="text-center text-xs text-slate-400">
+                            Listening to speaker…
+                        </p>
+                        </div>
+                    </div>
                     )}
+
+
 
                     {/* 4. PREP RECORD (10s Skipable) */}
                     {status === 'prep_record' && (
@@ -308,26 +370,36 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                     )}
 
                     {/* 5. RECORDING (2m) */}
-                    {status === 'recording' && (
+                  {status === "recording" && (
                         <div className="flex flex-col items-center gap-8 w-full max-w-md">
-                            <div className="flex items-center gap-4 text-red-600">
-                                <div className="w-4 h-4 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)} / {formatTime(maxTime)}</span>
+
+                            <div className="flex items-center gap-3 text-red-600">
+                            <span className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
+                            <span className="text-3xl font-bold tabular-nums">
+                                {formatTime(timeLeft)} / {formatTime(maxTime)}
+                            </span>
                             </div>
 
-                            <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                                <div className="h-full bg-red-500 transition-all duration-1000 linear" style={{ width: `${progressPercent}%` }} />
+                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-red-500 transition-all duration-1000"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                             </div>
 
-                            <div className="p-4 bg-slate-50 rounded-xl w-full border border-dashed border-slate-300 min-h-[120px] text-slate-700">
-                                {transcript || "Listening to your summary..."}
+                            <div className="w-full min-h-[120px] p-4 bg-slate-50 border border-dashed rounded-xl text-slate-700">
+                            {transcript || "Listening to your response..."}
                             </div>
 
-                            <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl transition-all active:scale-95">
-                                <Square size={20} fill="currentColor" /> Finish Recording
+                            <button
+                            onClick={stopRecording}
+                            className="px-10 py-4 bg-red-600 text-white rounded-full font-bold flex items-center gap-3 hover:bg-red-700 shadow-lg"
+                            >
+                            <Square size={18} /> Finish Recording
                             </button>
                         </div>
-                    )}
+                        )}
+
 
                     {/* 6. SUBMITTING */}
                     {status === 'submitting' && (

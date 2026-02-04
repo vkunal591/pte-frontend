@@ -286,75 +286,112 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                     )}
 
                     {/* 3. PLAYING AUDIO WITH SLIDER & PLAY/PAUSE */}
-                    {(status === 'playing' || status === 'recording') && (
-                        <div className="flex flex-col items-center gap-8 w-full max-w-lg">
-                            <button onClick={()=>{setStatus("prep_record"); handleTogglePlayPause()}} className={`p-4 m-2 bg-blue-400 text-white ${status === 'recording'? "hidden":""}`}>Skip Audio</button>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleTogglePlayPause}
-                                    className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors"
-                                >
-                                    {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
-                                </button>
-                                <div className="text-slate-500 text-sm font-medium">
-                                    {isPlaying ? "Playing Speaker Audio..." : "Audio Paused"}
-                                </div>
+                   {(status === "playing" || status === "recording") && (
+                        <div className="relative w-full max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
+
+                            {/* Skip Audio */}
+                            {status !== "recording" && (
+                            <button
+                                onClick={() => {
+                                handleTogglePlayPause();
+                                setStatus("prep_record");
+                                }}
+                                className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
+                            >
+                                Skip Audio
+                            </button>
+                            )}
+
+                            {/* Play / Pause */}
+                            <div className="flex flex-col items-center gap-4">
+                            <button
+                                onClick={handleTogglePlayPause}
+                                className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-200 transition"
+                            >
+                                {isPlaying ? <Pause size={30} /> : <Play size={30} />}
+                            </button>
+
+                            <p className="text-sm font-medium text-slate-500">
+                                {isPlaying ? "Playing audio..." : "Audio paused"}
+                            </p>
                             </div>
 
-                            <div className="w-full space-y-2">
-                                <div className="flex justify-between text-sm font-mono text-blue-600 font-bold">
-                                    <span>{formatTime(audioCurrentTime)}</span>
-                                    <span>{formatTime(audioDuration)}</span>
-                                </div>
-                                {/* INTERACTIVE SLIDER */}
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={audioDuration || 0}
-                                    step="0.1"
-                                    value={audioCurrentTime}
-                                    onChange={handleSliderChange}
-                                    className="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
-                                />
+                            {/* Slider */}
+                            <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-mono text-slate-500">
+                                <span>{formatTime(audioCurrentTime)}</span>
+                                <span>{formatTime(audioDuration)}</span>
+                            </div>
+
+                            <input
+                                type="range"
+                                min="0"
+                                max={audioDuration || 0}
+                                step="0.1"
+                                value={audioCurrentTime}
+                                onChange={handleSliderChange}
+                                className="w-full accent-blue-600 cursor-pointer"
+                            />
                             </div>
                         </div>
-                    )}
+                        )}
+
 
                     {/* 4. PREP RECORD (10s Skipable) */}
-                    {status === 'prep_record' && (
-                        <div className="text-center space-y-6">
-                            <div className="text-slate-400 font-semibold uppercase tracking-widest text-sm">Prepare to summarize</div>
-                            <div className="text-6xl font-black text-slate-800">{timeLeft}s</div>
-                            <button
-                                onClick={startRecording}
-                                className="flex items-center gap-2 mx-auto px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold transition-colors"
-                            >
-                                <SkipForward size={18} /> Skip Timer
-                            </button>
+                 {status === "prep_record" && (
+                    <div className="text-center space-y-6">
+                        <p className="uppercase text-xs tracking-widest text-slate-400">
+                        Prepare to summarize
+                        </p>
+
+                        <div className="text-6xl font-black text-slate-800">
+                        {timeLeft}s
                         </div>
+
+                        <button
+                        onClick={startRecording}
+                        className="inline-flex items-center gap-2 px-6 py-2 text-sm font-bold text-slate-600 bg-slate-100 rounded-full hover:bg-slate-200"
+                        >
+                        <SkipForward size={16} /> Skip
+                        </button>
+                    </div>
                     )}
 
                     {/* 5. RECORDING (2m) */}
-                    {status === 'recording' && (
-                        <div className="flex flex-col items-center gap-8 w-full max-w-md">
-                            <div className="flex items-center gap-4 text-red-600">
-                                <div className="w-4 h-4 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-3xl tabular-nums">{formatTime(timeLeft)} / {formatTime(maxTime)}</span>
+                    {status === "recording" && (
+                        <div className="w-full max-w-lg mx-auto space-y-8 text-center">
+
+                            {/* Timer */}
+                            <div className="flex items-center justify-center gap-3 text-red-600">
+                            <span className="w-3 h-3 rounded-full bg-red-600 animate-ping" />
+                            <span className="text-3xl font-bold tabular-nums">
+                                {formatTime(timeLeft)}
+                            </span>
                             </div>
 
-                            <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                                <div className="h-full bg-red-500 transition-all duration-1000 linear" style={{ width: `${progressPercent}%` }} />
+                            {/* Progress Bar */}
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-red-500 transition-all duration-1000"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                             </div>
 
-                            <div className="p-4 bg-slate-50 rounded-xl w-full border border-dashed border-slate-300 min-h-[120px] text-slate-700">
-                                {transcript || "Listening to your summary..."}
+                            {/* Transcript */}
+                            <div className="min-h-[120px] p-4 bg-slate-50 border border-dashed rounded-xl text-slate-700">
+                            {transcript || "Listening to your response..."}
                             </div>
 
-                            <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl transition-all active:scale-95">
-                                <Square size={20} fill="currentColor" /> Finish Recording
+                            {/* Stop */}
+                            <button
+                            onClick={stopRecording}
+                            className="mx-auto flex items-center gap-3 px-10 py-4 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 shadow-lg"
+                            >
+                            <Square size={18} /> Finish Recording
                             </button>
                         </div>
-                    )}
+                        )}
+
 
                     {/* 6. SUBMITTING */}
                     {status === 'submitting' && (

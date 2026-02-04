@@ -270,39 +270,56 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                     )}
 
                     {/* 3. PLAYING AUDIO WITH SLIDER & PLAY/PAUSE */}
-                    {(status === 'playing' || status === 'recording')  && (
-                        <div className="flex flex-col items-center gap-8 w-full max-w-lg">
-                              <button onClick={()=>{setStatus("prep_record"); handleTogglePlayPause()}} className={`p-4 m-2 bg-blue-400 text-white ${status === 'recording'? "hidden":""}`}>Skip Audio</button>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleTogglePlayPause}
-                                    className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors"
-                                >
-                                    {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" />}
-                                </button>
-                                <div className="text-slate-500 text-sm font-medium">
-                                    {isPlaying ? "Playing Speaker Audio..." : "Audio Paused"}
-                                </div>
-                            </div>
+                    {(status === "playing" || status === "recording") && (
+                    <div className="relative w-full max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
 
-                            <div className="w-full space-y-2">
-                                <div className="flex justify-between text-sm font-mono text-blue-600 font-bold">
-                                    <span>{formatTime(audioCurrentTime)}</span>
-                                    <span>{formatTime(audioDuration)}</span>
-                                </div>
-                                {/* INTERACTIVE SLIDER */}
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={audioDuration || 0}
-                                    step="0.1"
-                                    value={audioCurrentTime}
-                                    onChange={handleSliderChange}
-                                    className="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer accent-blue-600 hover:accent-blue-700 transition-all"
-                                />
-                            </div>
+                        {/* Skip Audio */}
+                        {status !== "recording" && (
+                        <button
+                            onClick={() => {
+                            handleTogglePlayPause();
+                            setStatus("prep_record");
+                            }}
+                            className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
+                        >
+                            Skip Audio
+                        </button>
+                        )}
+
+                        {/* Play / Pause */}
+                        <div className="flex flex-col items-center gap-4">
+                        <button
+                            onClick={handleTogglePlayPause}
+                            className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition"
+                        >
+                            {isPlaying ? <Pause size={30} /> : <Play size={30} />}
+                        </button>
+
+                        <p className="text-sm font-medium text-slate-500">
+                            {isPlaying ? "Playing speaker audio..." : "Audio paused"}
+                        </p>
                         </div>
+
+                        {/* Progress / Slider */}
+                        <div className="space-y-2">
+                        <div className="flex justify-between text-xs font-mono text-slate-500">
+                            <span>{formatTime(audioCurrentTime)}</span>
+                            <span>{formatTime(audioDuration)}</span>
+                        </div>
+
+                        <input
+                            type="range"
+                            min="0"
+                            max={audioDuration || 0}
+                            step="0.1"
+                            value={audioCurrentTime}
+                            onChange={handleSliderChange}
+                            className="w-full accent-blue-600 cursor-pointer"
+                        />
+                        </div>
+                    </div>
                     )}
+
 
                     {/* 4. PREP RECORD (10s Skipable) */}
                     {status === 'prep_record' && (
