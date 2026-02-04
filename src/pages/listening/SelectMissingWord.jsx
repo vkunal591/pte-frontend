@@ -295,6 +295,10 @@ export default function SelectMissingWord({
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6">
+      <div>
+        <h1>Select Missing Word</h1>
+        <p>You will hear a recording about fiction writing. At the end of the recording the lost word or group of words has been replaced by a beep. Select the correct option to complete the recording.</p>
+      </div>
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-6">
         <button

@@ -139,6 +139,15 @@ const attemptsToRender =
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-4">
+      <div>
+        <h1>
+          Summarize Spoken Text
+        </h1>
+        <p>
+          You will hear a short report. Write a summary for a fellow student who was not present. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.
+
+        </p>
+      </div>
       {/* HEADER */}
       <div className="flex items-center gap-2">
         <button onClick={() => setActiveSpeechQuestion(false)} className="hover:bg-gray-100 p-2 rounded-full transition">

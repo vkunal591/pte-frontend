@@ -107,6 +107,7 @@ const AttemptHistoryHIW = ({ questionId, currentAttemptId, onSelectAttempt }) =>
 
   return (
     <div className="mt-12 font-sans">
+     
       {/* ================= HEADER + TABS ================= */}
       <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-2">
@@ -389,6 +390,10 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
+       <div>
+        <h1>Highlight Incorrect Words</h1>
+        <p>You will hear a recording. Below is a transcription of the recording. Some words in the transcription differ from what the speaker said. Please click on the words that are different.</p>
+      </div>
       {/* ================= HEADER ================= */}
       <div className="flex items-center gap-4">
         <button onClick={() => setActiveSpeechQuestion(false)}>

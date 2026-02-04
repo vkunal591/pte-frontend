@@ -287,7 +287,17 @@ export default function HCS({ question, setActiveSpeechQuestion, nextButton, pre
   /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen bg-[#f8fafc] p-6">
+
       <div className="max-w-7xl mx-auto space-y-6">
+
+          <div>
+        <h1>
+            Highlight Correct Summary
+        </h1>
+        <p>
+          You will hear a recording. Click on the paragraph that best relates to the recording.
+        </p>
+      </div>
 
         {/* HEADER */}
         <div className="flex justify-between items-center">
