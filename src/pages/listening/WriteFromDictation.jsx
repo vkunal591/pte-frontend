@@ -19,8 +19,169 @@ import {
   History,
   Hash,
   Languages,
-  Eye
+  Eye,
+  Users,
+  User
 } from "lucide-react";
+import axios from "axios";
+
+
+
+
+
+ function WFDAttemptHistory({ question }) {
+  const [mode, setMode] = useState("my"); // my | community
+  const [community, setCommunity ] = useState([])
+
+  const attempts =
+    mode === "my"
+      ? question?.lastAttempts || []
+      : community;
+
+      const fetchCommunityAttempts = async () => {
+    try {
+  
+      const res = await axios.get("api/write-from-dictation/community");
+      
+      console.log(res?.data?.data)
+        setCommunity(res?.data?.data);
+      
+    } catch (err) {
+      console.error("Community fetch error:", err);
+    } 
+    
+  };
+
+  const handleTabChange = (tab) => {
+    setMode(tab);
+    
+      fetchCommunityAttempts();
+  };
+
+//   if (!attempts.length) {
+//     return (
+//       <div className="bg-white rounded-2xl border p-6 text-center text-slate-400">
+//         <History className="mx-auto mb-2" />
+//         No attempts yet
+//       </div>
+//     );
+//   }
+
+  return (
+    <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-4">
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <h3 className="font-black text-slate-800 flex items-center gap-2">
+          <History size={20} className="text-blue-500" />
+          Attempt History
+        </h3>
+
+        {/* TOGGLE */}
+        <div className="flex bg-slate-100 rounded-lg p-1 text-xs font-bold">
+          <button
+            onClick={() => handleTabChange("my")}
+            className={`px-3 py-1 rounded-md flex items-center gap-1 ${
+              mode === "my"
+                ? "bg-white shadow text-blue-600"
+                : "text-slate-500"
+            }`}
+          >
+            <User size={14} /> My
+          </button>
+          <button
+            onClick={() => handleTabChange("community")}
+            className={`px-3 py-1 rounded-md flex items-center gap-1 ${
+              mode === "community"
+                ? "bg-white shadow text-purple-600"
+                : "text-slate-500"
+            }`}
+          >
+            <Users size={14} /> Community
+          </button>
+        </div>
+      </div>
+
+      {/* LIST */}
+      <div className="space-y-4">
+        {attempts.map((attempt, index) => {
+          const correct =
+            attempt.wordAnalysis?.filter(w => w.status === "correct").length || 0;
+          const missing =
+            attempt.wordAnalysis?.filter(w => w.status === "missing").length || 0;
+          const extra =
+            attempt.wordAnalysis?.filter(w => w.status === "extra").length || 0;
+
+          return (
+            <div
+              key={index}
+              className="border rounded-xl p-4 bg-slate-50 hover:bg-slate-100 transition"
+            >
+              {/* HEADER */}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-slate-500">
+                  {mode === "community"
+                    ? attempt.userName || "Anonymous"
+                    : `Attempt #${question.attemptCount - index}`}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {new Date(attempt.createdAt).toLocaleString()}
+                </span>
+              </div>
+
+              {/* SCORE */}
+              <div className="flex items-center gap-4 mb-3">
+                <div className="text-3xl font-black text-slate-800">
+                  {attempt.totalScore}
+                  <span className="text-sm text-slate-400"> / 10</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Clock size={14} />
+                  {attempt.timeTaken}s
+                </div>
+              </div>
+
+              {/* STATS */}
+              <div className="grid grid-cols-3 gap-3 text-xs font-bold">
+                <Stat label="Correct" value={correct} color="green" />
+                <Stat label="Missing" value={missing} color="red" />
+                <Stat label="Extra" value={extra} color="purple" />
+              </div>
+
+              {/* TRANSCRIPT */}
+              <div className="mt-3">
+                <p className="text-xs font-bold text-slate-500 mb-1">
+                  Answer
+                </p>
+                <p className="text-sm text-slate-700 bg-white border rounded-lg p-2 line-clamp-3">
+                  {attempt.studentTranscript}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const Stat = ({ label, value, color }) => {
+  const colors = {
+    green: "text-green-600 bg-green-100",
+    red: "text-red-600 bg-red-100",
+    purple: "text-purple-600 bg-purple-100",
+  };
+
+  return (
+    <div className="flex items-center gap-2 bg-white border rounded-lg p-2">
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${colors[color]}`}>
+        {value}
+      </div>
+      <span className="text-slate-600">{label}</span>
+    </div>
+  );
+};
 
 
 export default function WriteFromDictation({
@@ -279,6 +440,8 @@ export default function WriteFromDictation({
           </button>
         </div>
       </div>
+
+      <WFDAttemptHistory question={question} />
 
       {/* AUDIO ELEMENT */}
       <audio

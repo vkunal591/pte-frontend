@@ -1,9 +1,153 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Volume2, RotateCcw, ChevronRight, X, Play, CheckCircle2, Info, Headphones, BookOpen, Share2, History, Calendar, Trash2, Languages, Eye, RefreshCw, ChevronLeft, Pause } from "lucide-react";
+import { ArrowLeft, Volume2, RotateCcw, ChevronRight, X, Play, CheckCircle2, Info, Headphones, BookOpen, Share2, History, Calendar, Trash2, Languages, Eye, RefreshCw, ChevronLeft, Pause, Users,
+  User } from "lucide-react";
 import { submitChooseSingleAnswerAttempt, submitHighlightAttempt } from "../../services/api";
 import { useSelector } from "react-redux";
 
 const PREP_TIME = 3;
+
+
+import axios from "axios";
+
+ function AttemptHistory({ question, userId }) {
+  const [mode, setMode] = useState("my"); // my | community
+  const [attempts, setAttempts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchAttempts();
+  }, [mode]);
+
+  const fetchAttempts = async () => {
+    try {
+      setLoading(true);
+      if(mode === "my"){
+        setAttempts(question?.lastAttempts)
+      }else{
+          const res = await axios.get("/api/choose-single-answer/community")
+          setAttempts(res?.data?.data)
+      }  
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewPrevious = (attempt) => {
+    console.log("View attempt:", attempt);
+  };
+
+
+  return (
+    <div>
+      <div className="bg-white rounded-[2rem] border shadow-sm p-6 min-h-[400px]">
+
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-black text-slate-800 flex items-center gap-2">
+            <History size={20} className="text-blue-500" />
+            Attempt History
+          </h3>
+
+          {/* TOGGLE */}
+          <div className="flex bg-slate-100 rounded-xl p-1 text-xs font-bold">
+            <button
+              onClick={() => setMode("my")}
+              className={`px-4 py-1.5 rounded-lg flex items-center gap-1 ${
+                mode === "my"
+                  ? "bg-white shadow text-blue-600"
+                  : "text-slate-500"
+              }`}
+            >
+              <User size={14} /> My
+            </button>
+            <button
+              onClick={() => setMode("community")}
+              className={`px-4 py-1.5 rounded-lg flex items-center gap-1 ${
+                mode === "community"
+                  ? "bg-white shadow text-indigo-600"
+                  : "text-slate-500"
+              }`}
+            >
+              <Users size={14} /> Community
+            </button>
+          </div>
+        </div>
+
+        {/* CONTENT */}
+        <div className="space-y-4">
+          {loading ? (
+            <p className="text-center text-slate-400">Loading...</p>
+          ) : attempts.length > 0 ? (
+            attempts.map((attempt, index) => (
+              <div
+                key={attempt._id || index}
+                className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between"
+              >
+                {/* LEFT */}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-600">
+                    {mode === "community"
+                      ? attempt.userName?.[0]?.toUpperCase() || "U"
+                      : "K"}
+                  </div>
+
+                  <div>
+                    <p className="font-bold text-slate-800">
+                      {mode === "community"
+                        ? attempt?.user.name || "Anonymous"
+                        : "Krishna Kant"}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(attempt.createdAt).toLocaleDateString()}{" "}
+                      {new Date(attempt.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* CENTER */}
+                <button
+                  onClick={() => handleViewPrevious(attempt)}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2 rounded-xl flex items-center gap-2 shadow-sm transition"
+                >
+                  Score {attempt.totalScore}/10
+                  <RotateCcw size={16} />
+                </button>
+
+                {/* RIGHT */}
+                <div className="flex items-center gap-3 text-slate-400">
+                  <button className="hover:text-indigo-500 transition">
+                    <Share2 size={18} />
+                  </button>
+
+                  {mode === "my" && (
+                    <button className="hover:text-red-500 transition">
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-10">
+              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <History size={20} className="text-slate-300" />
+              </div>
+              <p className="text-xs font-bold text-slate-400">
+                No previous attempts
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function ChooseSingleAnswer({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) {
 
@@ -296,70 +440,8 @@ const handleSkipAudio = () => {
         </div>
       </div>
 
-      <div>
-        <div className="bg-white rounded-[2rem] border shadow-sm p-6 min-h-[400px]">
-          <h3 className="font-black text-slate-800 flex items-center gap-2 mb-6">
-            <History size={20} className="text-blue-500" />
-            Attempt History
-          </h3>
-
-          <div className="space-y-4">
-            {question.lastAttempts && question.lastAttempts.length > 0 ? (
-              question.lastAttempts.map((attempt, index) => (
-                <div
-                  key={attempt._id || index}
-                  className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between"
-                >
-                  {/* LEFT */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-600">
-                      K
-                    </div>
-
-                    <div>
-                      <p className="font-bold text-slate-800">Krishna kant</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(attempt.createdAt).toLocaleDateString()}{" "}
-                        {new Date(attempt.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* CENTER SCORE BUTTON */}
-                  <button
-                    onClick={() => handleViewPrevious(attempt)}
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2 rounded-xl flex items-center gap-2 shadow-sm transition"
-                  >
-                    Score {attempt.isCorrect ? "1/1" : "0/1"}
-                    <RotateCcw size={16} />
-                  </button>
-
-                  {/* RIGHT ICONS */}
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <button className="hover:text-indigo-500 transition">
-                      <Share2 size={18} />
-                    </button>
-                    <button className="hover:text-red-500 transition">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <History size={20} className="text-slate-300" />
-                </div>
-                <p className="text-xs font-bold text-slate-400">No previous attempts</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+      {/*  */}
+          <AttemptHistory question={question} userId={user._id}/>
       {/* AUDIO ELEMENT */}
       <audio
   ref={audioRef}

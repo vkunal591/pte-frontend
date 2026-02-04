@@ -3,6 +3,7 @@ import { ArrowLeft, Clock, Volume2, RotateCcw, ChevronRight, X, ChevronLeft, Ref
 import { useSelector } from "react-redux";
 
 import { submitSummarizeSpokenAttempt, submitSummarizeWrittenAttempt } from "../../services/api";
+import axios from "axios";
 
 const MAX_TIME = 600;
 const MIN_WORDS = 1;
@@ -103,8 +104,50 @@ export default function SST({ question, setActiveSpeechQuestion, nextButton, pre
   setAudioFinished(true);                 // enable typing & timer
 };
 
+const [activeTab, setActiveTab] = useState("my");
+const [communityAttempts, setCommunityAttempts] = useState([]);
+const [loadingCommunity, setLoadingCommunity] = useState(false);
+
+const fetchCommunityAttempts = async () => {
+  try {
+    setLoadingCommunity(true);
+    const res = await axios.get("/api/sst/community")
+    console.log(res?.data?.data)
+  const data = res?.data?.data
+    if (data) {
+      setCommunityAttempts(data);
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoadingCommunity(false);
+  }
+};
+
+const handleTabChange = (tab) => {
+  setActiveTab(tab);
+  if (tab === "community" && communityAttempts.length === 0) {
+    fetchCommunityAttempts();
+  }
+};
+
+const attemptsToRender =
+  activeTab === "my"
+    ? question.lastAttempts
+    : communityAttempts;
+
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 p-4">
+      <div>
+        <h1>
+          Summarize Spoken Text
+        </h1>
+        <p>
+          You will hear a short report. Write a summary for a fellow student who was not present. You should write 50-70 words. You have 10 minutes to finish this task. Your response will be judged on the quality of your writing and on how well your response presents the key points presented in the lecture.
+
+        </p>
+      </div>
       {/* HEADER */}
       <div className="flex items-center gap-2">
         <button onClick={() => setActiveSpeechQuestion(false)} className="hover:bg-gray-100 p-2 rounded-full transition">
@@ -253,59 +296,93 @@ export default function SST({ question, setActiveSpeechQuestion, nextButton, pre
             Attempt History
           </h3>
 
+          <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => handleTabChange("my")}
+            className={`px-5 py-2 rounded-xl font-bold text-sm transition
+              ${activeTab === "my"
+                ? "bg-indigo-500 text-white"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+          >
+            My Attempts
+          </button>
+
+          <button
+            onClick={() => handleTabChange("community")}
+            className={`px-5 py-2 rounded-xl font-bold text-sm transition
+              ${activeTab === "community"
+                ? "bg-indigo-500 text-white"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+          >
+            Community
+          </button>
+       </div>
+
+
           <div className="space-y-4">
-            {question.lastAttempts && question.lastAttempts.length > 0 ? (
-              question.lastAttempts.map((attempt, index) => (
-                <div
-                  key={attempt._id || index}
-                  className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between"
-                >
-                  {/* LEFT */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-600">
-                      K
-                    </div>
-
-                    <div>
-                      <p className="font-bold text-slate-800">Krishna kant</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(attempt.createdAt).toLocaleDateString()}{" "}
-                        {new Date(attempt.createdAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* CENTER SCORE BUTTON */}
-                  <button
-                    onClick={() => handleViewPrevious(attempt)}
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2 rounded-xl flex items-center gap-2 shadow-sm transition"
+         
+              {attemptsToRender && attemptsToRender.length > 0 ? (
+                attemptsToRender.map((attempt, index) => (
+                  <div
+                    key={attempt._id || index}
+                    className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between"
                   >
-                    Score {attempt.totalScore}/12
-                    <RotateCcw size={16} />
-                  </button>
+                    {/* LEFT */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-600">
+                        {activeTab === "community"
+                          ? attempt.user?.name?.charAt(0) || "U"
+                          : "K"}
+                      </div>
 
-                  {/* RIGHT ICONS */}
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <button className="hover:text-indigo-500 transition">
-                      <Share2 size={18} />
+                      <div>
+                        <p className="font-bold text-slate-800">
+                          {activeTab === "community"
+                            ? attempt.user?.name
+                            : "Krishna kant"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(attempt.createdAt).toLocaleDateString()}{" "}
+                          {new Date(attempt.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* CENTER */}
+                    <button
+                      onClick={() => handleViewPrevious(attempt)}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2 rounded-xl flex items-center gap-2"
+                    >
+                      Score {attempt.totalScore}/12
+                      <RotateCcw size={16} />
                     </button>
-                    <button className="hover:text-red-500 transition">
-                      <Trash2 size={18} />
-                    </button>
+
+                    {/* RIGHT */}
+                    <div className="flex items-center gap-3 text-slate-400">
+                      <button className="hover:text-indigo-500">
+                        <Share2 size={18} />
+                      </button>
+
+                      {activeTab === "my" && (
+                        <button className="hover:text-red-500">
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-slate-400 text-sm font-bold">
+                  {loadingCommunity
+                    ? "Loading community attempts..."
+                    : "No attempts found"}
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <History size={20} className="text-slate-300" />
-                </div>
-                <p className="text-xs font-bold text-slate-400">No previous attempts</p>
-              </div>
-            )}
+              )}
+
+
           </div>
         </div>
       </div>
