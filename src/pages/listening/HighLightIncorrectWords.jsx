@@ -1,35 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useSelector } from "react-redux";
-import {
-  ArrowLeft,
-  Headphones,
-  Volume2,
-  RotateCcw,
-  Play,
-  Pause,
-  X,
-  History,
-  Share2,
-  Trash2,
-  CheckCircle2,
-  ChevronRight,
-  ChevronLeft,
-  Languages,
-  Eye,
-  RefreshCw
-} from "lucide-react";
+import { ArrowLeft, Volume2, RotateCcw, Headphones, Play, ChevronRight, RotateCw, History, Trash2, Share2, X, CheckCircle2, Info, Languages, Eye, RefreshCw, ChevronLeft, FastForward } from "lucide-react";
 import { submitHIWAttempt } from "../../services/api";
+import { useSelector } from "react-redux";
 
 export default function HighlightIncorrectWords({ question, setActiveSpeechQuestion, nextButton, previousButton }) {
   const [status, setStatus] = useState("countdown");
   const [prepTimer, setPrepTimer] = useState(3);
   const [selectedIndices, setSelectedIndices] = useState([]);
+  const [result, setResult] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [showModal, setShowModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [result, setResult] = useState(null); // Added result state
 
   const audioRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
@@ -39,44 +22,18 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
     return question.content.replace(/\s+/g, " ").trim().split(" ");
   }, [question?.content]);
 
-  /* ================= COUNTDOWN ================= */
   useEffect(() => {
     let timer;
     if (status === "countdown" && prepTimer > 0) {
-      timer = setInterval(() => setPrepTimer((t) => t - 1), 1000);
-    }
-    if (status === "countdown" && prepTimer === 0) {
+      timer = setInterval(() => setPrepTimer(t => t - 1), 1000);
+    } else if (status === "countdown" && prepTimer === 0) {
       setStatus("playing");
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => { });
-        setIsPlaying(true);
-      }
+      if (audioRef.current) audioRef.current.play();
     }
     return () => clearInterval(timer);
   }, [status, prepTimer]);
 
-  /* ================= AUDIO CONTROLS ================= */
-  const toggleAudio = () => {
-    if (!audioRef.current || audioFinished) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(() => { });
-    }
-  };
-
-  const handleSkipAudio = () => {
-    if (!audioRef.current) return;
-
-    audioRef.current.pause();
-    audioRef.current.currentTime = audioRef.current.duration;
-    setIsPlaying(false);
-    setAudioFinished(true);
-    setCurrentTime(duration);
-  };
-
+  /* ================= RESET SESSION ================= */
   const resetSession = () => {
     setPrepTimer(3);
     setStatus("countdown");
@@ -94,13 +51,11 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
     }
   };
 
-  const handleAudioEnded = () => {
-    setIsPlaying(false);
-    setAudioFinished(true);
-    setCurrentTime(duration);
-  };
+  /* ================= RESET ON QUESTION CHANGE ================= */
+  useEffect(() => {
+    resetSession();
+  }, [question]);
 
-  /* ================= WORD CLICK ================= */
   const handleWordClick = (index) => {
     if (status !== "playing") return;
     setSelectedIndices((prev) =>
@@ -108,117 +63,251 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
     );
   };
 
-  /* ================= SUBMIT ================= */
-  const handleSubmit = async () => {
-    if (audioRef.current) audioRef.current.pause();
-    setIsPlaying(false);
-    setAudioFinished(true);
-    setStatus("submitted");
-
-    try {
-      // Use user._id and question._id
-      const res = await submitHIWAttempt({
-        userId: user._id,
-        questionId: question._id,
-        selectedIndices
-      });
-      setResult(res.data);
-      setShowModal(true);
-    } catch (error) {
-      console.error("Error submitting HIW:", error);
-      // Fallback for demo if API fails?
-      // For now, let's assume it works or just show basic result
-      setShowModal(true);
+  const handleSkipAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = audioRef.current.duration || 0;
+      setAudioFinished(true);
     }
   };
 
-  /* ================= RESET ON QUESTION CHANGE ================= */
-  useEffect(() => {
-    resetSession();
-  }, [question]);
+  const handleViewPrevious = (attempt) => {
+    const uiIndices = attempt.selectedIndices.map(idx => idx - 1);
+    setSelectedIndices(uiIndices);
+    setResult({
+      score: attempt.score,
+      correctCount: attempt.correctCount || 0,
+      wrongCount: attempt.wrongCount || 0,
+      missedCount: attempt.missedCount || 0,
+      mistakes: question?.mistakes || []
+    });
+    setStatus("submitted");
+    setShowModal(true);
+  };
 
-  return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* ================= HEADER ================= */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => setActiveSpeechQuestion(false)}>
-          <ArrowLeft />
-        </button>
-        <h1 className="text-2xl font-bold">Highlight Incorrect Words</h1>
-      </div>
+  const handleSubmit = async () => {
+    if (audioRef.current) audioRef.current.pause();
+    const indicesToSend = selectedIndices.map(i => i + 1);
+    try {
+      const res = await submitHIWAttempt({
+        questionId: question._id,
+        userId: user?._id,
+        selectedIndices: indicesToSend,
+        timeTaken: Math.floor(currentTime)
+      });
+      setResult(res.data);
+      setStatus("submitted");
+      setShowModal(true); // Open modal automatically on submit
+    } catch (err) { console.error(err); }
+  };
 
-      {/* ================= COUNTDOWN ================= */}
-      {status === "countdown" ? (
-        <div className="h-[500px] flex flex-col items-center justify-center">
-          <p className="text-xl">Starting in</p>
-          <p className="text-6xl font-black text-blue-600">{prepTimer}</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl border shadow-sm flex flex-col min-h-[600px]">
-          {/* ================= AUDIO BAR ================= */}
-          <div className="p-6 bg-slate-50 border-b flex items-center gap-6">
-            <button
-              onClick={toggleAudio}
-              disabled={audioFinished}
-              className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center disabled:bg-slate-300"
-            >
-              {isPlaying ? <Pause /> : <Play className="ml-1" />}
-            </button>
+  // --- RESULT MODAL COMPONENT ---
+  const ResultModal = () => {
+    if (!result || !showModal) return null;
 
-            <div className="flex-1">
-              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 transition-[width] duration-200"
-                  style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-                />
+    const totalMistakes = question?.mistakes?.length || 0;
+    const scorePercentage = totalMistakes > 0 ? (result.score / totalMistakes) * 100 : 0;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-[2.5rem] w-full max-w-5xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-300">
+
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-50 p-2 rounded-xl text-blue-500"><ChevronRight className="rotate-90" size={20} /></div>
+              <h2 className="text-xl font-bold text-slate-700">
+                {question.name || "HIW_A_0418"} <span className="text-slate-400 font-medium">({question.title || "Whale Mimics Speech"})</span>
+              </h2>
+              <Share2 size={20} className="text-blue-500 cursor-pointer ml-2 hover:scale-110 transition" />
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => window.location.reload()} className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold hover:bg-blue-100 transition">
+                <RotateCcw size={18} /> Redo
+              </button>
+              <button onClick={nextButton} className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold hover:bg-blue-100 transition">
+                <ChevronRight size={18} /> Next Question
+              </button>
+              <button onClick={() => setShowModal(false)} className="p-2.5 bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition">
+                <X size={22} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row p-10 gap-10">
+            {/* Left Score Card */}
+            <div className="md:w-[35%] bg-white border-2 border-slate-50 rounded-[3rem] p-10 flex flex-col items-center justify-center relative shadow-sm ring-1 ring-purple-100/50">
+              <div className="absolute top-6 right-8 text-purple-300 bg-purple-50 p-2 rounded-full rotate-12"><Play size={16} fill="currentColor" /></div>
+              <h3 className="text-lg font-bold text-slate-600 mb-10 tracking-tight">Your Score</h3>
+
+              <div className="relative w-56 h-56 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-180" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="#f1f5f9" strokeWidth="8" fill="transparent" strokeDasharray="125.6" strokeDashoffset="0" />
+                  <circle cx="50" cy="50" r="40" stroke="#3b82f6" strokeWidth="8" fill="transparent" strokeDasharray="125.6" strokeDashoffset={125.6 - (125.6 * (result.score / totalMistakes))} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+                </svg>
+                <div className="absolute flex flex-col items-center mt-2">
+                  <span className="text-7xl font-black text-slate-800 tracking-tighter">{result.score}</span>
+                </div>
+                <div className="absolute bottom-6 flex justify-between w-full px-10 text-xs font-black text-slate-400">
+                  <span>0</span>
+                  <span>{totalMistakes}</span>
+                </div>
               </div>
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
-                <span>{Math.floor(currentTime)}s</span>
-                <span>{Math.floor(duration)}s</span>
+
+              <div className="w-full mt-10 space-y-5">
+                <div className="flex justify-between items-center">
+                  <span className="flex items-center gap-2.5 text-sm font-bold text-slate-400">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-400" /> Reading
+                  </span>
+                  <span className="bg-green-100 text-green-700 px-4 py-1 rounded-xl font-black text-sm">{(scorePercentage * 0.9).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="flex items-center gap-2.5 text-sm font-bold text-slate-400">
+                    <div className="w-2.5 h-2.5 rounded-full bg-pink-400" /> Listening
+                  </span>
+                  <span className="bg-pink-100 text-pink-700 px-4 py-1 rounded-xl font-black text-sm">{(scorePercentage * 0.9).toFixed(2)}</span>
+                </div>
               </div>
             </div>
 
-            {!audioFinished && (
-              <button onClick={handleSkipAudio} className="text-blue-600 font-bold text-sm">
-                Skip
+            {/* Right Lists Section */}
+            <div className="flex-1 flex flex-col gap-8">
+              {/* Correct Answer Box */}
+              <div className="border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+                <div className="bg-[#E6F8E8] px-8 py-4 text-slate-700 font-bold text-lg">Correct Answer</div>
+                <div className="p-6 space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar">
+                  {question?.mistakes?.map((m, idx) => (
+                    <div key={idx} className="flex items-center gap-3.5 text-slate-600 font-bold px-2">
+                      <CheckCircle2 size={20} className="text-green-500" /> {m.answer}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* My Answer Box */}
+              <div className="border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+                <div className="bg-[#EAF6FE] px-8 py-4 text-slate-700 font-bold text-lg">My Answer</div>
+                <div className="p-6 space-y-4 max-h-[160px] overflow-y-auto custom-scrollbar">
+                  {selectedIndices.length > 0 ? selectedIndices.map((i, idx) => {
+                    const isCorrect = question?.mistakes?.some(m => m.index === i + 1);
+                    return (
+                      <div key={idx} className="flex items-center gap-3.5 text-slate-600 font-bold px-2">
+                        {isCorrect ? <CheckCircle2 size={20} className="text-green-500" /> : <X size={20} className="text-red-500" />}
+                        {words[i]}
+                      </div>
+                    );
+                  }) : <p className="text-slate-400 italic px-2">No words selected</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 space-y-6 font-sans text-slate-800">
+      <ResultModal />
+
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setActiveSpeechQuestion(false)} className="p-2 hover:bg-slate-100 rounded-full transition">
+            <ArrowLeft size={22} />
+          </button>
+          <h1 className="text-2xl font-bold">Highlight Incorrect Words</h1>
+        </div>
+      </div>
+
+      {status === "countdown" ? (
+        <div className="bg-white rounded-[2.5rem] border shadow-sm p-20 text-center space-y-6 flex flex-col items-center justify-center min-h-[600px]">
+          <h2 className="text-2xl font-bold text-slate-800">Starting Soon...</h2>
+          <div className="text-6xl font-black text-blue-600 animate-pulse">{prepTimer}</div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-[2.5rem] border shadow-sm overflow-hidden relative min-h-[600px] flex flex-col">
+          <div className="p-8 bg-slate-50 border-b flex items-center gap-8">
+            <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xl shadow-lg">
+              {status === "countdown" ? prepTimer : <Headphones size={24} />}
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${(currentTime / duration) * 100}%` }} />
+              </div>
+              <div className="flex justify-between text-xs font-bold text-slate-400">
+                <span>{Math.floor(currentTime)}s</span>
+                <span>{Math.floor(duration || 0)}s</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Volume2 className="text-slate-400" />
+              <button
+                onClick={handleSkipAudio}
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-500 transition-colors tooltip-trigger"
+                title="Skip Audio"
+              >
+                <FastForward size={20} />
               </button>
+            </div>
+          </div>
+
+          {/* {status === "idle" && ( ... )} */}
+
+          <div className="p-12 min-h-[400px]">
+            <div className="text-lg lg:text-xl leading-[3.5rem] text-slate-700 font-medium select-none">
+              {words.map((word, index) => {
+                const isSelected = selectedIndices.includes(index);
+                const mistakeDetail = (result?.mistakes || question?.mistakes)?.find(m => m.index === index + 1);
+                const isActuallyMistake = !!mistakeDetail;
+
+                let bgColor = "";
+                if (status === "submitted") {
+                  if (isActuallyMistake && isSelected) bgColor = "bg-green-100 text-green-700 ring-2 ring-green-400";
+                  else if (!isActuallyMistake && isSelected) bgColor = "bg-red-100 text-red-700 ring-2 ring-red-400";
+                  else if (isActuallyMistake && !isSelected) bgColor = "bg-blue-100 text-blue-700 ring-2 ring-blue-200";
+                } else if (isSelected) {
+                  bgColor = "bg-blue-600 text-white shadow-md";
+                }
+
+                return (
+                  <span key={index} className="relative inline-block mr-1">
+                    <span onClick={() => handleWordClick(index)} className={`cursor-pointer px-1 py-1 rounded-md transition-all ${bgColor}`}>
+                      {word}
+                    </span>
+                    {status === "submitted" && isActuallyMistake && (
+                      <span className="absolute left-1/2 -translate-x-1/2 -bottom-10 bg-yellow-100 text-yellow-800 text-[10px] font-black px-2 py-1 rounded border border-yellow-200 whitespace-nowrap z-30 shadow-sm">
+                        (Answer : {mistakeDetail.answer})
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+
+
+          {/* SUBMIT BUTTON SECTION */}
+          <div className="px-10 py-6 bg-slate-50 border-t flex justify-end">
+            {status !== "submitted" ? (
+              <button
+                disabled={status !== "playing"}
+                onClick={handleSubmit}
+                className="bg-blue-600 disabled:bg-slate-300 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2"
+              >
+                <CheckCircle2 size={20} /> Submit Answer
+              </button>
+            ) : (
+              <div className="flex gap-4">
+                <button onClick={() => setShowModal(true)} className="bg-indigo-500 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-600 transition">
+                  View Result Details
+                </button>
+              </div>
             )}
-
-            <Volume2 className="text-slate-400" />
-          </div>
-
-          {/* ================= CONTENT ================= */}
-          <div
-            className="p-10 text-lg lg:text-xl leading-[3rem] text-slate-700 font-medium break-words break-all overflow-hidden"
-          >
-            {words.map((word, index) => {
-              const isSelected = selectedIndices.includes(index);
-              return (
-                <span
-                  key={index}
-                  onClick={() => handleWordClick(index)}
-                  className={`mr-1 px-1 py-1 rounded cursor-pointer ${isSelected ? "bg-blue-600 text-white" : ""
-                    }`}
-                >
-                  {word}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* SUBMIT BUTTON - MOVED INSIDE CARD */}
-          <div className="px-8 pb-8">
-            <button
-              onClick={handleSubmit}
-              className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg disabled:bg-slate-300 shadow-lg shadow-blue-200 disabled:shadow-none transition-all hover:bg-blue-700 flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 size={24} /> Submit Answer
-            </button>
           </div>
         </div>
       )}
 
-      {/* FOOTER CONTROLS - REPLACED WITH SST STYLE */}
+      {/* Footer Nav */}
       <div className="flex items-center justify-between pb-6 mt-6">
         {/* LEFT SIDE: Translate, Answer, Redo */}
         <div className="flex items-center gap-4">
@@ -239,7 +328,7 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
           </button>
 
           {/* Redo */}
-          <button onClick={resetSession} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={() => window.location.reload()} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
             <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
               <RefreshCw size={18} />
             </div>
@@ -265,97 +354,43 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
         </div>
       </div>
 
-      {/* ================= AUDIO ELEMENT ================= */}
-      <audio
-        ref={audioRef}
-        src={question.audioUrl}
-        onLoadedMetadata={(e) => setDuration(e.target.duration)}
-        onTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}
-        onEnded={handleAudioEnded}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        className="hidden"
-      />
+      {/* HISTORY TAB */}
+      <div className="bg-white rounded-[2rem] border shadow-sm p-6">
+        <h3 className="font-black text-slate-800 flex items-center gap-2 mb-6 text-lg">
+          <History size={22} className="text-blue-500" />
+          Attempt History
+        </h3>
+        <div className="space-y-4">
+          {question?.lastAttempts?.length > 0 ? (
+            question.lastAttempts.map((attempt, index) => (
+              <div key={attempt._id || index} className="bg-slate-50 rounded-2xl px-6 py-4 flex items-center justify-between border border-transparent hover:border-blue-100 transition">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-600 uppercase">
+                    {user?.name?.charAt(0) || "U"}
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-800">{user?.name || "User"}</p>
+                    <p className="text-xs text-slate-400">
+                      {new Date(attempt.createdAt).toLocaleDateString()} {new Date(attempt.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => handleViewPrevious(attempt)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold px-6 py-2 rounded-xl flex items-center gap-2 shadow-sm transition active:scale-95">
+                  Score {attempt.score}/{question?.mistakes?.length || 0} <RotateCcw size={16} />
+                </button>
+                <div className="flex items-center gap-3 text-slate-400">
+                  <button className="hover:text-indigo-500 transition"><Share2 size={18} /></button>
+                  <button className="hover:text-red-500 transition"><Trash2 size={18} /></button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-10 text-slate-400 italic">No previous attempts</div>
+          )}
+        </div>
+      </div>
 
-      {/* ================= RESULT MODAL ================= */}
-      {showModal && result && (
-        <ResultModal
-          result={result}
-          onClose={() => setShowModal(false)}
-          onRedo={resetSession}
-        />
-      )}
+      <audio ref={audioRef} src={question.audioUrl} onTimeUpdate={(e) => setCurrentTime(e.target.currentTime)} onLoadedMetadata={(e) => setDuration(e.target.duration)} className="hidden" />
     </div>
   );
 }
-
-/* ================= RESULT MODAL COMPONENT ================= */
-const ResultModal = ({ result, onClose, onRedo }) => {
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const progress = result.score || 0;
-  // Should adjust max score logic if needed. Assuming 100% or normalized to 0-1 for pie?
-  // Actually, let's just make it look good.
-  const scoreValue = result.totalScore !== undefined ? result.totalScore : result.score;
-  const maxScore = result.maxScore || 10;
-  const percentage = (scoreValue / maxScore);
-  const offset = circumference - circumference * percentage;
-
-  return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden relative border flex flex-col items-center p-10">
-
-        <div className="absolute top-6 right-6">
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full"><X /></button>
-        </div>
-
-        <h2 className="text-3xl font-black text-slate-800 mb-8">Performance Result</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full">
-
-          {/* SCORE GAUGE */}
-          <div className="bg-slate-50 rounded-[2.5rem] p-8 flex flex-col items-center justify-center border">
-            <div className="relative w-48 h-48 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r={radius} fill="none" stroke="#e2e8f0" strokeWidth="12" />
-                <circle
-                  cx="60" cy="60" r={radius} fill="none" stroke="#2563eb" strokeWidth="12"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-black text-slate-800">{scoreValue}</span>
-                <span className="text-xs text-slate-400 font-bold uppercase">Score</span>
-              </div>
-            </div>
-          </div>
-
-          {/* DETAILS */}
-          <div className="space-y-4">
-            <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-              <span className="text-green-800 font-bold">Listening Score</span>
-              <div className="text-2xl font-black text-green-600">{result.listeningScore?.toFixed(1) || 0}</div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-              <span className="text-purple-800 font-bold">Reading Score</span>
-              <div className="text-2xl font-black text-purple-600">{result.readingScore?.toFixed(1) || 0}</div>
-            </div>
-
-            <div className="flex gap-4 mt-6">
-              <button onClick={onRedo} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-2">
-                <RotateCcw size={18} /> Redo
-              </button>
-              <button onClick={onClose} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
-                Close
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </div>
-  );
-};
