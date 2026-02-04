@@ -35,13 +35,13 @@ const PracticeCard = ({ title, icon, color, count, total, onClick }) => {
             <div className="mb-2">
                 <div className="text-sm font-semibold text-slate-700 mb-1">Practiced Ques : {count}</div>
                 <div className="w-full bg-white/50 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-slate-300 h-full w-0" />
+                    <div className="bg-slate-300 h-full w-0" style={{ width: `${total ? (count / total) * 100 : 0}%` }} />
                 </div>
             </div>
 
             <div className="flex justify-between items-end text-sm">
                 <div>
-                    <span className="font-bold text-slate-700">0%</span>
+                    <span className="font-bold text-slate-700">{total ? Math.round((count / total) * 100) : 0}%</span>
                     <div className="text-slate-500 text-xs">Completed</div>
                 </div>
                 <div className="text-right">
