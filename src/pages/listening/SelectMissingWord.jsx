@@ -4,7 +4,7 @@ import { submitChooseSingleAnswerAttempt, submitHighlightAttempt, submitSelectMi
 import { useSelector } from "react-redux";
 
 // import React, { useEffect, useRef, useState } from "react";
- import {
+import {
   ArrowLeft,
   Headphones,
   Volume2,
@@ -33,7 +33,7 @@ import axios from "axios";
 
 const PREP_TIME = 3;
 
-const AttemptHistory = ({ attempts, setResult, setStatus,onSelectAttempt  }) => {
+const AttemptHistory = ({ attempts, setResult, setStatus, onSelectAttempt }) => {
   const [activeTab, setActiveTab] = useState("my");
   const [communityAttempts, setCommunityAttempts] = useState([]);
   const [loadingCommunity, setLoadingCommunity] = useState(false);
@@ -42,9 +42,9 @@ const AttemptHistory = ({ attempts, setResult, setStatus,onSelectAttempt  }) => 
     try {
       setLoadingCommunity(true);
       const res = await axios.get("api/listening-fib/community");
-    
-        setCommunityAttempts(res?.data?.data);
-      
+
+      setCommunityAttempts(res?.data?.data);
+
     } catch (err) {
       console.error("Community fetch error:", err);
     } finally {
@@ -136,12 +136,12 @@ const AttemptHistory = ({ attempts, setResult, setStatus,onSelectAttempt  }) => 
                 <div className="text-sm font-semibold text-slate-700">
                   {attempt.createdAt
                     ? new Date(attempt.createdAt).toLocaleString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
                     : "Just now"}
                 </div>
               </div>
@@ -153,15 +153,14 @@ const AttemptHistory = ({ attempts, setResult, setStatus,onSelectAttempt  }) => 
                 </span>
                 <div className="flex items-baseline gap-1">
                   <span
-                    className={`text-xl font-bold ${
-                      attempt.score === attempt.maxScore
-                        ? "text-green-600"
-                        : attempt.score > attempt.maxScore / 2
+                    className={`text-xl font-bold ${attempt.score === attempt.maxScore
+                      ? "text-green-600"
+                      : attempt.score > attempt.maxScore / 2
                         ? "text-blue-600"
                         : "text-red-500"
-                    }`}
+                      }`}
                   >
-                    {attempt.isCorrect ? "1":"0"}
+                    {attempt.isCorrect ? "1" : "0"}
                   </span>
                   <span className="text-sm text-slate-400 font-medium">
                     / 1
@@ -172,11 +171,10 @@ const AttemptHistory = ({ attempts, setResult, setStatus,onSelectAttempt  }) => 
               {/* STATUS */}
               <div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    attempt.score === attempt.maxScore
-                      ? "bg-green-100 text-green-700"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${attempt.score === attempt.maxScore
+                    ? "bg-green-100 text-green-700"
+                    : "bg-slate-100 text-slate-600"
+                    }`}
                 >
                   {attempt.score === attempt.maxScore
                     ? "Perfect"
@@ -262,6 +260,20 @@ export default function SelectMissingWord({
     setCurrentTime(audioRef.current.duration);
     setIsPlaying(false);
     setStatus("finished");
+  };
+
+  /* ---------------- REDO ---------------- */
+  const handleRedo = () => {
+    setStatus("countdown");
+    setPrepTimer(PREP_TIME);
+    setSelectedOption(null);
+    setResult(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   /* ---------------- SUBMIT ---------------- */
@@ -393,11 +405,10 @@ export default function SelectMissingWord({
                 <div
                   key={index}
                   onClick={() => setSelectedOption(index)}
-                  className={`p-5 rounded-2xl border-2 cursor-pointer transition ${
-                    selected
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-transparent hover:bg-slate-50"
-                  }`}
+                  className={`p-5 rounded-2xl border-2 cursor-pointer transition ${selected
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-transparent hover:bg-slate-50"
+                    }`}
                 >
                   <p className="font-bold text-sm mb-1">
                     OPTION {String.fromCharCode(65 + index)}
@@ -436,18 +447,59 @@ export default function SelectMissingWord({
         className="hidden"
       />
 
-      <AttemptHistory attempts={question?.lastAttempts} setResult={setResult} setStatus={setStatus}/>
+      {/* ================= FOOTER CONTROLS ================= */}
+      <div className="flex items-center justify-between pb-6 mt-6">
+        <div className="flex items-center gap-4">
+          {/* Translate (Static) */}
+          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <Languages size={18} />
+            </div>
+            <span className="text-xs font-medium">Translate</span>
+          </button>
+
+          {/* Answer (Static) */}
+          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors cursor-default text-opacity-50">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <Eye size={18} />
+            </div>
+            <span className="text-xs font-medium">Answer</span>
+          </button>
+
+          {/* Redo */}
+          <button onClick={handleRedo} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <RefreshCw size={18} />
+            </div>
+            <span className="text-xs font-medium">Redo</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button onClick={previousButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <ChevronLeft size={20} />
+            </div>
+            <span className="text-xs font-medium">Previous</span>
+          </button>
+
+          <button onClick={nextButton} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center bg-white shadow-sm">
+              <ChevronRight size={20} />
+            </div>
+            <span className="text-xs font-medium">Next</span>
+          </button>
+        </div>
+      </div>
+
+      <AttemptHistory attempts={question?.lastAttempts} setResult={setResult} setStatus={setStatus} />
 
       {/* RESULT */}
       {status === "result" && result && (
         <HCSResultModal
           result={result}
           onClose={() => setStatus("idle")}
-          onRedo={() => {
-            setStatus("countdown");
-            setPrepTimer(PREP_TIME);
-            setSelectedOption(null);
-          }}
+          onRedo={handleRedo}
         />
       )}
     </div>
