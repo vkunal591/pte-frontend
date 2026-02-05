@@ -160,6 +160,7 @@ function App() {
 
           <Route path="practice/listening/mcma" element={<ManageListeningMCMA />} />
           <Route path="practice/listening/mcsa" element={<ManageListeningMCSA />} />
+          <Route path="practice/listening/hcs" element={<ManageHighlightSummary />} />
 
 
           <Route path='mock/sectional/listening' element={<ManageListening />} />
