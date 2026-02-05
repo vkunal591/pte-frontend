@@ -1,15 +1,35 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft, Volume2, RotateCcw, ChevronRight, X, Play, CheckCircle2, Info, Headphones, BookOpen, Share2, History, Calendar, Trash2, Languages, Eye, RefreshCw, ChevronLeft, Pause, Users,
-  User
+  User, FileText, Check
 } from "lucide-react";
 import { submitChooseSingleAnswerAttempt, submitHighlightAttempt } from "../../services/api";
 import { useSelector } from "react-redux";
+import axios from "axios";
 
 const PREP_TIME = 3;
 
 
-import axios from "axios";
+
+
+const Toast = ({ show, onClose, title, children }) => {
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-6 max-w-lg w-[90vw] relative border border-slate-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"><X size={18} /></button>
+        <div className="mb-2 flex items-center gap-2">
+          {title}
+        </div>
+        <div className="text-sm font-medium leading-relaxed text-slate-600 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 function AttemptHistory({ question, userId }) {
   const [mode, setMode] = useState("my"); // my | community
@@ -74,8 +94,8 @@ function AttemptHistory({ question, userId }) {
             <button
               onClick={() => setMode("my")}
               className={`px-4 py-1.5 rounded-lg flex items-center gap-1 ${mode === "my"
-                  ? "bg-white shadow text-blue-600"
-                  : "text-slate-500"
+                ? "bg-white shadow text-blue-600"
+                : "text-slate-500"
                 }`}
             >
               <User size={14} /> My
@@ -83,8 +103,8 @@ function AttemptHistory({ question, userId }) {
             <button
               onClick={() => setMode("community")}
               className={`px-4 py-1.5 rounded-lg flex items-center gap-1 ${mode === "community"
-                  ? "bg-white shadow text-indigo-600"
-                  : "text-slate-500"
+                ? "bg-white shadow text-indigo-600"
+                : "text-slate-500"
                 }`}
             >
               <Users size={14} /> Community
@@ -178,6 +198,8 @@ export default function ChooseSingleAnswer({ question, setActiveSpeechQuestion, 
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const audioRef = useRef(null);
   const progressRef = useRef(null);
@@ -412,22 +434,52 @@ export default function ChooseSingleAnswer({ question, setActiveSpeechQuestion, 
         {/* RIGHT COLUMN: HISTORY */}
 
       </div>
+      <Toast
+        show={showTranscript}
+        onClose={() => setShowTranscript(false)}
+        title={<span className="font-bold text-slate-800 flex items-center gap-2"><FileText size={18} className="text-blue-600" /> Audio Transcript</span>}
+      >
+        {question?.transcript || "No transcript available for this audio."}
+      </Toast>
+
+      <Toast
+        show={showAnswer}
+        onClose={() => setShowAnswer(false)}
+        title={<span className="font-bold text-slate-800 flex items-center gap-2"><CheckCircle2 size={18} className="text-emerald-600" /> Correct Answer</span>}
+      >
+        <div className="space-y-2">
+          <p className="font-medium text-slate-600">The correct answer is:</p>
+          {question.options.map((opt, i) => opt.isCorrect && (
+            <div key={i} className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs">{String.fromCharCode(65 + i)}</div>
+              <p className="text-emerald-900 font-bold text-sm">{opt.text}</p>
+            </div>
+          ))}
+        </div>
+      </Toast>
+
       {/* Footer Nav */}
       <div className="flex items-center justify-between pb-6 mt-6">
         {/* LEFT SIDE: Translate, Answer, Redo */}
         <div className="flex items-center gap-4">
-          {/* Translate (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
-              <Languages size={18} />
+          {/* Transcribe */}
+          <button
+            onClick={() => { setShowTranscript(!showTranscript); setShowAnswer(false); }}
+            className={`flex flex-col items-center gap-1 transition-colors ${showTranscript ? "text-blue-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm ${showTranscript ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-white"}`}>
+              <FileText size={18} />
             </div>
-            <span className="text-xs font-bold">Translate</span>
+            <span className="text-xs font-bold">Transcribe</span>
           </button>
 
-          {/* Answer (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default text-opacity-50">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
-              <Eye size={18} />
+          {/* Answer */}
+          <button
+            onClick={() => { setShowAnswer(!showAnswer); setShowTranscript(false); }}
+            className={`flex flex-col items-center gap-1 transition-colors ${showAnswer ? "text-emerald-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm ${showAnswer ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-white"}`}>
+              <CheckCircle2 size={18} />
             </div>
             <span className="text-xs font-bold">Answer</span>
           </button>
