@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ProductCard from '../../components/ProductCard/ProductCard';
+import logo from '../../assets/logo.png';
 
 const products = [
     { id: 'pte-academic', title: 'PTE', subTitle: 'Academic', theme: 'blue' },
@@ -31,6 +32,9 @@ const SelectProduct = () => {
         <div className="max-w-4xl mx-auto flex flex-col items-center pt-8">
             {/* Page Header */}
             <div className="text-center mb-12">
+                <div className="flex justify-center mb-4">
+                    <img src={logo} alt="Pawan PTE Logo" className="h-16 w-16 rounded-full object-cover shadow-md" />
+                </div>
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">
                     Select <span className="text-primary-600">Product</span>
                 </h1>
