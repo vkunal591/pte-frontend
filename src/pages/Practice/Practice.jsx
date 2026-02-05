@@ -173,7 +173,7 @@ function Practice() {
     const fetchReadAloud = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/read-aloud');
+            const response = await fetch(`/api/read-aloud/questions/${user._id}`);
             const data = await response.json();
             if (data.success) setReadAloudQuestions(data.data);
         } catch (err) { setError('Failed to fetch Read Aloud'); }
@@ -699,7 +699,7 @@ function Practice() {
                                         </div>
                                         <div className="col-span-2 flex justify-end">
                                             <button className="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-lg text-xs font-bold">
-                                                {q.status || q.attemptCount || 'Not Practiced'}
+                                                {q.attemptCount > 0 ? `Practiced (${q.attemptCount})` : 'Not Practiced'}
                                             </button>
                                         </div>
                                     </div>
