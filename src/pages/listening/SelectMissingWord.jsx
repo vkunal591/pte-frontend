@@ -24,13 +24,32 @@ import {
   Info,
   BarChart2,
   Users,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import axios from "axios";
 
 const PREP_TIME = 3;
 
 
+
+
+const Toast = ({ show, onClose, title, children }) => {
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-6 max-w-lg w-[90vw] relative border border-slate-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"><X size={18} /></button>
+        <div className="mb-2 flex items-center gap-2">
+          {title}
+        </div>
+        <div className="text-sm font-medium leading-relaxed text-slate-600 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 
 const AttemptHistory = ({ question, attempts, setResult, setStatus, onSelectAttempt }) => {
@@ -214,6 +233,8 @@ export default function SelectMissingWord({
   const [audioDuration, setAudioDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const audioRef = useRef(null);
   const progressRef = useRef(null);
@@ -456,17 +477,24 @@ export default function SelectMissingWord({
       {/* ================= FOOTER CONTROLS ================= */}
       <div className="flex items-center justify-between pb-6 mt-6">
         <div className="flex items-center gap-4">
-          {/* Translate (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
-              <Languages size={18} />
+
+          {/* Transcribe */}
+          <button
+            onClick={() => setShowTranscript(!showTranscript)}
+            className={`flex flex-col items-center gap-1 transition-colors ${showTranscript ? "text-blue-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm transition-all ${showTranscript ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-white"}`}>
+              <FileText size={18} />
             </div>
-            <span className="text-xs font-bold">Translate</span>
+            <span className="text-xs font-bold">Transcribe</span>
           </button>
 
-          {/* Answer (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default text-opacity-50">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
+          {/* Answer */}
+          <button
+            onClick={() => setShowAnswer(!showAnswer)}
+            className={`flex flex-col items-center gap-1 transition-colors ${showAnswer ? "text-emerald-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm transition-all ${showAnswer ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-white"}`}>
               <Eye size={18} />
             </div>
             <span className="text-xs font-bold">Answer</span>
@@ -500,7 +528,42 @@ export default function SelectMissingWord({
 
 
 
+
       <AttemptHistory question={question} attempts={question?.lastAttempts} setResult={setResult} setStatus={setStatus} />
+
+      {/* TRANSCRIPT TOAST */}
+      <Toast
+        show={showTranscript}
+        onClose={() => setShowTranscript(false)}
+        title={<><FileText size={18} className="text-blue-600" /><span className="font-bold text-slate-800">Audio Transcript</span></>}
+      >
+        <p className="leading-relaxed text-slate-600">
+          {question?.transcript || "No transcript available for this audio."}
+        </p>
+      </Toast>
+
+      {/* ANSWER TOAST */}
+      <Toast
+        show={showAnswer}
+        onClose={() => setShowAnswer(false)}
+        title={<><CheckCircle2 size={18} className="text-emerald-600" /><span className="font-bold text-slate-800">Correct Answer</span></>}
+      >
+        <div className="space-y-3">
+          {question?.options?.map((opt, i) => (
+            opt.isCorrect && (
+              <div key={i} className="flex items-start gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  {String.fromCharCode(65 + i)}
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-900 text-sm">{opt.text}</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-0.5">Correct Option</p>
+                </div>
+              </div>
+            )
+          ))}
+        </div>
+      </Toast>
 
 
       {/* RESULT */}

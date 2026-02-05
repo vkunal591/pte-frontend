@@ -25,6 +25,23 @@ import {
 import { submitHIWAttempt } from "../../services/api";
 import axios from "axios";
 
+const Toast = ({ show, onClose, title, children }) => {
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-6 max-w-lg w-[90vw] relative border border-slate-200">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"><X size={18} /></button>
+        <div className="mb-2 flex items-center gap-2">
+          {title}
+        </div>
+        <div className="text-sm font-medium leading-relaxed text-slate-600 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const getHIWCommunityAttempts = (questionId) =>
   axios.get(
     `/api/hiw/${questionId}/community`
@@ -248,6 +265,8 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
   const [showModal, setShowModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   const audioRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
@@ -468,17 +487,23 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
       {/* ================= FOOTER CONTROLS ================= */}
       <div className="flex items-center justify-between pb-6 mt-6">
         <div className="flex items-center gap-4">
-          {/* Translate (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
+          {/* Transcribe */}
+          <button
+            onClick={() => setShowTranscript(!showTranscript)}
+            className={`flex flex-col items-center gap-1 transition-colors ${showTranscript ? "text-blue-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm transition-all ${showTranscript ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-white"}`}>
               <Languages size={18} />
             </div>
-            <span className="text-xs font-bold">Translate</span>
+            <span className="text-xs font-bold">Transcribe</span>
           </button>
 
-          {/* Answer (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors cursor-default text-opacity-50">
-            <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
+          {/* Answer */}
+          <button
+            onClick={() => setShowAnswer(!showAnswer)}
+            className={`flex flex-col items-center gap-1 transition-colors ${showAnswer ? "text-emerald-600" : "text-slate-600 hover:text-slate-800"}`}
+          >
+            <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-sm transition-all ${showAnswer ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-white"}`}>
               <Eye size={18} />
             </div>
             <span className="text-xs font-bold">Answer</span>
@@ -517,6 +542,35 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
         currentAttemptId={result?._id}
         onSelectAttempt={handleSelectAttempt}
       />
+
+      {/* TRANSCRIPT TOAST */}
+      <Toast
+        show={showTranscript}
+        onClose={() => setShowTranscript(false)}
+        title={<><Languages size={18} className="text-blue-600" /><span className="font-bold text-slate-800">Audio Transcript</span></>}
+      >
+        <p className="leading-relaxed text-slate-600">
+          {question?.transcript || "No transcript available for this audio."}
+        </p>
+      </Toast>
+
+      {/* ANSWER TOAST */}
+      <Toast
+        show={showAnswer}
+        onClose={() => setShowAnswer(false)}
+        title={<><CheckCircle2 size={18} className="text-emerald-600" /><span className="font-bold text-slate-800">Incorrect Words (Answer)</span></>}
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-slate-500 mb-2">The following words are incorrect in the transcript:</p>
+          <div className="flex flex-wrap gap-2">
+            {question?.mistakes?.map((m, i) => (
+              <span key={i} className="px-3 py-1 bg-rose-50 text-rose-700 rounded-lg border border-rose-100 font-bold text-sm">
+                Word #{m.index}: <span className="text-slate-800">{words[m.index - 1]}</span> → <span className="text-emerald-600">{m.answer}</span>
+              </span>
+            )) || <p className="text-slate-400 italic">No mistakes defined.</p>}
+          </div>
+        </div>
+      </Toast>
 
 
 
