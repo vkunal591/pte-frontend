@@ -227,6 +227,53 @@ const ReadingReorder = ({ question, setActiveSpeechQuestion, nextButton, previou
   const [viewAttempt, setViewAttempt] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
 
+  // Translation State
+  const [translation, setTranslation] = useState("");
+  const [loadingTranslation, setLoadingTranslation] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  // Answer Flash State
+  const [showFlashAnswer, setShowFlashAnswer] = useState(false);
+
+  const handleTranslate = async () => {
+    if (!question || !question.sentences) {
+      console.log("No question text found for translation");
+      return;
+    }
+    console.log("Starting translation...");
+    setLoadingTranslation(true);
+    setShowToast(true);
+
+    try {
+      // Concatenate all sentence texts
+      const fullText = question.sentences.map(s => s.text).join(" ");
+
+      const res = await axios.get(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(
+          fullText.substring(0, 1000)
+        )}&langpair=en|hi`
+      );
+
+      console.log("Translation API Response:", res.data);
+
+      if (res.data && res.data.responseData) {
+        setTranslation(res.data.responseData.translatedText);
+      }
+    } catch (err) {
+      console.error("Translation failed", err);
+      setTranslation("Translation failed. Please try again.");
+    } finally {
+      setLoadingTranslation(false);
+    }
+  };
+
+  const handleShowAnswer = () => {
+    if (!question || !question.correctOrder) return;
+    setShowFlashAnswer(true);
+    setTimeout(() => setShowFlashAnswer(false), 8000); // Hide after 8 seconds
+  };
+
+
   // Initialize
   useEffect(() => {
     if (question && question.sentences) {
@@ -479,16 +526,16 @@ const ReadingReorder = ({ question, setActiveSpeechQuestion, nextButton, previou
       <div className="flex items-center justify-between pb-10">
         {/* LEFT SIDE: Translate, Answer, Redo */}
         <div className="flex items-center gap-4">
-          {/* Translate (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
+          {/* Translate (Working) */}
+          <button onClick={handleTranslate} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
             <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
               <Languages size={18} />
             </div>
             <span className="text-xs font-bold">Translate</span>
           </button>
 
-          {/* Answer (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
+          {/* Answer (Working) */}
+          <button onClick={handleShowAnswer} className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
             <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
               <Eye size={18} />
             </div>
@@ -521,6 +568,47 @@ const ReadingReorder = ({ question, setActiveSpeechQuestion, nextButton, previou
           </button>
         </div>
       </div>
+
+      {/* Answer Toast */}
+      {showFlashAnswer && (
+        <Toast
+          show={showFlashAnswer}
+          onClose={() => setShowFlashAnswer(false)}
+          title="Correct Order"
+        >
+          <div className="space-y-4">
+            {question?.correctOrder?.map((itemId, idx) => {
+              const item = question.sentences.find(s => s.id === itemId);
+              return (
+                <div key={itemId} className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="w-6 h-6 rounded-full bg-green-600 text-white flex-shrink-0 flex items-center justify-center text-xs font-bold shadow-sm mt-0.5">
+                    {idx + 1}
+                  </div>
+                  <div className="text-slate-700 text-sm leading-relaxed font-medium">
+                    {item ? item.text : "Loading..."}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Toast>
+      )}
+
+      {/* Translation Toast */}
+      {showToast && (
+        <Toast
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          title="Hindi Translation"
+          loading={loadingTranslation}
+        >
+          <p className="text-sm leading-relaxed text-slate-700">
+            {loadingTranslation ? "Translating..." : translation}
+          </p>
+        </Toast>
+      )}
+
+
 
       {/* History Section */}
       {question && (
@@ -670,3 +758,28 @@ const ReadingReorder = ({ question, setActiveSpeechQuestion, nextButton, previou
 };
 
 export default ReadingReorder;
+
+// Toast Component
+const Toast = ({ show, onClose, title, children, loading }) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl p-6 max-w-lg w-[90vw] relative border border-slate-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors"
+        >
+          <X size={18} />
+        </button>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{title}</span>
+          {loading && <RefreshCw size={14} className="animate-spin text-slate-500" />}
+        </div>
+        <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
