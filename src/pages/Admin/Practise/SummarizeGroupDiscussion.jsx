@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
-import { 
-  Plus, Edit, Trash2, X, Upload, 
-  Search, Users, Clock, MessageSquare, 
+import {
+  Plus, Edit, Trash2, X, Upload,
+  Search, Users, Clock, MessageSquare,
   AlertCircle, Loader2, Play, Eye, AudioLines
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,7 @@ const initialForm = {
   answerTime: 60,
   difficulty: "medium", // Matches Backend Enum Lowercase
   answer: "",
+  transcript: "",
   audio: null,
 };
 
@@ -53,7 +54,7 @@ const ManageSummarizeGroup = () => {
 
   /* ---------------- SEARCH & FILTER ---------------- */
   const filteredQuestions = useMemo(() => {
-    return questions.filter(q => 
+    return questions.filter(q =>
       q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       q.answer.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -81,6 +82,7 @@ const ManageSummarizeGroup = () => {
       answerTime: q.answerTime,
       difficulty: q.difficulty,
       answer: q.answer,
+      transcript: q.transcript,
       audio: null,
     });
     setEditingId(q._id);
@@ -139,7 +141,7 @@ const ManageSummarizeGroup = () => {
   return (
     <AdminLayout>
       <div className="p-8 bg-[#f8fafc] min-h-screen">
-        
+
         {/* HEADER */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -159,7 +161,7 @@ const ManageSummarizeGroup = () => {
         {/* SEARCH BAR */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
+          <input
             type="text"
             placeholder="Search by title or answer content..."
             value={searchTerm}
@@ -208,8 +210,8 @@ const ManageSummarizeGroup = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col items-center gap-1">
-                          <span className="flex items-center gap-1 text-xs text-slate-500"><Clock size={12}/> Prep: {q.prepareTime}s</span>
-                          <span className="flex items-center gap-1 text-xs font-medium text-indigo-600"><Play size={10}/> Answer: {q.answerTime}s</span>
+                          <span className="flex items-center gap-1 text-xs text-slate-500"><Clock size={12} /> Prep: {q.prepareTime}s</span>
+                          <span className="flex items-center gap-1 text-xs font-medium text-indigo-600"><Play size={10} /> Answer: {q.answerTime}s</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -219,9 +221,9 @@ const ManageSummarizeGroup = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-end gap-2">
-                          <ActionButton onClick={() => handleView(q)} icon={<Eye size={18}/>} color="text-slate-400 hover:text-indigo-600" />
-                          <ActionButton onClick={() => openEditModal(q)} icon={<Edit size={18}/>} color="text-slate-400 hover:text-emerald-600" />
-                          <ActionButton onClick={() => handleDelete(q._id)} icon={<Trash2 size={18}/>} color="text-slate-400 hover:text-rose-600" />
+                          <ActionButton onClick={() => handleView(q)} icon={<Eye size={18} />} color="text-slate-400 hover:text-indigo-600" />
+                          <ActionButton onClick={() => openEditModal(q)} icon={<Edit size={18} />} color="text-slate-400 hover:text-emerald-600" />
+                          <ActionButton onClick={() => handleDelete(q._id)} icon={<Trash2 size={18} />} color="text-slate-400 hover:text-rose-600" />
                         </div>
                       </td>
                     </motion.tr>
@@ -236,21 +238,21 @@ const ManageSummarizeGroup = () => {
         <AnimatePresence>
           {openModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setOpenModal(false)}
                 className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
               />
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden"
+                className="bg-white w-full max-w-xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
               >
                 <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                   <h2 className="text-xl font-bold text-slate-800">{editingId ? "Edit Discussion" : "Add Discussion"}</h2>
-                  <button onClick={() => setOpenModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20}/></button>
+                  <button onClick={() => setOpenModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Title</label>
                     <input
@@ -267,7 +269,18 @@ const ManageSummarizeGroup = () => {
                       name="answer" value={form.answer} onChange={handleChange}
                       placeholder="Provide the model summary or transcript..."
                       rows={4}
-                      className="w-full border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-4 focus:ring-indigo-50 outline-none resize-none"
+                      className="w-full border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-4 focus:ring-indigo-50 outline-none resize-y"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Transcript</label>
+                    <textarea
+                      name="transcript" value={form.transcript} onChange={handleChange}
+                      placeholder="Enter the transcript..."
+                      rows={4}
+                      className="w-full border border-slate-200 px-4 py-2.5 rounded-xl focus:ring-4 focus:ring-indigo-50 outline-none resize-y"
                       required
                     />
                   </div>
@@ -294,7 +307,7 @@ const ManageSummarizeGroup = () => {
 
                   <div className="relative group">
                     <input type="file" name="audio" accept="audio/*" onChange={handleChange} id="audio-disc" hidden />
-                    <label 
+                    <label
                       htmlFor="audio-disc"
                       className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-6 hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-all"
                     >
@@ -309,7 +322,7 @@ const ManageSummarizeGroup = () => {
                     disabled={submitLoading}
                     className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
-                    {submitLoading ? <Loader2 className="animate-spin"/> : editingId ? "Save Changes" : "Publish Discussion"}
+                    {submitLoading ? <Loader2 className="animate-spin" /> : editingId ? "Save Changes" : "Publish Discussion"}
                   </button>
                 </form>
               </motion.div>
@@ -321,17 +334,17 @@ const ManageSummarizeGroup = () => {
         <AnimatePresence>
           {viewModal && viewData && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setViewModal(false)}
                 className="absolute inset-0 bg-slate-900/70 backdrop-blur-md"
               />
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-slate-900 text-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative"
               >
-                <button onClick={() => setViewModal(false)} className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-full transition-colors z-10"><X/></button>
-                
+                <button onClick={() => setViewModal(false)} className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-full transition-colors z-10"><X /></button>
+
                 <div className="p-8 space-y-6">
                   <div className="space-y-2">
                     <span className="text-indigo-400 text-xs font-bold tracking-[0.2em] uppercase">Discussion Preview</span>
@@ -350,7 +363,7 @@ const ManageSummarizeGroup = () => {
 
                   <div className="bg-indigo-500/10 p-6 rounded-2xl border border-indigo-500/20 space-y-4">
                     <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-widest">
-                      <AudioLines size={16}/> Audio Content
+                      <AudioLines size={16} /> Audio Content
                     </div>
                     {viewData.audioUrl ? (
                       <audio controls className="w-full accent-indigo-500">
@@ -363,10 +376,19 @@ const ManageSummarizeGroup = () => {
 
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
-                      <MessageSquare size={16}/> Reference Answer
+                      <MessageSquare size={16} /> Reference Answer
                     </div>
-                    <div className="bg-white/5 p-6 rounded-2xl border border-white/10 max-h-48 overflow-y-auto leading-relaxed text-slate-300 text-sm scrollbar-hide">
+                    <div className="bg-white/5 p-6 rounded-2xl border border-white/10 max-h-48 overflow-y-auto leading-relaxed text-slate-300 text-sm">
                       {viewData.answer}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-400 font-bold text-xs uppercase tracking-widest">
+                      <MessageSquare size={16} /> Transcript
+                    </div>
+                    <div className="bg-white/5 p-6 rounded-2xl border border-white/10 max-h-48 overflow-y-auto leading-relaxed text-slate-300 text-sm">
+                      {viewData.transcript}
                     </div>
                   </div>
                 </div>
