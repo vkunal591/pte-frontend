@@ -31,7 +31,7 @@ const ManageReadingReorder = () => {
         title: "",
         paragraphs: ["", "", "", ""], // Just text content
         difficulty: "Medium",
-        isPrediction: false,
+        isPredictive: false,
     };
     const [form, setForm] = useState(initialForm);
 
@@ -121,7 +121,7 @@ const ManageReadingReorder = () => {
                 sentences: shuffledSentences,
                 correctOrder: correctOrder,
                 difficulty: form.difficulty,
-                isPrediction: form.isPrediction
+                isPredictive: form.isPredictive
             };
 
             if (editingId) {
@@ -177,7 +177,7 @@ const ManageReadingReorder = () => {
                             <motion.div key={q._id} className="grid grid-cols-1 md:grid-cols-12 items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
                                 <div className="col-span-8 flex items-center gap-5">
                                     <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                                        {q.isPrediction ? <Sparkles size={20} /> : <Shuffle size={20} />}
+                                        {q.isPredictive ? <Sparkles size={20} /> : <Shuffle size={20} />}
                                     </div>
                                     <div className="space-y-1">
                                         <h3 className="font-bold text-slate-800">{q.title}</h3>
@@ -224,7 +224,7 @@ const ManageReadingReorder = () => {
                                                 </div>
                                                 <div className="flex items-end pb-4">
                                                     <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-600">
-                                                        <input type="checkbox" checked={form.isPrediction} onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
+                                                        <input type="checkbox" checked={form.isPredictive} onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
                                                         Prediction Question
                                                     </label>
                                                 </div>

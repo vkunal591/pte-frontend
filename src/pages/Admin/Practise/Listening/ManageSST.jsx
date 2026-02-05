@@ -20,7 +20,7 @@ const ManageSST = () => {
   const [viewData, setViewData] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const initialForm = { title: "", difficulty: "Medium", keywords: "", answer: "", transcript: "", audio: null, isPrediction: false };
+  const initialForm = { title: "", difficulty: "Medium", keywords: "", answer: "", transcript: "", audio: null, isPredictive: false };
   const [form, setForm] = useState(initialForm);
 
   const fetchQuestions = async () => {
@@ -45,7 +45,7 @@ const ManageSST = () => {
       if (key === "keywords") {
         const kwArr = val.split(",").map(k => k.trim());
         fd.append(key, JSON.stringify(kwArr));
-      } else if (key === "isPrediction") {
+      } else if (key === "isPredictive") {
         fd.append(key, val);
       } else if (val) fd.append(key, val);
     });
@@ -100,7 +100,7 @@ const ManageSST = () => {
                   <div>
                     <h3 className="font-bold text-slate-800">{q.title}</h3>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">SST Module</p>
-                    {q.isPrediction && (
+                    {q.isPredictive && (
                       <span className="inline-block mt-1 text-[8px] font-bold text-white bg-purple-500 px-1.5 py-0.5 rounded uppercase">Prediction</span>
                     )}
                   </div>
@@ -110,7 +110,7 @@ const ManageSST = () => {
                 </div>
                 <div className="col-span-3 flex justify-end gap-2">
                   <button onClick={() => { setViewData(q); setIsViewModalOpen(true); }} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"><Eye size={18} /></button>
-                  <button onClick={() => { setEditingId(q._id); setForm({ ...q, keywords: q.keywords?.join(", "), audio: null, transcript: q.transcript || "", isPrediction: q.isPrediction || false }); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"><Edit size={18} /></button>
+                  <button onClick={() => { setEditingId(q._id); setForm({ ...q, keywords: q.keywords?.join(", "), audio: null, transcript: q.transcript || "", isPredictive: q.isPredictive || false }); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"><Edit size={18} /></button>
                   <button onClick={async () => { if (window.confirm("Delete?")) { await axios.delete(`/api/sst/${q._id}`); fetchQuestions(); } }} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"><Trash2 size={18} /></button>
                 </div>
               </motion.div>
@@ -143,8 +143,8 @@ const ManageSST = () => {
                         <option value="Hard">Hard</option>
                       </select>
                       <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-600 mt-2">
-                        <input type="checkbox" checked={form.isPrediction} onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
-                        Prediction Question
+                        <input type="checkbox" checked={form.isPredictive} onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
+                        Predictive Question
                       </label>
                       <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-3xl p-10 hover:bg-indigo-50 cursor-pointer transition-all">
                         <AudioLines className="text-indigo-400 mb-2" size={32} />

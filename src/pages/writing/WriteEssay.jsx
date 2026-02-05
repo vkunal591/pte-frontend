@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  ArrowLeft, Clock, RefreshCw, ChevronLeft, ChevronRight, Eye, Languages, X
+  ArrowLeft, Clock, RefreshCw, ChevronLeft, ChevronRight, Eye, Languages, X, FileText
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { submitEssayAttempt } from "../../services/api";
@@ -24,6 +24,9 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
   const [translation, setTranslation] = useState("");
   const [loadingTranslation, setLoadingTranslation] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  // Answer State
+  const [showAnswer, setShowAnswer] = useState(false);
 
   // Reset session when question changes
   useEffect(() => {
@@ -59,6 +62,7 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
     setIsLocked(false);
     setTranslation("");
     setShowToast(false);
+    setShowAnswer(false);
   };
 
   /* ---------------- TRANSLATION ---------------- */
@@ -320,7 +324,10 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
           </button>
 
           {/* Answer (Static) */}
-          <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
+          <button
+            onClick={() => setShowAnswer(true)}
+            className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors"
+          >
             <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
               <Eye size={18} />
             </div>
@@ -380,6 +387,29 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
             </div>
             <button
               onClick={() => setShowToast(false)}
+              className="hover:bg-slate-100 p-1 rounded-full transition-colors"
+            >
+              <X size={16} className="text-slate-500" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- MODEL ANSWER TOAST ---------------- */}
+      {showAnswer && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-white text-slate-800 border border-slate-200 px-6 py-4 rounded-xl shadow-2xl max-w-3xl flex items-start gap-4">
+            <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600 shrink-0">
+              <FileText size={20} />
+            </div>
+            <div className="space-y-1 flex-1">
+              <h4 className="font-bold text-sm text-emerald-700 uppercase tracking-wider">Model Answer</h4>
+              <p className="text-sm leading-relaxed text-slate-700 max-h-60 overflow-y-auto pr-2 font-medium">
+                {question.modelAnswer || "No model answer provided for this question."}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAnswer(false)}
               className="hover:bg-slate-100 p-1 rounded-full transition-colors"
             >
               <X size={16} className="text-slate-500" />

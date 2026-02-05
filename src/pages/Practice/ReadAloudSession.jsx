@@ -281,7 +281,7 @@ const ReadAloudSession = () => {
           name: 'Demo Question',
           text: 'Yellow is considered the most optimistic color. Yet surprisingly, people lose their tempers more often in yellow rooms, and babies cry more in them. The reason may be that yellow is the most complex color for the eyes. So, it can be overpowering if overused.',
           difficulty: 'Medium',
-          isPrediction: true,
+          isPredictive: true,
         };
         setQuestion(demoQ);
         setAllQuestions([demoQ]);
@@ -644,7 +644,7 @@ const ReadAloudSession = () => {
             </span>
             <span className="text-slate-500">({question.name || question.title || 'Unknown Title'})</span>
 
-            {question.isPrediction && (
+            {question.isPredictive && (
               <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">Predictive</span>
             )}
 

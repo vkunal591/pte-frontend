@@ -30,7 +30,7 @@ const ManageWriteFromDictation = () => {
     transcript: "", // The correct sentence
     difficulty: "Medium",
     audio: null,
-    isPrediction: false
+    isPredictive: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -61,7 +61,7 @@ const ManageWriteFromDictation = () => {
     fd.append("title", form.title);
     fd.append("difficulty", form.difficulty);
     fd.append("transcript", form.transcript);
-    fd.append("isPrediction", form.isPrediction);
+    fd.append("isPredictive", form.isPredictive);
     if (form.audio) fd.append("audio", form.audio);
 
     try {
@@ -95,7 +95,7 @@ const ManageWriteFromDictation = () => {
       title: q.title || "",
       transcript: q.transcript || "",
       difficulty: q.difficulty || "Medium",
-      isPrediction: q.isPrediction || false,
+      isPredictive: q.isPredictive || false,
       audio: null
     });
     setIsModalOpen(true);
@@ -171,7 +171,7 @@ const ManageWriteFromDictation = () => {
                   <div className="max-w-[80%]">
                     <h3 className="font-bold text-slate-800 text-lg truncate">{q.title || "Untitled Sentence"}</h3>
                     <p className="text-slate-400 text-sm line-clamp-1 italic">"{q.transcript}"</p>
-                    {q.isPrediction && (
+                    {q.isPredictive && (
                       <span className="inline-block mt-1 text-[8px] font-bold text-white bg-purple-500 px-1.5 py-0.5 rounded uppercase">Prediction</span>
                     )}
                   </div>
@@ -220,8 +220,8 @@ const ManageWriteFromDictation = () => {
                           <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
                         </select>
                         <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-600 mt-2">
-                          <input type="checkbox" checked={form.isPrediction} onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
-                          Prediction Question
+                          <input type="checkbox" checked={form.isPredictive} onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })} className="w-4 h-4 accent-indigo-600" />
+                          Predictive Question
                         </label>
                       </div>
                       <div>

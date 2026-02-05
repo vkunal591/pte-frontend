@@ -15,7 +15,6 @@ const initialForm = {
   prepareTime: 10,
   answerTime: 40,
   difficulty: "Medium",
-  isPrediction: false,
   audio: null,
   isPredictive: false
 };
@@ -81,7 +80,6 @@ const ManageRetellLecture = () => {
       prepareTime: q.prepareTime,
       answerTime: q.answerTime,
       difficulty: q.difficulty,
-      isPrediction: q.isPrediction || false,
       audio: null,
       isPredictive: q.isPredictive || false,
     });
@@ -189,7 +187,7 @@ const ManageRetellLecture = () => {
                   <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Lecture Details</th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Timing</th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Difficulty</th>
-                   <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Predictive</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Predictive</th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -235,12 +233,12 @@ const ManageRetellLecture = () => {
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(q.difficulty)}`}>
                           {q.difficulty}
                         </span>
-                        {q.isPrediction && (
+                        {q.isPredictive && (
                           <span className="block mt-1 text-[10px] font-bold text-white bg-purple-500 px-2 py-0.5 rounded uppercase">Prediction</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${q.isPredictive ? "bg-blue-400": ""}`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${q.isPredictive ? "bg-blue-400" : ""}`}>
                           {q.isPredictive}
                         </span>
                       </td>
@@ -337,34 +335,34 @@ const ManageRetellLecture = () => {
                     </label>
                   </div>
 
-                    <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Predictive
-                  </label>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Predictive
+                    </label>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setForm((prev) => ({
-                          ...prev,
-                          isPredictive: !prev.isPredictive,
-                        }))
-                      }
-                      className={`relative w-12 h-6 rounded-full transition-colors duration-300
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            isPredictive: !prev.isPredictive,
+                          }))
+                        }
+                        className={`relative w-12 h-6 rounded-full transition-colors duration-300
                         ${form.isPredictive ? "bg-indigo-600" : "bg-slate-300"}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300
                           ${form.isPredictive ? "translate-x-6" : "translate-x-0"}`}
-                      />
-                    </button>
+                        />
+                      </button>
 
-                    <span className="text-sm text-slate-600">
-                      {form.isPredictive ? "ON" : "OFF"}
-                    </span>
+                      <span className="text-sm text-slate-600">
+                        {form.isPredictive ? "ON" : "OFF"}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
 
                   <button

@@ -52,7 +52,7 @@ const ManageListeningFIB = () => {
     fd.append("transcript", form.transcript);
     fd.append("difficulty", form.difficulty);
     fd.append("correctAnswers", JSON.stringify(form.correctAnswers.filter(a => a.correctAnswer !== "")));
-    fd.append("isPrediction", form.isPrediction);
+    fd.append("isPredictive", form.isPredictive);
     if (form.audio) fd.append("audio", form.audio);
 
     try {
@@ -68,6 +68,7 @@ const ManageListeningFIB = () => {
     setForm({
       title: q.title || "",
       transcript: q.transcript || "",
+      isPredictive: q.isPredictive || false,
       difficulty: q.difficulty || "Medium",
       correctAnswers: q.correctAnswers || [{ index: 1, correctAnswer: "" }],
       audio: null
@@ -164,9 +165,14 @@ const ManageListeningFIB = () => {
                         <select value={form.difficulty} onChange={e => setForm({ ...form, difficulty: e.target.value })} className="p-4 bg-slate-50 border rounded-2xl outline-none font-bold text-slate-700">
                           <option>Easy</option><option>Medium</option><option>Hard</option>
                         </select>
+                        {/* The following div was moved out of the select tag for syntactic correctness */}
                         <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200">
-                          <input type="checkbox" checked={form.isPrediction} onChange={e => setForm({ ...form, isPrediction: e.target.checked })} className="w-5 h-5 accent-indigo-600" />
-                          <div className="flex items-center gap-1 text-xs font-bold text-slate-600"><Sparkles size={14} className="text-amber-500" /> Prediction</div>
+                          <input
+                            type="checkbox"
+                            checked={form.isPredictive}
+                            onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })}
+                            className="w-5 h-5 accent-indigo-600 cursor-pointer"
+                          />  <div className="flex items-center gap-1 text-xs font-bold text-slate-600"><Sparkles size={14} className="text-amber-500" /> Prediction</div>
                         </div>
                         <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-4 hover:bg-indigo-50 cursor-pointer">
                           <Music size={20} className="text-indigo-400 mb-1" />

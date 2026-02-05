@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  CheckCircle2, Loader2, Music, AlertCircle, PlayCircle, MoreVertical, FileText, Sparkles
+  CheckCircle2, Loader2, Music, AlertCircle, PlayCircle, MoreVertical, FileText, Sparkles,
+  PlusCircle, Search, Headphones, Eye, Edit, Trash2, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -33,7 +34,7 @@ const ManageListeningMCSA = () => {
     ],
     difficulty: "Medium",
     audio: null,
-    isPrediction: false
+    isPredictive: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -71,7 +72,7 @@ const ManageListeningMCSA = () => {
     fd.append("transcript", form.transcript);
     fd.append("options", JSON.stringify(form.options));
     fd.append("difficulty", form.difficulty);
-    fd.append("isPrediction", form.isPrediction);
+    fd.append("isPredictive", form.isPredictive);
     if (form.audio) fd.append("audio", form.audio);
 
     try {
@@ -107,7 +108,7 @@ const ManageListeningMCSA = () => {
       options: q.options.map(o => ({ text: o.text, isCorrect: o.isCorrect })),
       difficulty: q.difficulty || "Medium",
       audio: null, // Reset file input
-      isPrediction: q.isPrediction || false
+      isPredictive: q.isPredictive || false
     });
     setIsModalOpen(true);
   };
@@ -186,7 +187,7 @@ const ManageListeningMCSA = () => {
                   <div>
                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                       {q.title}
-                      {q.isPrediction && (
+                      {q.isPredictive && (
                         <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Sparkles size={10} /> Prediction
                         </span>
@@ -255,8 +256,8 @@ const ManageListeningMCSA = () => {
                       <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <input
                           type="checkbox"
-                          checked={form.isPrediction}
-                          onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })}
+                          checked={form.isPredictive}
+                          onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })}
                           className="w-5 h-5 accent-indigo-600 cursor-pointer"
                         />
                         <div className="flex items-center gap-2">

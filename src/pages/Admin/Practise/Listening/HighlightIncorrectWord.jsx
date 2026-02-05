@@ -34,7 +34,7 @@ const ManageHIW = () => {
     difficulty: "Medium",
     audio: null,
     transcript: "",
-    isPrediction: false
+    isPredictive: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -70,7 +70,7 @@ const ManageHIW = () => {
     fd.append("difficulty", form.difficulty);
     fd.append("transcript", form.transcript);
     fd.append("mistakes", JSON.stringify(form.mistakes));
-    fd.append("isPrediction", form.isPrediction);
+    fd.append("isPredictive", form.isPredictive);
     if (form.audio) fd.append("audio", form.audio);
 
     try {
@@ -184,7 +184,7 @@ const ManageHIW = () => {
                   <div>
                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                       {q.title}
-                      {q.isPrediction && (
+                      {q.isPredictive && (
                         <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Sparkles size={10} /> Prediction
                         </span>
@@ -205,7 +205,7 @@ const ManageHIW = () => {
                   <button onClick={() => { setViewData(q); setIsViewModalOpen(true); }} className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"><Eye size={20} /></button>
                   <button onClick={() => {
                     setEditingId(q._id);
-                    setForm({ ...q, audio: null, mistakes: q.mistakes || [], transcript: q.transcript || "", isPrediction: q.isPrediction || false });
+                    setForm({ ...q, audio: null, mistakes: q.mistakes || [], transcript: q.transcript || "", isPredictive: q.isPredictive || false });
                     setIsModalOpen(true);
                   }} className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"><Edit size={20} /></button>
                   <button onClick={() => handleDelete(q._id)} className="p-3 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"><Trash2 size={20} /></button>
@@ -247,8 +247,8 @@ const ManageHIW = () => {
                       <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <input
                           type="checkbox"
-                          checked={form.isPrediction}
-                          onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })}
+                          checked={form.isPredictive}
+                          onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })}
                           className="w-5 h-5 accent-indigo-600 cursor-pointer"
                         />
                         <div className="flex items-center gap-2">

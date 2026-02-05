@@ -447,7 +447,7 @@ const ReadingFIBDropdown = ({ question, setActiveSpeechQuestion, nextButton, pre
                 {question?.title || "Reading Task"}
               </span>
             </div>
-            {question?.isPrediction && (
+            {question?.isPredictive && (
               <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-md font-bold shadow-sm">
                 Predictive
               </span>

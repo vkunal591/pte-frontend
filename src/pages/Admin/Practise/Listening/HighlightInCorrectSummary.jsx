@@ -35,7 +35,7 @@ const ManageHighlightSummary = () => {
     ],
     difficulty: "Medium",
     audio: null,
-    isPrediction: false
+    isPredictive: false
   };
   const [form, setForm] = useState(initialForm);
 
@@ -73,7 +73,7 @@ const ManageHighlightSummary = () => {
     fd.append("transcript", form.transcript);
     fd.append("difficulty", form.difficulty);
     fd.append("summaries", JSON.stringify(form.summaries));
-    fd.append("isPrediction", form.isPrediction);
+    fd.append("isPredictive", form.isPredictive);
     if (form.audio) fd.append("audio", form.audio);
 
     try {
@@ -109,7 +109,7 @@ const ManageHighlightSummary = () => {
       summaries: q.summaries.map(s => ({ text: s.text, isCorrect: s.isCorrect })),
       difficulty: q.difficulty || "Medium",
       audio: null,
-      isPrediction: q.isPrediction || false
+      isPredictive: q.isPredictive || false
     });
     setIsModalOpen(true);
   };
@@ -188,7 +188,7 @@ const ManageHighlightSummary = () => {
                   <div>
                     <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                       {q.title || "Untitled Summary"}
-                      {q.isPrediction && (
+                      {q.isPredictive && (
                         <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1">
                           <Sparkles size={10} /> Prediction
                         </span>
@@ -243,8 +243,8 @@ const ManageHighlightSummary = () => {
                       <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <input
                           type="checkbox"
-                          checked={form.isPrediction}
-                          onChange={(e) => setForm({ ...form, isPrediction: e.target.checked })}
+                          checked={form.isPredictive}
+                          onChange={(e) => setForm({ ...form, isPredictive: e.target.checked })}
                           className="w-5 h-5 accent-indigo-600 cursor-pointer"
                         />
                         <div className="flex items-center gap-2">
