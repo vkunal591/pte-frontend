@@ -417,8 +417,8 @@ export const getWriteFromDictationQuestions = async (userId) => {
 
 export const submitWriteFromDictationAttempt = async (attemptData) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/write-from-dictation/submit`,
+    const response = await api.post(
+      `/write-from-dictation/submit`,
       attemptData
     );
     return response.data;

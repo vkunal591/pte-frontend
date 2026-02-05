@@ -21,7 +21,9 @@ import {
   Languages,
   Eye,
   Users,
-  User
+  User,
+  X,
+  Info
 } from "lucide-react";
 import axios from "axios";
 
@@ -82,8 +84,8 @@ function WFDAttemptHistory({ question }) {
           <button
             onClick={() => handleTabChange("my")}
             className={`px-3 py-1 rounded-md flex items-center gap-1 ${mode === "my"
-                ? "bg-white shadow text-blue-600"
-                : "text-slate-500"
+              ? "bg-white shadow text-blue-600"
+              : "text-slate-500"
               }`}
           >
             <User size={14} /> My
@@ -91,8 +93,8 @@ function WFDAttemptHistory({ question }) {
           <button
             onClick={() => handleTabChange("community")}
             className={`px-3 py-1 rounded-md flex items-center gap-1 ${mode === "community"
-                ? "bg-white shadow text-purple-600"
-                : "text-slate-500"
+              ? "bg-white shadow text-purple-600"
+              : "text-slate-500"
               }`}
           >
             <Users size={14} /> Community
@@ -455,6 +457,16 @@ export default function WriteFromDictation({
           setAudioFinished(true);
         }}
       />
+
+      {status === "result" && result && (
+        <WFDResultModal
+          result={result}
+          onClose={() => setStatus("idle")}
+          onRedo={resetSession}
+          onNext={nextButton}
+          question={question}
+        />
+      )}
     </div>
   );
 }
