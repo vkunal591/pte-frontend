@@ -494,7 +494,7 @@ function Practice() {
         let questions = getRawQuestions();
 
         if (filters.prediction) {
-            questions = questions.filter(q => q.isPrediction);
+            questions = questions.filter(q => q.isPredictive);
             // If isPrediction is missing/undefined, it excludes it. 
             // Ensure backend sends this boolean or default to false.
         }
@@ -689,8 +689,9 @@ function Practice() {
                                     >
                                         <div className="col-span-8 flex items-center gap-3">
                                             <span className="font-semibold text-slate-700">#{q._id.toString().substring(0, 5).toUpperCase()}</span>
-                                            <span className="text-slate-500 text-sm">({q.name || q.title})</span>
+                                            <h3 className="text-slate-500 text-sm">({q.name || q.title}) <span className={`${q.isPredictive ? "bg-blue-400 p-2 m-2 rounded text-white":""}`}>{q.isPredictive? "Predictive":""}</span> </h3>
                                         </div>
+                                        
                                         <div className="col-span-2 flex justify-center">
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${q.difficulty === 'Hard' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'
                                                 }`}>
