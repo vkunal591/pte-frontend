@@ -19,6 +19,7 @@ import {
   Languages,
   Eye,
   AlignLeft,
+  X,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
 import { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api'; // Not directly used but good to keep
@@ -243,6 +244,11 @@ const ReadAloudSession = () => {
   const textContainerRef = useRef(null); // Ref for the text paragraph
 
   const { user } = useSelector(state => state.auth);
+
+  // Translation State
+  const [translation, setTranslation] = useState("");
+  const [loadingTranslation, setLoadingTranslation] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
 
   useEffect(() => {
@@ -539,6 +545,33 @@ const ReadAloudSession = () => {
     };
   }, [isOneLineMode, question]); // Re-attach listeners when mode changes or question changes
 
+  /* ---------------- TRANSLATION ---------------- */
+  const handleTranslate = async () => {
+    if (translation) {
+      setShowToast(true);
+      return;
+    }
+
+    setLoadingTranslation(true);
+    try {
+      // Use selected text if in one-line mode and text is selected, otherwise use full text
+      const textToTranslate = isOneLineMode && selectedText ? selectedText : question.text;
+
+      const response = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=en|hi`
+      );
+      const data = await response.json();
+      if (data.responseData && data.responseData.translatedText) {
+        setTranslation(data.responseData.translatedText);
+        setShowToast(true);
+      }
+    } catch (error) {
+      console.error("Translation error:", error);
+    } finally {
+      setLoadingTranslation(false);
+    }
+  };
+
 
   if (loading) return <div className="p-8 text-center">Loading Question...</div>;
   if (!question) return <div className="p-8 text-center text-red-500">Question not found</div>;
@@ -695,12 +728,16 @@ const ReadAloudSession = () => {
 
             {/* LEFT SIDE: Translate, Answer, Redo */}
             <div className="flex items-center gap-4">
-              {/* Translate (Static) */}
-              <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
-                <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
+              {/* Translate */}
+              <button
+                onClick={handleTranslate}
+                disabled={loadingTranslation}
+                className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors disabled:opacity-50"
+              >
+                <div className={`w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm ${loadingTranslation ? "animate-pulse" : ""}`}>
                   <Languages size={18} />
                 </div>
-                <span className="text-xs font-bold">Translate</span>
+                <span className="text-xs font-bold">{loadingTranslation ? "..." : "Translate"}</span>
               </button>
 
               {/* Answer (Static) */}
@@ -795,10 +832,10 @@ const ReadAloudSession = () => {
               <div className="p-8 overflow-y-auto flex-1">
                 {view.score < 10 && (
                   <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2 text-sm">
-                    <Info size={16} />
                     Low score detected. Try to speak more clearly and fluently.
                   </div>
                 )}
+
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start mb-8">
                   {/* Left: Overall Score Circle */}
@@ -975,8 +1012,28 @@ const ReadAloudSession = () => {
             </div>
           </>
         )}
-      </div>
-    </DashboardLayout>
+        {/* ---------------- TRANSLATION TOAST ---------------- */}
+        {showToast && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            <div className="bg-white text-slate-800 border border-slate-200 px-6 py-4 rounded-xl shadow-2xl max-w-2xl flex items-start gap-4">
+              <Languages className="shrink-0 mt-1 text-purple-600" size={20} />
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-purple-700">Hindi Translation</h4>
+                <p className="text-sm leading-relaxed text-slate-700 max-h-40 overflow-y-auto pr-2">
+                  {translation}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowToast(false)}
+                className="hover:bg-slate-100 p-1 rounded-full transition-colors"
+              >
+                <X size={16} className="text-slate-500" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div >
+    </DashboardLayout >
   );
 };
 
