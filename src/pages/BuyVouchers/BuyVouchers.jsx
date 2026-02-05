@@ -16,9 +16,10 @@ const BuyVouchers = () => {
     const [historyLoading, setHistoryLoading] = useState(false);
 
     // Pricing Constants
-    const UNIT_TOTAL = 17000;
-    const UNIT_BASE = 14407;
-    const UNIT_GST = 2593;
+    // Pricing Constants
+    const UNIT_TOTAL = 15999;
+    const UNIT_BASE = 13558;
+    const UNIT_GST = 2441;
 
     const baseAmount = UNIT_BASE * quantity;
     const gstAmount = UNIT_GST * quantity;
