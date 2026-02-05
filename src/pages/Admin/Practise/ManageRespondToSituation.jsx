@@ -20,7 +20,7 @@ const initialForm = {
   answer: "",
   keywords: "",
   transcript: "",
-  isPrediction: false,
+  isPredictive: false,
 };
 
 const ManageRespondSituation = () => {
@@ -88,7 +88,7 @@ const ManageRespondSituation = () => {
       answer: q.answer || "",
       keywords: q.keywords?.join(", ") || "",
       transcript: q.transcript || "",
-      isPrediction: q.isPrediction || false,
+      isPredictive: q.isPredictive || false,
     });
     setEditingId(q._id);
     setOpenModal(true);
@@ -189,6 +189,7 @@ const ManageRespondSituation = () => {
                   <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Situation Title</th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Timing</th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Difficulty</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Predictive</th>
                   <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -231,6 +232,11 @@ const ManageRespondSituation = () => {
                         {q.isPrediction && (
                           <span className="block mt-1 text-[10px] font-bold text-white bg-purple-500 px-2 py-0.5 rounded uppercase">Prediction</span>
                         )}
+                      </td>
+                        <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${q.isPredictive?"bg-blue-400":""}`}>
+                          {q.isPredictive}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-end gap-2">
@@ -342,6 +348,36 @@ const ManageRespondSituation = () => {
                       </span>
                     </label>
                   </div>
+
+                    <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Predictive
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          isPredictive: !prev.isPredictive,
+                        }))
+                      }
+                      className={`relative w-12 h-6 rounded-full transition-colors duration-300
+                        ${form.isPredictive ? "bg-indigo-600" : "bg-slate-300"}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300
+                          ${form.isPredictive ? "translate-x-6" : "translate-x-0"}`}
+                      />
+                    </button>
+
+                    <span className="text-sm text-slate-600">
+                      {form.isPredictive ? "ON" : "OFF"}
+                    </span>
+                  </div>
+                </div>
+
 
                   <button
                     disabled={submitLoading}

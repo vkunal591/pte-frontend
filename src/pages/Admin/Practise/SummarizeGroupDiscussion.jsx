@@ -19,6 +19,7 @@ const initialForm = {
   transcript: "",
   isPrediction: false,
   audio: null,
+  isPredictive: false
 };
 
 const ManageSummarizeGroup = () => {
@@ -86,6 +87,7 @@ const ManageSummarizeGroup = () => {
       transcript: q.transcript,
       isPrediction: q.isPrediction || false,
       audio: null,
+      isPredictive: q.isPredictive
     });
     setEditingId(q._id);
     setOpenModal(true);
@@ -222,6 +224,11 @@ const ManageSummarizeGroup = () => {
                         </span>
 
                       </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border uppercase ${q.isPredictive ? "bg-blue-400":""}`}>
+                          {q.isPredictive}
+                        </span>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-end gap-2">
                           <ActionButton onClick={() => handleView(q)} icon={<Eye size={18} />} color="text-slate-400 hover:text-indigo-600" />
@@ -322,6 +329,36 @@ const ManageSummarizeGroup = () => {
                       </span>
                     </label>
                   </div>
+
+                    <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Predictive
+                  </label>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({
+                          ...prev,
+                          isPredictive: !prev.isPredictive,
+                        }))
+                      }
+                      className={`relative w-12 h-6 rounded-full transition-colors duration-300
+                        ${form.isPredictive ? "bg-indigo-600" : "bg-slate-300"}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300
+                          ${form.isPredictive ? "translate-x-6" : "translate-x-0"}`}
+                      />
+                    </button>
+
+                    <span className="text-sm text-slate-600">
+                      {form.isPredictive ? "ON" : "OFF"}
+                    </span>
+                  </div>
+                </div>
+
 
                   <button
                     disabled={submitLoading}
