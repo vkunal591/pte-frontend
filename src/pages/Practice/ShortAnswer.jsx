@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import {
-    ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Pause, Square, Mic, Info, BarChart2, CheckCircle, Volume2, PlayCircle, History, Eye, Languages
+    ArrowLeft, RefreshCw, ChevronLeft, ChevronRight, Shuffle, Play, Pause, Square, Mic, Info, BarChart2, CheckCircle, Volume2, PlayCircle, History, Eye, Languages, FileText, X
 } from 'lucide-react'; // Added Pause icon
 import { submitRepeatAttempt, submitShortAnswerAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
@@ -20,6 +20,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false); // New state for play/pause
     const [showFlashAnswer, setShowFlashAnswer] = useState(false); // Answer Flash State
+    const [showTranscript, setShowTranscript] = useState(false); // Transcript visibility state
 
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
@@ -425,12 +426,15 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
             <div className="flex items-center justify-between pb-10">
                 {/* LEFT SIDE: Translate, Answer, Redo */}
                 <div className="flex items-center gap-4">
-                    {/* Translate (Static) */}
-                    <button className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors">
+                    {/* Transcribe (Working) */}
+                    <button
+                        onClick={() => setShowTranscript(true)}
+                        className="flex flex-col items-center gap-1 text-slate-600 hover:text-slate-800 transition-colors"
+                    >
                         <div className="w-10 h-10 rounded-full border-2 border-slate-300 flex items-center justify-center bg-white shadow-sm">
-                            <Languages size={18} />
+                            <FileText size={18} />
                         </div>
-                        <span className="text-xs font-bold">Translate</span>
+                        <span className="text-xs font-bold">Transcribe</span>
                     </button>
 
                     {/* Answer (Working) */}
@@ -480,6 +484,24 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                 <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 max-w-2xl text-center border border-slate-700">
                     <p className="font-medium text-lg leading-relaxed">
                         {question.answer || "No answer available."}
+                    </p>
+                </div>
+            )}
+
+            {/* Transcript Toast */}
+            {showTranscript && (
+                <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-white text-slate-800 px-6 py-4 rounded-xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 max-w-2xl w-full border border-slate-200">
+                    <div className="flex justify-between items-start gap-4 mb-2">
+                        <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">Audio Transcript</span>
+                        <button
+                            onClick={() => setShowTranscript(false)}
+                            className="text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full p-1"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                    <p className="font-medium text-lg leading-relaxed">
+                        {question.transcript || "No transcript available for this audio."}
                     </p>
                 </div>
             )}

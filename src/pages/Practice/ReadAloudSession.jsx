@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import axios from 'axios';
@@ -18,12 +18,11 @@ import {
   Sparkles as InventoryIcon,
   Languages,
   Eye,
+  AlignLeft,
   X,
-  AlignLeft, // New icon for one-line mode
-
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api';
+import { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api'; // Not directly used but good to keep
 import { useSelector } from 'react-redux';
 
 
@@ -51,7 +50,7 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
 
 
 
-        if (activeTab === 'my_answer' &&Array.isArray(response?.data)) {
+        if (Array.isArray(response?.data)) {
           const mapped = response.data.map(item => ({
             _id: item._id,
             date: item.date,
@@ -69,31 +68,7 @@ const AttemptHistory = ({ questionId, currentAttemptId, onSelectAttempt }) => {
           }));
 
           setHistory(mapped);
-        } else      if (activeTab === 'community' && Array.isArray(response?.data)) {
-        const flattened = response.data.flatMap(userBlock =>
-          (userBlock.attempts || []).map(attempt => ({
-            _id: attempt._id,
-            date: attempt.date,
-            score: attempt.score || 0,
-            pronunciation: attempt.pronunciation || 0,
-            fluency: attempt.fluency || 0,
-            content: attempt.content || 0,
-            transcript: attempt.transcript,
-            wordAnalysis: attempt.wordAnalysis,
-            aiFeedback: attempt.aiFeedback,
-            analysis: attempt.analysis,
-
-            // 👇 VERY IMPORTANT
-            userId: userBlock.user, // contains name, email
-          }))
-        );
-
-  // 🔥 SORT LATEST FIRST
-  flattened.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  setHistory(flattened);
-}
-        else {
+        } else {
           setHistory([]);
         }
       } catch (err) {
@@ -252,12 +227,13 @@ const ReadAloudSession = () => {
   const [maxTime, setMaxTime] = useState(35);
   const [result, setResult] = useState(null);
   const [isStarted, setIsStarted] = useState(true);
+  const transcriptRef = useRef('');
 
   // NEW: modal state (for current + previous attempts)
   const [isResultOpen, setIsResultOpen] = useState(false);
   const [selectedAttempt, setSelectedAttempt] = useState(null);
 
-  const { transcript, resetTranscript } = useSpeechRecognition();
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   // TTS State
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -266,7 +242,6 @@ const ReadAloudSession = () => {
   const [isOneLineMode, setIsOneLineMode] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const textContainerRef = useRef(null); // Ref for the text paragraph
-
 
   const { user } = useSelector(state => state.auth);
 
@@ -318,6 +293,12 @@ const ReadAloudSession = () => {
     if (id) fetchQuestion();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
+
 
   const resetSession = () => {
     setIsResultOpen(false);
@@ -405,6 +386,12 @@ const ReadAloudSession = () => {
       return;
     }
 
+    if (!browserSupportsSpeechRecognition) {
+      alert("Speech recognition not supported in this browser");
+      return;
+    }
+
+
     setIsStarted(true);
     setStatus('recording');
     setTimeLeft(0); // Start at 0 for count-up
@@ -417,74 +404,45 @@ const ReadAloudSession = () => {
     await SpeechRecognition.stopListening();
     setStatus('submitting');
 
-    const finalTranscript = transcript; // Ensure transcript is captured
+    const finalTranscript = transcriptRef.current;
+
+    if (!finalTranscript || finalTranscript.trim() === '') {
+      alert("No speech detected. Please try again.");
+      setStatus('prep');
+      return;
+    }
+
     const referenceText = isOneLineMode && selectedText ? selectedText : question.text;
 
     try {
-      // For one-line mode, we'll calculate a basic score on the frontend
-      let simulatedResult;
-      if (isOneLineMode) {
-        simulatedResult = calculateFrontendScore(finalTranscript, referenceText);
-      } else {
-        // Normal mode, send to backend
-        const payload = {
-          testId: sectionId || question._id,
-          answers: [{
-            questionId: question._id || question.id,
-            transcript: finalTranscript,
-            audioUrl: "mock-audio.mp3"
-          }],
-          userId: "user_from_auth_if_needed"
-        };
+      // Calculate scores on the frontend
+      const { payload, resultData } = calculateFrontendScore(finalTranscript, referenceText);
 
-        const res = await submitReadAloudAttempt(payload);
+      // Submit to backend
+      const res = await axios.post("/api/attempts/save/attempt", payload);
+      const savedAttempt = res.data.data;
 
-        if (res.success) {
-          const data = res.data;
-          const qScore = data.scores?.find(s => s.questionId === (question._id || question.id)) || data.scores?.[0];
-
-          if (qScore) {
-            simulatedResult = { // Map backend result to local format
-              score: (qScore.contentScore || 0) + (qScore.pronunciationScore || 0) + (qScore.fluencyScore || 0),
-              fluency: qScore.fluencyScore || 0,
-              pronunciation: qScore.pronunciationScore || 0,
-              content: qScore.contentScore || 0,
-              transcript: qScore.userTranscript || finalTranscript,
-              _id: data._id,
-              wordAnalysis: qScore.wordAnalysis
-            };
-          }
-        }
-      }
-
-      if (simulatedResult) {
-        setResult(simulatedResult);
-        setSelectedAttempt(simulatedResult);
-        setIsResultOpen(true);
-        setStatus('result');
-      } else if (!isOneLineMode) { // Only alert for backend failure in normal mode
-         alert(`Submission failed: ${'Could not process backend response.'}`);
-         setStatus('prep');
-      }
-
+      // Update UI with the result (either from backend or frontend if not saved)
+      setResult(savedAttempt || resultData);
+      setSelectedAttempt(savedAttempt || resultData);
+      setIsResultOpen(true);
+      setStatus('result');
 
     } catch (err) {
-      console.error('Submission error', err);
-
-      if (err.response && err.response.status === 403 && err.response.data.message === "PRACTICE_LIMIT_REACHED") {
-        alert("Practice limit reached! Please upgrade to continue.");
-        setStatus('prep');
-        return;
-      }
-
-      alert(`Submission failed: ${err.response?.data?.message || err.message}`);
-      setStatus('prep');
+      console.error("Error during scoring or saving attempt:", err);
+      // Fallback to displaying frontend calculated result if backend save fails
+      const { resultData } = calculateFrontendScore(finalTranscript, referenceText);
+      setResult(resultData);
+      setSelectedAttempt(resultData);
+      setIsResultOpen(true);
+      setStatus('result');
     }
   };
 
 
-  // NEW: Frontend Scoring Logic
-  const calculateFrontendScore = async(userTranscript, referenceText) => {
+  // NEW: Frontend Scoring Logic (returns payload and local result data)
+  const calculateFrontendScore = (userTranscript, referenceText) => {
+
     console.log(userTranscript, referenceText)
     const userWords = userTranscript.toLowerCase().split(/\s+/).filter(Boolean);
     const refWords = referenceText.toLowerCase().split(/\s+/).filter(Boolean);
@@ -492,59 +450,64 @@ const ReadAloudSession = () => {
     let correctWords = 0;
     const wordAnalysis = [];
 
-    // Simple word-by-word comparison
+    // Simple word-by-word comparison for content and pronunciation feedback
     for (let i = 0; i < refWords.length; i++) {
-      if (userWords[i] === refWords[i]) {
+      if (userWords[i] && userWords[i] === refWords[i]) {
         correctWords++;
         wordAnalysis.push({ word: refWords[i], status: 'good' });
       } else {
+        // Mark as bad if missing or incorrect
         wordAnalysis.push({ word: refWords[i], status: 'bad' });
       }
     }
 
-    const accuracy = correctWords / refWords.length;
+    // Assign 'good' to any remaining user words that weren't matched in reference
+    // This part might need more sophisticated alignment for true fluency.
+    // For now, focusing on matching reference.
+
+    const contentAccuracy = correctWords / refWords.length;
 
     // Simulate PTE-like scoring (max 5 for each, total 15)
-    // This is a very basic simulation.
-    const contentScore = Math.min(5, Math.round(accuracy * 5));
-    const pronunciationScore = Math.min(5, Math.round(accuracy * 5)); // Placeholder
-    const fluencyScore = Math.min(5, Math.round(accuracy * 5)); // Placeholder
+    // This is a basic simulation. You can make it more complex.
+    const contentScore = Math.min(5, Math.round(contentAccuracy * 5));
+
+    // Pronunciation: A bit more lenient than content, but still based on accuracy
+    const pronunciationScore = Math.min(5, Math.round(contentAccuracy * 5 * 1.1)); // Slightly higher if good content
+
+    // Fluency: Simplistic. If most words are there and spoken within time.
+    // You could also factor in words per second here if you track timings.
+    const fluencyScore = Math.min(5, Math.round(contentAccuracy * 5 * 0.9)); // Slightly lower if content isn't perfect
 
     const totalScore = contentScore + pronunciationScore + fluencyScore;
 
-    // ✅ Payload that backend expects
-  const payload = {
-    userId: user._id,
-    paragraphId: question._id, // ⚠️ use questionId (not paragraphId unless backend expects it)
-    transcript: userTranscript,
+    // Construct the payload for the backend
+    const payload = {
+      userId: user._id,
+      paragraphId: question._id,
+      transcript: userTranscript,
+      score: totalScore,
+      content: contentScore,
+      pronunciation: pronunciationScore,
+      fluency: fluencyScore,
+      wordAnalysis,
+      aiFeedback: `Frontend analysis: You got ${correctWords} out of ${refWords.length} words correct. Try to match the selected text more closely!`,
+      // Add other fields expected by your backend like date, etc.
+      date: new Date().toISOString(),
+    };
 
-    score: totalScore,
-    content: contentScore,
-    pronunciation: pronunciationScore,
-    fluency: fluencyScore,
-
-    wordAnalysis,
-    aiFeedback: `You got ${correctWords} out of ${refWords.length} words correct. Try to match the selected text more closely!`,
-  };
-
-  // ✅ Correct API call
-  const res = await axios.post(
-    "/api/attempts/save/attempt",
-    payload
-  );
-
- console.log( res.data.data)
-
-    return {
+    // Construct the result data for immediate UI display
+    const resultData = {
       score: totalScore,
       fluency: fluencyScore,
       pronunciation: pronunciationScore,
       content: contentScore,
       transcript: userTranscript,
-      _id: 'frontend_scored_' + Date.now(),
+      _id: 'frontend_scored_' + Date.now(), // Unique ID for frontend display
       wordAnalysis: wordAnalysis,
       aiFeedback: `Frontend analysis: You got ${correctWords} out of ${refWords.length} words correct. Try to match the selected text more closely!`
     };
+
+    return { payload, resultData };
   };
 
   const handleSkipPrep = () => startRecording();
