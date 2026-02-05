@@ -174,7 +174,12 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                                             <circle cx="80" cy="80" r="70" stroke="#333" strokeWidth="6" fill="transparent" />
                                             <circle cx="80" cy="80" r="70" stroke={(status === 'prep' || status === 'prep_start') ? "#3b82f6" : "#ef4444"} strokeWidth="6" fill="transparent" strokeDasharray={440} strokeDashoffset={440 - (440 * timeLeft) / maxTime} className="transition-all duration-1000 ease-linear" strokeLinecap="round" />
                                         </svg>
-                                        <span className="absolute text-5xl font-black text-black">{timeLeft}</span>
+                                       <span className="absolute font-black text-black text-4xl">
+                                        {status === 'recording'
+                                            ? `${maxTime - timeLeft} / ${maxTime}`
+                                            : timeLeft}
+                                        </span>
+
                                     </div>
                                     <p className={`text-sm font-bold uppercase tracking-[0.2em] ${(status === 'prep' || status === 'prep_start') ? 'text-blue-400' : 'text-red-500 animate-pulse'}`}>
                                         {status === 'prep_start' ? 'Starting Soon...' : status === 'prep' ? 'Preparation' : 'Recording...'}
