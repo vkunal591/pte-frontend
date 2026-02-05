@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../../assets/logo.png';
 
 const CheckIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -17,11 +18,11 @@ const Sidebar = ({ currentStep = 1 }) => {
         <div className="w-full md:w-80 bg-white p-8 md:min-h-screen border-r border-slate-100 flex flex-col">
             {/* Logo */}
             <div className="mb-12 flex items-center gap-2">
-                <div className="w-8 h-8 text-primary-600 font-bold text-2xl">
-                    {/* Simple Logo Placeholder */}
-                    &lt;
+                <img src={logo} alt="Pawan PTE Logo" className="h-10 w-10 rounded-full object-cover" />
+                <div className="text-2xl font-bold text-blue-600 tracking-tighter flex items-center">
+                    <span className="text-blue-500 mr-1">{ }</span>
+                    Pawan PTE
                 </div>
-                <span className="text-2xl font-bold text-primary-700 tracking-tight">PTE Practice</span>
             </div>
 
             {/* Stepper */}

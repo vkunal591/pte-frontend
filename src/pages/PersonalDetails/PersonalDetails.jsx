@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import logo from '../../assets/logo.png';
 
 
 // Icons
@@ -83,6 +84,9 @@ const PersonalDetails = () => {
         <div className="max-w-xl mx-auto flex flex-col items-center pt-8">
             {/* Simple Header */}
             <div className="text-center mb-8">
+                <div className="flex justify-center mb-4">
+                    <img src={logo} alt="Pawan PTE Logo" className="h-16 w-16 rounded-full object-cover shadow-md" />
+                </div>
                 <h1 className="text-3xl font-bold text-slate-900 mb-2">
                     Personal <span className="text-primary-600">Details</span>
                 </h1>
