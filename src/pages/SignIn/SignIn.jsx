@@ -1,4 +1,4 @@
-```javascript
+
 import React from "react";
 import api from "../../services/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -172,12 +172,13 @@ const SignIn = () => {
           <div className="mt-8 text-center text-slate-500">
             Don't have an account?{" "}
             <Link
-              to={`/ select - product${ location.search } `}
+              to={`/select-product${location.search}`}
               className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
             >
               Sign up
             </Link>
-          </div>        </div>
+          </div>
+        </div>
       </div>
     </div>
   );
