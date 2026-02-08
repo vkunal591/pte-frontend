@@ -23,7 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import api, { submitReadAloudAttempt, getReadAloudHistory } from '../../services/api'; // Not directly used but good to keep
+import api, { savePracticeAttempt, getReadAloudHistory } from '../../services/api'; // Not directly used but good to keep
 import { useSelector } from 'react-redux';
 
 
@@ -420,7 +420,7 @@ const ReadAloudSession = () => {
       const { payload, resultData } = calculateFrontendScore(finalTranscript, referenceText);
 
       // Submit to backend
-      const res = await api.post("/attempts/save/attempt", payload);
+      const res = await savePracticeAttempt(payload);
       const savedAttempt = res.data.data;
 
       // Update UI with the result (either from backend or frontend if not saved)

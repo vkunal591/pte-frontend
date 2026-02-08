@@ -136,14 +136,7 @@ export const submitReadAloudAttempt = async (attemptData) => {
   }
 };
 
-export const getReadAloudHistory = async (questionId) => {
-  try {
-    const response = await api.get(`/attempts/history/${questionId}`);
-    return response.data;
-  } catch (error) {
-    throw error.response ? error.response.data : new Error("Network Error");
-  }
-};
+
 
 export const submitSummarizeWrittenAttempt = async (data) => {
   try {
@@ -499,5 +492,27 @@ export const fetchUserProfile = async () => {
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : new Error("Network Error");
+
+  }
+}
+
+export const savePracticeAttempt = async (attemptData) => {
+  try {
+    const response = await api.post("/attempts/save/attempt", attemptData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const getReadAloudHistory = async (questionId) => {
+  try {
+    const response = await api.get(`/attempts/history/${questionId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+
+
