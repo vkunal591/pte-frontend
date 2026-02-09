@@ -1,27 +1,29 @@
 import axios from 'axios';
 
-export const API_BASE_URL = "https://project1-backend-4u0d.onrender.com/api";
+ export const API_BASE_URL = "https://project1-backend-4u0d.onrender.com/api";
 //export const API_BASE_URL = (window.location.hostname === "localhost") ? "https://project1-backend-4u0d.onrender.com/api" : "https://project1-backend-4u0d.onrender.com/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
+  withCredentials: true, // keep true only if you also use cookies
 });
 
-export default api;
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    console.log(token)
 
-
-
-// Add interceptor
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 403 && error.response.data.message === "PRACTICE_LIMIT_REACHED") {
-      window.dispatchEvent(new Event("practiceLimitReached"));
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error);
-  }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
+
+export default api;
 
 
 export const submitRepeatAttempt = async (attemptData) => {

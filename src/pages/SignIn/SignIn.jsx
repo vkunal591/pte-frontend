@@ -57,10 +57,10 @@ const SignIn = () => {
       // if (!response.ok) body is typically thrown by axio interceoptor or we check response.status? 
       // Actually axios throws on non-2xx by default.
 
-      console.log(data)
+      console.log("data",data)
 
       const user = data.data.user; // Assuming data.data contains { user, token }
-      const token = data.data.token; // Assuming data.data contains { user, token }
+      const token = data.token; // Assuming data.data contains { user, token }
 
       // ✅ store in redux
       dispatch(setCredentials({ user, token }));
