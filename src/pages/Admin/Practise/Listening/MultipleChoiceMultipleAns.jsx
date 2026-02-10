@@ -43,7 +43,7 @@ const ManageListeningMCMA = () => {
     setLoading(true);
     try {
       // Ensure this endpoint matches your server route
-      const { data } = await api.get(`/listening-multi-choice-multi-answer/get/${user._id}`);
+      const { data } = await api.get(`/listening-multi-choice-multi-answer/questions/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);

@@ -5,9 +5,10 @@ import {
   Headphones, Type, ScrollText, PenSquare, HeadphonesIcon // Specific icons for writing
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout"; // Adjust path as needed
+import api from "../../../../services/api";
 
 const ManageWriting = () => {
   const { user } = useSelector((state) => state.auth);
@@ -37,7 +38,7 @@ const ManageWriting = () => {
     setLoading(true);
     try {
       // Endpoint to get all existing Writing sections (should include populated questions or just IDs)
-      const res = await axios.get("/api/question/writing");
+      const res = await api.get("/question/writing");
       setWritingSections(res.data.data || []);
     } catch (err) {
       console.error("Failed to fetch writing sections:", err);
@@ -51,7 +52,7 @@ const ManageWriting = () => {
     setUnusedLoading(true);
     try {
       // Endpoint to get all questions not currently used in any Writing section
-      const res = await axios.get("/api/question/writing/get/unused");
+      const res = await api.get("/question/writing/get/unused");
       setAvailableQuestions(res.data.data || {});
     } catch (err) {
       console.error("Failed to fetch unused questions:", err);
@@ -92,10 +93,10 @@ const ManageWriting = () => {
 
       if (editingId) {
         // Update existing section
-        await axios.put(`/api/question/writing/${editingId}`, payload);
+        await api.put(`/question/writing/${editingId}`, payload);
       } else {
         // Create new section
-        await axios.post("/api/question/writing", payload); // Assuming this is your create endpoint
+        await api.post("/question/writing", payload); // Assuming this is your create endpoint
       }
       setIsModalOpen(false); // Close the modal
       await fetchWritingSections(); // Refresh the list of sections
@@ -147,7 +148,7 @@ const ManageWriting = () => {
     setSubmitLoading(true); // Set loading to true while fetching section details
     try {
       // Fetch the full section details with populated questions
-      const res = await axios.get(`/api/question/writing/${section._id}`);
+      const res = await api.get(`/question/writing/${section._id}`);
       const detailedSection = res.data.data;
 
       // Populate the form with existing section data
@@ -160,7 +161,7 @@ const ManageWriting = () => {
       });
 
       // Fetch all unused questions to provide options for adding more
-      const unusedRes = await axios.get("/api/question/writing/get/unused");
+      const unusedRes = await api.get("/question/writing/get/unused");
       const fetchedUnusedQuestions = unusedRes.data.data || {};
 
       // Filter out questions ALREADY IN THE CURRENT SECTION from the fetched unused list
@@ -187,7 +188,7 @@ const ManageWriting = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Writing section? This cannot be undone.")) {
       try {
-        await axios.delete(`/api/question/writing/${id}`);
+        await api.delete(`/question/writing/${id}`);
         fetchWritingSections(); // Refresh the list after deletion
       } catch (err) {
         console.error("Error deleting writing section:", err);

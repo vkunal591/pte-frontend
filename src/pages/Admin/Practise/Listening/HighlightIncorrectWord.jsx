@@ -41,7 +41,7 @@ const ManageHIW = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/hiw/get/${user._id}`);
+      const { data } = await api.get(`/hiw/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);

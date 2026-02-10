@@ -129,14 +129,14 @@ const ManageSSTs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await axios.get(`/api/question/sst-group/${section._id}`);
+            const res = await api.get(`/question/sst-group/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 summarizeSpokenTextQuestion: detailedSection.summarizeSpokenTextQuestion || [],
             });
 
-            const unusedRes = await axios.get("/api/question/sst-group/get/unused");
+            const unusedRes = await api.get("/question/sst-group/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};

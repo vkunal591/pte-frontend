@@ -31,6 +31,7 @@ const ManageHighlightSummary = () => {
     summaries: [
       { text: "", isCorrect: false },
       { text: "", isCorrect: false },
+      { text: "", isCorrect: false },
       { text: "", isCorrect: false }
     ],
     difficulty: "Medium",
@@ -44,7 +45,7 @@ const ManageHighlightSummary = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/hcs/get/${user._id}`);
+      const { data } = await api.get(`/hcs/attempts/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -194,7 +195,7 @@ const ManageHighlightSummary = () => {
                         </span>
                       )}
                     </h3>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">HCS Module • 3 Summaries</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">HCS Module • 4 Summaries</p>
                   </div>
                 </div>
                 <div className="col-span-3 text-center">

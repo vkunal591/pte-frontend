@@ -46,7 +46,7 @@ const ManageSelectMissingWord = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/select-missing-word/get/${user._id}`);
+      const { data } = await api.get(`/select-missing-word/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);

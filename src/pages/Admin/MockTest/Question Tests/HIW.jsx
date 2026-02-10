@@ -129,14 +129,14 @@ const ManageHIWs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await axios.get(`/api/question/hiw/${section._id}`);
+            const res = await api.get(`/question/hiw/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 highlightIncorrectWordsQuestions: detailedSection.highlightIncorrectWordsQuestions || [],
             });
 
-            const unusedRes = await axios.get("/api/question/hiw/get/unused");
+            const unusedRes = await api.get("/question/hiw/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};

@@ -156,7 +156,7 @@ const ManageFullMockTest = () => {
                 listening: selectedIds.listening
             };
 
-            const res = await axios.post('/api/mocktest/full/create', payload, { withCredentials: true });
+            const res = await api.post('/mocktest/full/create', payload, { withCredentials: true });
             if (res.data.success) {
                 alert("Full Mock Test Created Successfully!");
                 // Reset or Redirect

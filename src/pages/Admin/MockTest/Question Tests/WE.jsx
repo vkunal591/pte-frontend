@@ -139,7 +139,7 @@ const ManageWriteEssays = () => {
     setSubmitLoading(true);
     try {
       // Axios will now use the baseURL: http://localhost:5173/api/question/we/:id
-      const res = await axios.get(`/api/question/we/${section._id}`);
+      const res = await api.get(`/question/we/${section._id}`);
       const detailedSection = res.data.data;
       setForm({
         title: detailedSection.title,
@@ -147,7 +147,7 @@ const ManageWriteEssays = () => {
       });
 
       // Axios will now use the baseURL: http://localhost:5173/api/question/we/get/unused
-      const unusedRes = await axios.get("/api/question/we/get/unused");
+      const unusedRes = await api.get("/question/we/get/unused");
       // The key from the backend is 'writeEssay'
       const fetchedUnusedQuestions = unusedRes.data.data.writeEssay ? { essay: unusedRes.data.data.writeEssay } : {};
 

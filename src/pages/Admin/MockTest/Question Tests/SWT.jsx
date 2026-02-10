@@ -133,14 +133,14 @@ const ManageSWTs = () => {
     setIsModalOpen(true);
     setSubmitLoading(true);
     try {
-      const res = await axios.get(`/api/question/swt/${section._id}`); // Backend get by ID route
+      const res = await api.get(`/question/swt/${section._id}`); // Backend get by ID route
       const detailedSection = res.data.data;
       setForm({
         title: detailedSection.title,
         SummarizeTextQuestions: detailedSection.SummarizeTextQuestions || [], // Matches backend populated field
       });
 
-      const unusedRes = await axios.get("/api/question/swt/get/unused"); // New single endpoint
+      const unusedRes = await api.get("/question/swt/get/unused"); // New single endpoint
       const fetchedUnusedQuestions = unusedRes.data.data || {};
 
       const filteredAvailableQuestions = {};

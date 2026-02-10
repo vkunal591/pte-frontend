@@ -40,7 +40,7 @@ const ManageWriteFromDictation = () => {
     setLoading(true);
     try {
       // Endpoint based on your controller
-      const { data } = await api.get(`/write-from-dictation/get/${user._id}`);
+      const { data } = await api.get(`/write-from-dictation/questions/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);

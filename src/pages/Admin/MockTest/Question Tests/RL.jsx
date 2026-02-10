@@ -33,7 +33,7 @@ const ManageRLTFs = () => {
     setLoading(true);
     try {
       // API endpoint for fetching all Retell Lecture sections - matches backend route
-      const res = await axios.get("/api/question/rl");
+      const res = await api.get("/question/rl");
       console.log(res?.data?.data); // Keep for debugging if needed
       setRltfSections(res.data.data || []);
     } catch (err) {

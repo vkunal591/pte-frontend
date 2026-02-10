@@ -5,9 +5,10 @@ import {
   Headphones
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout"; // Adjust path as needed
+import api from "../../../../services/api";
 
 const ManageSpeaking = () => {
   const { user } = useSelector((state) => state.auth);
@@ -39,9 +40,9 @@ const ManageSpeaking = () => {
     try {
       // It's crucial that this endpoint either populates the questions
       // or we fetch full details when opening the edit modal.
-      // Assuming /api/question/speaking returns sections with populated questions
+      // Assuming /question/speaking returns sections with populated questions
       // or at least enough info (like title) to display.
-      const res = await axios.get("/api/question/speaking");
+      const res = await api.get("/question/speaking");
       setSpeakingSections(res.data.data || []);
       
     } catch (err) {
@@ -54,7 +55,7 @@ const ManageSpeaking = () => {
   const fetchUnusedQuestions = async () => {
     setUnusedLoading(true);
     try {
-      const res = await axios.get("/api/question/speaking/get/unused");
+      const res = await api.get("/question/speaking/get/unused");
       setAvailableQuestions(res.data.data || {});
     } catch (err) {
       console.error("Failed to fetch unused questions:", err);
@@ -95,9 +96,9 @@ const ManageSpeaking = () => {
       };
 
       if (editingId) {
-        await axios.put(`/api/question/speaking/${editingId}`, payload);
+        await api.put(`/question/speaking/${editingId}`, payload);
       } else {
-        await axios.post("/api/question/speaking", payload); // Assuming this is your create endpoint
+        await api.post("/question/speaking", payload); // Assuming this is your create endpoint
       }
       setIsModalOpen(false);
       await fetchSpeakingSections(); // Re-fetch sections to update list
@@ -150,7 +151,7 @@ const ManageSpeaking = () => {
     setSubmitLoading(true); // Indicate loading for form data
     try {
       // Fetch the full section details with populated questions
-      const res = await axios.get(`/api/question/speaking/${section._id}`); // Assuming a GET by ID endpoint that populates questions
+      const res = await api.get(`/question/speaking/${section._id}`); // Assuming a GET by ID endpoint that populates questions
       const detailedSection = res.data.data;
 
       setForm({
@@ -164,7 +165,7 @@ const ManageSpeaking = () => {
       });
 
       // Fetch all unused questions
-      const unusedRes = await axios.get("/api/question/speaking/get/unused");
+      const unusedRes = await api.get("/question/speaking/get/unused");
       const fetchedUnusedQuestions = unusedRes.data.data || {};
 
       // Filter out questions already in the current section from the fetched unused list
@@ -190,7 +191,7 @@ const ManageSpeaking = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Speaking section? This cannot be undone.")) {
       try {
-        await axios.delete(`/api/question/speaking/${id}`);
+        await api.delete(`/question/speaking/${id}`);
         fetchSpeakingSections(); // Re-fetch sections to update list
         // No need to fetch unused questions here explicitly, as modal open/save handles it implicitly for next open
       } catch (err) {

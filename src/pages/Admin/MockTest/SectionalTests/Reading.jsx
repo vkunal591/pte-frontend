@@ -5,9 +5,10 @@ import {
   ListOrdered, CircleDot, Highlighter, ScanText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout"; // Adjust path as needed
+import api from "../../../../services/api";
 
 const ManageReading = () => {
   const { user } = useSelector((state) => state.auth);
@@ -39,7 +40,7 @@ const ManageReading = () => {
   const fetchReadingSections = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/question/reading"); // Assuming this endpoint gets all reading sections
+      const res = await api.get("/question/reading"); // Assuming this endpoint gets all reading sections
       setReadingSections(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -51,7 +52,7 @@ const ManageReading = () => {
   const fetchUnusedQuestions = async () => {
     setUnusedLoading(true);
     try {
-      const res = await axios.get("/api/question/reading/get/unused"); // This endpoint fetches all unused questions
+      const res = await api.get("/question/reading/get/unused"); // This endpoint fetches all unused questions
       setAvailableQuestions(res.data.data || {});
     } catch (err) {
       console.error("Failed to fetch unused questions:", err);
@@ -86,9 +87,9 @@ const ManageReading = () => {
       };
 
       if (editingId) {
-        await axios.put(`/api/question/reading/${editingId}`, payload);
+        await api.put(`/question/reading/${editingId}`, payload);
       } else {
-        await axios.post("/api/question/reading", payload);
+        await api.post("/question/reading", payload);
       }
       setIsModalOpen(false);
       fetchReadingSections();
@@ -127,7 +128,7 @@ const ManageReading = () => {
     setEditingId(section._id);
     // Fetch detailed section data including populated questions
     try {
-      const res = await axios.get(`/api/question/reading/${section._id}`);
+      const res = await api.get(`/question/reading/${section._id}`);
       const detailedSection = res.data.data;
 
       setForm({
@@ -152,7 +153,7 @@ const ManageReading = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Reading section?")) {
       try {
-        await axios.delete(`/api/question/reading/${id}`);
+        await api.delete(`/question/reading/${id}`);
         fetchReadingSections();
         fetchUnusedQuestions(); // Re-fetch unused questions after deletion
       } catch (err) {

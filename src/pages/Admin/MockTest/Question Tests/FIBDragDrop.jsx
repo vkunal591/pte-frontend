@@ -32,7 +32,7 @@ const ManageFIBDragDrops = () => {
     const fetchFIBDSections = async () => {
         setLoading(true);
         try {
-            const res = await axios.get("/api/question/fibd"); // Backend route from fibdRoutes.js (usually mounted at /api/question/fibd)
+            const res = await api.get("/question/fibd"); // Backend route from fibdRoutes.js (usually mounted at /api/question/fibd)
             setFibdSections(res.data.data || []);
         } catch (err) {
             console.error("Failed to fetch FIB Drag Drop sections:", err);

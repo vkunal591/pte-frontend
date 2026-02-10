@@ -129,14 +129,14 @@ const ManageFIBLs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await axios.get(`/api/question/fibl/${section._id}`);
+            const res = await api.get(`/question/fibl/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 fiblQuestions: detailedSection.fiblQuestions || [],
             });
 
-            const unusedRes = await axios.get("/api/question/fibl/get/unused");
+            const unusedRes = await api.get("/question/fibl/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};

@@ -5,9 +5,9 @@ import {
   CircleDot, Highlighter, BookAudio, Mic
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import AdminLayout from "../../../../components/Admin/AdminLayout"; // Adjust path as needed
+import api from "../../../../services/api";
 
 const ManageListening = () => {
   const { user } = useSelector((state) => state.auth);
@@ -39,7 +39,7 @@ const ManageListening = () => {
   const fetchListeningSections = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("/api/question/listening"); // Assuming this endpoint gets all listening sections
+      const res = await api.get("/question/listening"); // Assuming this endpoint gets all listening sections
       setListeningSections(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -51,7 +51,7 @@ const ManageListening = () => {
   const fetchUnusedQuestions = async () => {
     setUnusedLoading(true);
     try {
-      const res = await axios.get("/api/question/listening/get/unused"); // This endpoint fetches all unused questions
+      const res = await api.get("/question/listening/get/unused"); // This endpoint fetches all unused questions
       setAvailableQuestions(res.data.data || {});
     } catch (err) {
       console.error("Failed to fetch unused questions:", err);
@@ -86,9 +86,9 @@ const ManageListening = () => {
       };
 
       if (editingId) {
-        await axios.put(`/api/question/listening/${editingId}`, payload);
+        await api.put(`/question/listening/${editingId}`, payload);
       } else {
-        await axios.post("/api/question/listening", payload);
+        await api.post("/question/listening", payload);
       }
       setIsModalOpen(false);
       fetchListeningSections();
@@ -127,7 +127,7 @@ const ManageListening = () => {
     setEditingId(section._id);
     // Fetch detailed section data including populated questions
     try {
-      const res = await axios.get(`/api/question/listening/${section._id}`);
+      const res = await api.get(`/question/listening/${section._id}`);
       const detailedSection = res.data.data;
 
       setForm({
@@ -152,7 +152,7 @@ const ManageListening = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this Listening section?")) {
       try {
-        await axios.delete(`/api/question/listening/${id}`);
+        await api.delete(`/question/listening/${id}`);
         fetchListeningSections();
         fetchUnusedQuestions(); // Re-fetch unused questions after deletion
       } catch (err) {

@@ -30,7 +30,8 @@ const ManageListeningMCSA = () => {
     options: [
       { text: "", isCorrect: false },
       { text: "", isCorrect: false },
-      { text: "", isCorrect: false }
+      { text: "", isCorrect: false },
+       { text: "", isCorrect: false }
     ],
     difficulty: "Medium",
     audio: null,
@@ -43,7 +44,7 @@ const ManageListeningMCSA = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/choose-single-answer/get/${user._id}`);
+      const { data } = await api.get(`/choose-single-answer/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) {
       console.error("Fetch Error:", err);

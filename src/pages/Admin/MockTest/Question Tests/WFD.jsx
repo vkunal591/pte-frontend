@@ -129,14 +129,14 @@ const ManageWFDs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await axios.get(`/api/question/wfd/${section._id}`);
+            const res = await api.get(`/question/wfd/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 WriteFromDictationQuestions: detailedSection.WriteFromDictationQuestions || [],
             });
 
-            const unusedRes = await axios.get("/api/question/wfd/get/unused");
+            const unusedRes = await api.get("/question/wfd/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};

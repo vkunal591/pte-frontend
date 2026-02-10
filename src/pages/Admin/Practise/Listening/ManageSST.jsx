@@ -26,7 +26,7 @@ const ManageSST = () => {
   const fetchQuestions = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/sst/get/${user._id}`);
+      const { data } = await api.get(`/sst/questions/${user._id}`);
       setQuestions(data.data || []);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
