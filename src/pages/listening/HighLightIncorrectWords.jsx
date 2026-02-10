@@ -603,116 +603,178 @@ export default function HighlightIncorrectWords({ question, setActiveSpeechQuest
   );
 }
 
-const ResultModal = ({ result, onClose, onRedo, question, nextButton }) => {
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const scoreValue = result.score || 0;
-  // If maxScore is not present, use missedCount + score as fallback approximation or just 1
-  const maxScore = result.maxScore || (result.score + (result.missedCount || 0)) || 1;
-  const percentage = maxScore > 0 ? (scoreValue / maxScore) : 0;
-  const offset = circumference - circumference * percentage;
 
-  const totalMistakes = question?.mistakes?.length || 0;
-  const scorePercentage = totalMistakes > 0 ? (scoreValue / totalMistakes) * 100 : 0;
+const ResultModal = ({ result, onClose, onRedo, question, nextButton }) => {
+  // ---- SAFE VALUES ----
+  const correct = result?.correctCount || 0;
+  const wrong = result?.wrongCount || 0;
+  const missed = result?.missedCount || 0;
+
+
+  const totalQuestions = result?.mistakes.length;
+
+  // ---- CIRCLE LOGIC (FIXED) ----
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+
+  const percentage =
+    totalQuestions > 0 ? correct / totalQuestions : 0;
+
+  const offset = circumference * (1 - percentage);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden relative border flex flex-col items-center animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+      <div className="bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl border flex flex-col items-center max-h-[90vh] overflow-y-auto">
 
-        {/* Header */}
+        {/* ---------- HEADER ---------- */}
         <div className="flex items-center justify-between p-6 border-b w-full">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-50 p-2 rounded-xl text-blue-500"><ChevronRight className="rotate-90" size={20} /></div>
+            <div className="bg-blue-50 p-2 rounded-xl text-blue-500">
+              <ChevronRight className="rotate-90" size={20} />
+            </div>
             <h2 className="text-xl font-bold text-slate-700">
-              {question?.name || "HIW_Test"} <span className="text-slate-400 font-medium">({question?.title || "Result"})</span>
+              {question?.name || "HIW_Test"}
+              <span className="text-slate-400 font-medium">
+                {" "}({question?.title || "Result"})
+              </span>
             </h2>
-            <Share2 size={20} className="text-blue-500 cursor-pointer ml-2 hover:scale-110 transition" />
+            <Share2 size={20} className="text-blue-500 cursor-pointer" />
           </div>
+
           <div className="flex items-center gap-3">
-            <button onClick={onRedo} className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold hover:bg-blue-100 transition">
+            <button
+              onClick={onRedo}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold"
+            >
               <RotateCcw size={18} /> Redo
             </button>
+
             {nextButton && (
-              <button onClick={nextButton} className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold hover:bg-blue-100 transition">
-                <ChevronRight size={18} /> Next Question
+              <button
+                onClick={nextButton}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full font-bold"
+              >
+                <ChevronRight size={18} /> Next
               </button>
             )}
 
-            <button onClick={onClose} className="p-2.5 bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition">
+            <button
+              onClick={onClose}
+              className="p-2.5 bg-slate-100 rounded-full text-slate-400"
+            >
               <X size={22} />
             </button>
           </div>
         </div>
 
+        {/* ---------- BODY ---------- */}
         <div className="flex flex-col md:flex-row p-10 gap-10 w-full">
-          {/* Left Score Card */}
-          <div className="md:w-[35%] bg-white border-2 border-slate-50 rounded-[3rem] p-10 flex flex-col items-center justify-center relative shadow-sm ring-1 ring-purple-100/50">
-            <div className="absolute top-6 right-8 text-purple-300 bg-purple-50 p-2 rounded-full rotate-12"><Play size={16} fill="currentColor" /></div>
-            <h3 className="text-lg font-bold text-slate-600 mb-10 tracking-tight">Your Score</h3>
+
+          {/* ---------- SCORE CARD ---------- */}
+          <div className="md:w-[35%] bg-white border rounded-[3rem] p-10 flex flex-col items-center shadow-sm">
+            <h3 className="text-lg font-bold text-slate-600 mb-8">
+              Your Score
+            </h3>
 
             <div className="relative w-56 h-56 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-180" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" stroke="#f1f5f9" strokeWidth="8" fill="transparent" strokeDasharray="125.6" strokeDashoffset="0" />
-                <circle cx="50" cy="50" r="40" stroke="#3b82f6" strokeWidth="8" fill="transparent" strokeDasharray="125.6" strokeDashoffset={offset} strokeLinecap="round" className="transition-all duration-1000 ease-out" />
+              <svg
+                className="-rotate-90"
+                width="200"
+                height="200"
+                viewBox="0 0 100 100"
+              >
+                {/* BACKGROUND */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="#e5e7eb"
+                  strokeWidth="8"
+                  fill="none"
+                />
+
+                {/* PROGRESS */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="#3b82f6"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  strokeLinecap="round"
+                  className="transition-all duration-700 ease-out"
+                />
               </svg>
-              <div className="absolute flex flex-col items-center mt-2">
-                <span className="text-7xl font-black text-slate-800 tracking-tighter">{scoreValue}</span>
-              </div>
-              <div className="absolute bottom-6 flex justify-between w-full px-10 text-xs font-black text-slate-400">
-                <span>0</span>
-                <span>{maxScore}</span>
-              </div>
-            </div>
 
-            <div className="w-full mt-10 space-y-5">
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2.5 text-sm font-bold text-slate-400">
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" /> Reading
-                </span>
-                <span className="bg-green-100 text-green-700 px-4 py-1 rounded-xl font-black text-sm">{(scorePercentage * 0.9).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="flex items-center gap-2.5 text-sm font-bold text-slate-400">
-                  <div className="w-2.5 h-2.5 rounded-full bg-pink-400" /> Listening
-                </span>
-                <span className="bg-pink-100 text-pink-700 px-4 py-1 rounded-xl font-black text-sm">{(scorePercentage * 0.9).toFixed(2)}</span>
+              {/* SCORE TEXT */}
+              <div className="absolute text-center">
+                <div className="text-7xl font-black text-slate-800">
+                  {correct}
+                </div>
+                <div className="text-sm font-bold text-slate-400">
+                  out of {totalQuestions}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Lists Section */}
+          {/* ---------- RIGHT SIDE ---------- */}
           <div className="flex-1 flex flex-col gap-8">
-            {/* Stats Row */}
+
+            {/* STATS */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-green-50 p-4 rounded-2xl border border-green-100 text-center">
-                <span className="text-green-800 font-bold block text-sm mb-1">Correct</span>
-                <div className="text-2xl font-black text-green-600">{result.correctCount || 0}</div>
+              <Stat title="Correct" value={correct} color="green" />
+              <Stat title="Wrong" value={wrong} color="red" />
+              <Stat title="Missed" value={missed} color="orange" />
+            </div>
+
+            {/* CORRECT ANSWERS */}
+            <div className="border rounded-[2.5rem] overflow-hidden shadow-sm">
+              <div className="bg-green-50 px-8 py-4 font-bold text-lg">
+                Correct Answers
               </div>
-              <div className="bg-red-50 p-4 rounded-2xl border border-red-100 text-center">
-                <span className="text-red-800 font-bold block text-sm mb-1">Incorrect</span>
-                <div className="text-2xl font-black text-red-600">{result.wrongCount || 0}</div>
-              </div>
-              <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 text-center">
-                <span className="text-orange-800 font-bold block text-sm mb-1">Missed</span>
-                <div className="text-2xl font-black text-orange-600">{result.missedCount || 0}</div>
+
+              <div className="p-6 space-y-4 max-h-[220px] overflow-y-auto">
+                {result?.mistakes?.length > 0 ? (
+                  result.mistakes.map((m, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 text-slate-600 font-semibold"
+                    >
+                      <CheckCircle2 size={18} className="text-green-500" />
+                      {m.answer}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-sm">
+                    No answers available
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Correct Answers List */}
-            <div className="border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm flex-1">
-              <div className="bg-[#E6F8E8] px-8 py-4 text-slate-700 font-bold text-lg">Correct Answers</div>
-              <div className="p-6 space-y-4 max-h-[200px] overflow-y-auto custom-scrollbar">
-                {question?.mistakes?.map((m, idx) => (
-                  <div key={idx} className="flex items-center gap-3.5 text-slate-600 font-bold px-2">
-                    <CheckCircle2 size={20} className="text-green-500" /> {m.answer}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
-
         </div>
       </div>
     </div>
   );
 };
+
+const Stat = ({ title, value, color }) => {
+  const colors = {
+    green: "bg-green-50 text-green-600",
+    red: "bg-red-50 text-red-600",
+    orange: "bg-orange-50 text-orange-600",
+  };
+
+  return (
+    <div className={`p-4 rounded-2xl text-center font-bold ${colors[color]}`}>
+      <div className="text-sm">{title}</div>
+      <div className="text-2xl font-black">{value}</div>
+    </div>
+  );
+};
+
+
