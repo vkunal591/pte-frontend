@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import api from "../../services/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlice"; // ✅ adjust path if needed
 import logo from "../../assets/logo.png";
 
@@ -27,6 +27,12 @@ const SignIn = () => {
   console.log('SignIn: Rendering SignIn component');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const {user} = useSelector(state => state.auth)
+  useEffect(()=>{
+    if(user)
+      navigate(redirectPath);
+  },[])
 
   /* Check for redirect url */
   const location = useLocation();

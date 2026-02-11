@@ -136,7 +136,7 @@ const ManageROs = () => {
                 reorderQuestions: detailedSection.reorderQuestions || [],
             });
 
-            const unusedRes = await api.get("/api/question/ro/get/unused");
+            const unusedRes = await api.get("/question/ro/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};

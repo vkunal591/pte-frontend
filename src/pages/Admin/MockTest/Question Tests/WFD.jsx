@@ -81,7 +81,7 @@ const ManageWFDs = () => {
             if (editingId) {
                 await api.put(`/question/wfd/${editingId}`, payload);
             } else {
-                await api.post("/question/wfd/create", payload);
+                await api.post("/question/wfd", payload);
             }
             setIsModalOpen(false);
             await fetchWFDSections();

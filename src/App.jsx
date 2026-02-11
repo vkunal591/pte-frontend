@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import SignIn from './pages/SignIn/SignIn';
@@ -75,10 +75,14 @@ import ManageHIWs from './pages/Admin/MockTest/Question Tests/HIW';
 import ManageROs from './pages/Admin/MockTest/Question Tests/RO';
 
 import ManageWFDs from './pages/Admin/MockTest/Question Tests/WFD';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCredentials } from './redux/slices/authSlice';
+import api from './services/api';
 
 
 
 function App() {
+  const dispatch = useDispatch();
   const [showLimitModal, setShowLimitModal] = React.useState(false);
 
   React.useEffect(() => {
@@ -86,6 +90,30 @@ function App() {
     window.addEventListener('practiceLimitReached', handleLimitReached);
     return () => window.removeEventListener('practiceLimitReached', handleLimitReached);
   }, []);
+
+  const {user} = useSelector(state => state.auth)
+  useEffect(() => {
+  if (user) return;
+
+  const fetchProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await api.get("/auth/profile");
+   
+
+      // OPTIONAL: store user in redux
+      dispatch(setCredentials({ user: res.data?.data, token }));
+    } catch (error) {
+      console.error("Profile fetch failed:", error);
+    }
+  };
+
+  fetchProfile();
+}, [dispatch, user]);
+
+
 
 
   return (

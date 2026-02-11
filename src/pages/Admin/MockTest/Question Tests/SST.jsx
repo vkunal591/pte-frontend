@@ -32,7 +32,7 @@ const ManageSSTs = () => {
     const fetchSSTGroups = async () => {
         setLoading(true);
         try {
-            const { data } = await api.get("/question/sst-group"); // Backend route
+            const { data } = await api.get("/question/sst"); // Backend route
             setSSTGroups(data.data || []);
         } catch (err) {
             console.error("Failed to fetch SST groups:", err);
@@ -44,7 +44,7 @@ const ManageSSTs = () => {
     const fetchUnusedQuestions = async () => {
         setUnusedLoading(true);
         try {
-            const { data } = await api.get("/question/sst-group/get/unused");
+            const { data } = await api.get("/question/sst/get/unused");
             setAvailableQuestions(data.data || {});
         } catch (err) {
             console.error("Failed to fetch unused SST questions:", err);
@@ -79,9 +79,9 @@ const ManageSSTs = () => {
             };
 
             if (editingId) {
-                await api.put(`/question/sst-group/${editingId}`, payload);
+                await api.put(`/question/sst/${editingId}`, payload);
             } else {
-                await api.post("/question/sst-group", payload);
+                await api.post("/question/sst", payload);
             }
             setIsModalOpen(false);
             await fetchSSTGroups();
@@ -129,14 +129,14 @@ const ManageSSTs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await api.get(`/question/sst-group/${section._id}`);
+            const res = await api.get(`/question/sst/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 summarizeSpokenTextQuestion: detailedSection.summarizeSpokenTextQuestion || [],
             });
 
-            const unusedRes = await api.get("/question/sst-group/get/unused");
+            const unusedRes = await api.get("/question/sst/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};
@@ -161,7 +161,7 @@ const ManageSSTs = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this SST group?")) {
             try {
-                await api.delete(`/question/sst-group/${id}`);
+                await api.delete(`/question/sst/${id}`);
                 fetchSSTGroups();
             } catch (err) {
                 console.error("Error deleting SST group:", err);

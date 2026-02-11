@@ -152,7 +152,7 @@ const ManageRTSs = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this RTS section? This cannot be undone.")) {
       try {
-        await api.delete(`/api/question/rts/${id}`);
+        await api.delete(`/question/rts/${id}`);
         fetchRTSSections();
       } catch (err) {
         console.error("Error deleting RTS section:", err);

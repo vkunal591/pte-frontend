@@ -129,14 +129,14 @@ const ManageFIBRWs = () => {
         setIsModalOpen(true);
         setSubmitLoading(true);
         try {
-            const res = await api.get(`/api/question/fib/${section._id}`);
+            const res = await api.get(`/question/fib/${section._id}`);
             const detailedSection = res.data.data;
             setForm({
                 title: detailedSection.title,
                 fibQuestions: detailedSection.fibQuestions || [],
             });
 
-            const unusedRes = await api.get("/api/question/fib/get/unused");
+            const unusedRes = await api.get("/question/fib/get/unused");
             const fetchedUnusedQuestions = unusedRes.data.data || {};
 
             const filteredAvailableQuestions = {};
@@ -161,7 +161,7 @@ const ManageFIBRWs = () => {
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this FIB RW section?")) {
             try {
-                await api.delete(`/api/question/fib/${id}`);
+                await api.delete(`/question/fib/${id}`);
                 fetchFIBSections();
             } catch (err) {
                 console.error("Error deleting FIB RW section:", err);
