@@ -280,8 +280,8 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                             {status !== "recording" && (
                                 <button
                                     onClick={() => {
-                                        handleTogglePlayPause();
-                                        setStatus("recording");
+                                        setIsPlaying(false);
+                                        startRecording();
                                     }}
                                     className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
                                 >
