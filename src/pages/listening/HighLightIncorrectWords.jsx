@@ -124,6 +124,7 @@ const AttemptHistoryHIW = ({ questionId, currentAttemptId, onSelectAttempt }) =>
     );
   }
 
+  console.log(myAttempts)
   return (
     <div className="mt-12 font-sans">
       {/* ================= HEADER + TABS ================= */}
@@ -225,10 +226,10 @@ const AttemptHistoryHIW = ({ questionId, currentAttemptId, onSelectAttempt }) =>
                       : "text-red-500"
                     }`}
                 >
-                  {attempt.score}
+                  {attempt.correctCount}
                 </span>
                 <span className="text-sm text-slate-400 font-medium">
-                  / {attempt.missedCount + attempt.score}
+                  / {attempt.correctCount + attempt.wrongCount}
                 </span>
               </div>
             </div>
