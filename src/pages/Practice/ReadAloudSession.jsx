@@ -424,8 +424,8 @@ const ReadAloudSession = () => {
       const savedAttempt = res.data.data;
 
       // Update UI with the result (either from backend or frontend if not saved)
-      setResult(savedAttempt || resultData);
-      setSelectedAttempt(savedAttempt || resultData);
+      setResult(resultData);
+      setSelectedAttempt(resultData);
       setIsResultOpen(true);
       setStatus('result');
 
@@ -442,74 +442,79 @@ const ReadAloudSession = () => {
 
 
   // NEW: Frontend Scoring Logic (returns payload and local result data)
-  const calculateFrontendScore = (userTranscript, referenceText) => {
-
-    console.log(userTranscript, referenceText)
-    const userWords = userTranscript.toLowerCase().split(/\s+/).filter(Boolean);
-    const refWords = referenceText.toLowerCase().split(/\s+/).filter(Boolean);
+const calculateFrontendScore = (userTranscript, referenceText) => {
+    // 1. Clean and Normalize strings (remove punctuation and lowercase)
+    const cleanText = (text) => text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
+    
+    const userWords = cleanText(userTranscript).split(/\s+/).filter(Boolean);
+    const refWords = cleanText(referenceText).split(/\s+/).filter(Boolean);
 
     let correctWords = 0;
     const wordAnalysis = [];
 
-    // Simple word-by-word comparison for content and pronunciation feedback
-    for (let i = 0; i < refWords.length; i++) {
-      if (userWords[i] && userWords[i] === refWords[i]) {
-        correctWords++;
-        wordAnalysis.push({ word: refWords[i], status: 'good' });
-      } else {
-        // Mark as bad if missing or incorrect
-        wordAnalysis.push({ word: refWords[i], status: 'bad' });
-      }
-    }
+    // 2. Better Matching Logic: 
+    // Instead of strict index matching, we check if the word exists 
+    // within a small "window" of the user's speech to allow for pauses or extra words.
+    refWords.forEach((refWord, index) => {
+        // Check if the word exists in the user transcript
+        // We look in a window (current index +/- 3 words) to handle stammers/extra words
+        const searchWindow = userWords.slice(Math.max(0, index - 3), index + 5);
+        
+        if (searchWindow.includes(refWord)) {
+            correctWords++;
+            wordAnalysis.push({ word: refWord, status: 'good' });
+        } else {
+            wordAnalysis.push({ word: refWord, status: 'bad' });
+        }
+    });
 
-    // Assign 'good' to any remaining user words that weren't matched in reference
-    // This part might need more sophisticated alignment for true fluency.
-    // For now, focusing on matching reference.
+    // 3. PTE Scoring Simulation
+    const totalWords = refWords.length;
+    const accuracyRatio = correctWords / totalWords;
 
-    const contentAccuracy = correctWords / refWords.length;
+    // Content: How many key words did you actually say?
+    // PTE: 5 = 100%, 4 = 80%, 3 = 60%, etc.
+    let contentScore = 0;
+    if (accuracyRatio > 0.9) contentScore = 5;
+    else if (accuracyRatio > 0.75) contentScore = 4;
+    else if (accuracyRatio > 0.5) contentScore = 3;
+    else if (accuracyRatio > 0.3) contentScore = 2;
+    else if (accuracyRatio > 0.1) contentScore = 1;
 
-    // Simulate PTE-like scoring (max 5 for each, total 15)
-    // This is a basic simulation. You can make it more complex.
-    const contentScore = Math.min(5, Math.round(contentAccuracy * 5));
-
-    // Pronunciation: A bit more lenient than content, but still based on accuracy
-    const pronunciationScore = Math.min(5, Math.round(contentAccuracy * 5 * 1.1)); // Slightly higher if good content
-
-    // Fluency: Simplistic. If most words are there and spoken within time.
-    // You could also factor in words per second here if you track timings.
-    const fluencyScore = Math.min(5, Math.round(contentAccuracy * 5 * 0.9)); // Slightly lower if content isn't perfect
+    // Pronunciation: Based on accuracy + minor penalty for extra words
+    let pronunciationScore = Math.max(1, Math.round(contentScore * 0.9));
+    
+    // Fluency: Based on how close the user transcript length is to the reference
+    // (If user speaks too many extra filler words or too few, fluency drops)
+    const lengthRatio = userWords.length / totalWords;
+    let fluencyScore = 0;
+    if (lengthRatio >= 0.9 && lengthRatio <= 1.1) fluencyScore = 5;
+    else if (lengthRatio >= 0.7 && lengthRatio <= 1.3) fluencyScore = 4;
+    else if (lengthRatio >= 0.5 && lengthRatio <= 1.5) fluencyScore = 3;
+    else fluencyScore = 2;
 
     const totalScore = contentScore + pronunciationScore + fluencyScore;
 
-    // Construct the payload for the backend
-    const payload = {
-      userId: user._id,
-      paragraphId: question._id,
-      transcript: userTranscript,
-      score: totalScore,
-      content: contentScore,
-      pronunciation: pronunciationScore,
-      fluency: fluencyScore,
-      wordAnalysis,
-      aiFeedback: `Frontend analysis: You got ${correctWords} out of ${refWords.length} words correct. Try to match the selected text more closely!`,
-      // Add other fields expected by your backend like date, etc.
-      date: new Date().toISOString(),
+    const resultData = {
+        score: totalScore,
+        fluency: fluencyScore,
+        pronunciation: pronunciationScore,
+        content: contentScore,
+        transcript: userTranscript,
+        _id: 'frontend_scored_' + Date.now(),
+        wordAnalysis: wordAnalysis,
+        aiFeedback: `Detected ${correctWords} out of ${totalWords} words. Your pronunciation is good, keep working on oral fluency!`
     };
 
-    // Construct the result data for immediate UI display
-    const resultData = {
-      score: totalScore,
-      fluency: fluencyScore,
-      pronunciation: pronunciationScore,
-      content: contentScore,
-      transcript: userTranscript,
-      _id: 'frontend_scored_' + Date.now(), // Unique ID for frontend display
-      wordAnalysis: wordAnalysis,
-      aiFeedback: `Frontend analysis: You got ${correctWords} out of ${refWords.length} words correct. Try to match the selected text more closely!`
+    const payload = {
+        ...resultData,
+        userId: user._id, // Ensure user object is accessible
+        paragraphId: question._id,
+        date: new Date().toISOString(),
     };
 
     return { payload, resultData };
-  };
+};
 
   const handleSkipPrep = () => startRecording();
 
@@ -718,6 +723,12 @@ const ReadAloudSession = () => {
                 </div>
               )}
 
+                  {status === 'submitting' && (
+                        <div className="text-center space-y-4">
+                            <RefreshCw className="w-12 h-12 text-primary-600 animate-spin mx-auto" />
+                            <p className="font-bold text-slate-700 text-lg">Analyzing your response...</p>
+                        </div>
+                    )}
             </div>
 
           </div>

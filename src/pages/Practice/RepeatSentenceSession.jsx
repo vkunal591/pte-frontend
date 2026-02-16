@@ -20,6 +20,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
     const [result, setResult] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+    
+    const [loading, setLoading] = useState(false);
 
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -154,6 +156,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
 
     const handleFinalSubmission = async (audioBlob) => {
         const formData = new FormData();
+        setLoading(true);
         const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
         formData.append("questionId", question?._id);
         formData.append("transcript", finalTranscript);
@@ -166,6 +169,9 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         } catch (err) {
             console.error("Submission error", err);
             setStatus("idle");
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -264,7 +270,12 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
 
                 </div>
 
-                <div className="flex-1 p-8 flex flex-col items-center justify-center">
+              {
+                loading ? (
+                    <div className="flex-1 p-8 flex flex-col items-center justify-center">
+                        <BarChart2 className="animate-spin text-slate-400" size={48} />
+                        </div>)
+                        :  <div className="flex-1 p-8 flex flex-col items-center justify-center">
 
                     {/* 1. IDLE STATE WITH HISTORY */}
                     {/* Auto-start enabled */}
@@ -457,6 +468,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                         </div>
                     )}
                 </div>
+              }
             </div>
 
 
