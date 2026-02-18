@@ -10,7 +10,6 @@ import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
 
 const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
-    console.log(question)
     const navigate = useNavigate();
     const transcriptRef = useRef("");
     const { user } = useSelector((state) => state.auth);
@@ -156,26 +155,60 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
     };
 
 
-    const startRecording = async () => {
-        resetTranscript();
-        transcriptRef.current = "";
-        setStatus('recording');
-        setTimeLeft(0); // Count Up
-        setMaxTime(40);
+ const startRecording = async () => {
+    resetTranscript();
+    transcriptRef.current = "";
+    setStatus('recording');
+    setTimeLeft(0);
+    setMaxTime(40);
 
+    // Ensure SpeechRecognition API is available
+    if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
+        console.error("Browser does not support Speech Recognition.");
+        alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
+        setStatus('idle');
+        return;
+    }
+
+    try {
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Microphone stream obtained:", stream);
+
+        const recorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = recorder;
+        audioChunks.current = [];
+
+        recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+                audioChunks.current.push(e.data);
+            }
+        };
+        recorder.onstart = () => console.log("MediaRecorder started.");
+        recorder.onstop = () => console.log("MediaRecorder stopped.");
+        recorder.onerror = (e) => console.error("MediaRecorder error:", e.error); // Crucial for debugging recorder issues
+
+        recorder.start();
         SpeechRecognition.startListening({ continuous: true });
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = recorder;
-            audioChunks.current = [];
-            recorder.ondataavailable = (e) => audioChunks.current.push(e.data);
-            recorder.start();
-        } catch (err) {
-            console.error("Microphone access denied", err);
-            setStatus('idle');
+        console.log("SpeechRecognition listening started.");
+
+    } catch (err) {
+        console.error("Microphone access failed (getUserMedia error):", err);
+        console.error("Error name:", err.name); // NotAllowedError, AbortError, SecurityError etc.
+        console.error("Error message:", err.message);
+        // Provide user feedback based on error type if possible
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            alert("Microphone access was denied. Please allow microphone permissions for this site in your browser settings.");
+        } else if (err.name === 'NotFoundError') {
+            alert("No microphone found. Please ensure a microphone is connected and working.");
+        } else if (err.name === 'SecurityError') {
+            alert("Microphone access blocked due to security restrictions (e.g., non-HTTPS or Permissions-Policy). Ensure your site is on HTTPS.");
+        } else {
+            alert("An unexpected error occurred while trying to access the microphone: " + err.message);
         }
-    };
+        setStatus('idle');
+    }
+};
 
     const stopRecording = () => {
         SpeechRecognition.stopListening();
