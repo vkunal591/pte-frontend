@@ -409,7 +409,7 @@ const ReadAloudSession = () => {
     setMaxTime(isOneLineMode ? 40 : 40); // Shorter max time for one-line mode
     resetTranscript();
     await checkMic();
-    SpeechRecognition.startListening({ continuous: true });
+    await SpeechRecognition.startListening({ continuous: true });
   };
 
   const stopRecording = async () => {
@@ -428,7 +428,7 @@ const ReadAloudSession = () => {
 
     try {
       // Calculate scores on the frontend
-      const { payload, resultData } = calculateFrontendScore(finalTranscript, referenceText);
+      const { payload, resultData } = await calculateFrontendScore(finalTranscript, referenceText);
 
       // Submit to backend
       const res = await savePracticeAttempt(payload);
@@ -443,7 +443,7 @@ const ReadAloudSession = () => {
     } catch (err) {
       console.error("Error during scoring or saving attempt:", err);
       // Fallback to displaying frontend calculated result if backend save fails
-      const { resultData } = calculateFrontendScore(finalTranscript, referenceText);
+      const { resultData } = await calculateFrontendScore(finalTranscript, referenceText);
       setResult(resultData);
       setSelectedAttempt(resultData);
       setIsResultOpen(true);
@@ -527,7 +527,7 @@ const ReadAloudSession = () => {
     return { payload, resultData };
   };
 
-  const handleSkipPrep = () => startRecording();
+  const handleSkipPrep = async () => await startRecording();
 
   // NEW: Handle text selection
   const handleTextSelection = () => {
