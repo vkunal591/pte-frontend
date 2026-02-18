@@ -9,10 +9,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://194.238.16.68:5000',
+        target: 'https://api.pawanpte.cloud',
         changeOrigin: true,
         secure: false,
       },
     },
-  },
+  },  
 })
