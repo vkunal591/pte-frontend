@@ -124,7 +124,6 @@ const AttemptHistoryHIW = ({ questionId, currentAttemptId, onSelectAttempt }) =>
     );
   }
 
-  console.log(myAttempts)
   return (
     <div className="mt-12 font-sans">
       {/* ================= HEADER + TABS ================= */}
@@ -728,7 +727,7 @@ const ResultModal = ({ result, onClose, onRedo, question, nextButton }) => {
             <div className="grid grid-cols-3 gap-4">
               <Stat title="Correct" value={correct} color="green" />
               <Stat title="Wrong" value={wrong} color="red" />
-              <Stat title="Total" value={correct + wrong} color="orange" />
+              {/* <Stat title="Total" value={correct + wrong} color="orange" /> */}
             </div>
 
 
