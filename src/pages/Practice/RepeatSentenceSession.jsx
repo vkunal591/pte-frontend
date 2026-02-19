@@ -33,7 +33,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
 
-    const { transcript, resetTranscript } = useSpeechRecognition();
+   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
     useEffect(() => {
         transcriptRef.current = transcript;
@@ -71,7 +71,25 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         setMaxTime(3);
     };
 
-    const handleStartListening = () => {
+    const checkMic = async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Mic permission granted");
+    } catch (err) {
+        alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
+        console.error("Microphone access denied or unavailable", err);
+        setStatus('prep'); // Revert to prep state if mic is denied
+    }
+};
+
+    const handleStartListening = async() => {
+            if (!browserSupportsSpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+        setStatus('prep');
+        return;
+    }
+    await checkMic();
+    if (status === 'prep') return;
         setStatus("listening");
         setAudioCurrentTime(0);
 
@@ -124,6 +142,13 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
     };
 
     const startRecording = async () => {
+        if (!browserSupportsSpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+        setStatus('prep');
+        return;
+    }
+    await checkMic(); // Double check mic here, essential before getUserMedia
+    if (status === 'prep') return; // Exit if checkMic failed and reverted status
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
@@ -141,26 +166,34 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
             console.error("Microphone access denied", err);
         }
     };
-
-    const stopRecording = () => {
+const stopRecording = () => {
         SpeechRecognition.stopListening();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
             setStatus('submitting');
             mediaRecorderRef.current.onstop = async () => {
                 const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
+                // Small delay to ensure all audio data is processed
                 setTimeout(() => handleFinalSubmission(audioBlob), 300);
             };
+        } else {
+            // Handle case where recording wasn't properly started
+            console.warn("Attempted to stop recording, but mediaRecorderRef.current was not active.");
+            handleFinalSubmission(null); // Proceed with submission, perhaps marking no audio
         }
     };
-
-    const handleFinalSubmission = async (audioBlob) => {
+      const handleFinalSubmission = async (audioBlob) => {
         const formData = new FormData();
         setLoading(true);
         const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
         formData.append("questionId", question?._id);
         formData.append("transcript", finalTranscript);
-        formData.append("audio", audioBlob);
+        // Only append audio if it exists
+        if (audioBlob) {
+            formData.append("audio", audioBlob);
+        } else {
+            console.warn("No audio blob to append to FormData.");
+        }
         formData.append("userId", user?._id);
         try {
             const response = await submitRepeatAttempt(formData);
@@ -168,12 +201,14 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
             setStatus("result");
         } catch (err) {
             console.error("Submission error", err);
-            setStatus("idle");
+            setStatus("idle"); // Revert to idle or prep on error
+            alert("There was an error submitting your attempt. Please try again.");
         }
         finally {
             setLoading(false);
         }
     };
+
 
     const getAISuggestion = (score) => {
         if (score >= 11) {
@@ -214,6 +249,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         setMaxTime(3);
         resetTranscript();
         transcriptRef.current = "";
+        questionAudioRef.current.pause();
+         window.speechSynthesis.cancel()
     };
 
     const handleShowAnswer = () => {
@@ -374,6 +411,9 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
                             <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
                                 <Square size={18} fill="currentColor" /> Finish Recording
                             </button>
+                              {!browserSupportsSpeechRecognition && (
+                                <div className="text-sm text-red-500 mt-2">Speech recognition not supported in this browser. Please use Google Chrome.</div>
+                            )}
                         </div>
                     )}
 

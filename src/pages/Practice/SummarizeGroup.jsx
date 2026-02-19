@@ -30,7 +30,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
 
-    const { transcript, resetTranscript } = useSpeechRecognition();
+   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
     useEffect(() => {
         transcriptRef.current = transcript;
@@ -77,6 +77,17 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
             }
         }
     }, [isPlaying]);
+
+     const checkMic = async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Mic permission granted");
+    } catch (err) {
+        alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
+        console.error("Microphone access denied or unavailable", err);
+        setStatus('prep'); // Revert to prep state if mic is denied
+    }
+};
 
 
     const handleStartClick = () => {
@@ -151,6 +162,13 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
 
 
     const startRecording = async () => {
+          if (!browserSupportsSpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+        setStatus('prep');
+        return;
+    }
+    await checkMic();
+
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
@@ -356,6 +374,9 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                             <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-10 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl transition-all active:scale-95">
                                 <Square size={20} fill="currentColor" /> Finish Recording
                             </button>
+                             {!browserSupportsSpeechRecognition && (
+                                <div className="text-sm text-red-500 mt-2">Speech recognition not supported in this browser. Please use Google Chrome.</div>
+                            )}
                         </div>
                     )}
 

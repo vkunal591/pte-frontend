@@ -10,6 +10,7 @@ import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
 
 const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
+
     const navigate = useNavigate();
     const transcriptRef = useRef("");
     const { user } = useSelector((state) => state.auth);
@@ -30,11 +31,23 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
 
-    const { transcript, resetTranscript } = useSpeechRecognition();
+    const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
     useEffect(() => {
         transcriptRef.current = transcript;
     }, [transcript]);
+
+    const checkMic = async () => {
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("Mic permission granted");
+        } catch (err) {
+            alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
+            console.error("Microphone access denied or unavailable", err);
+            // Do NOT change status here directly. Let the startRecording handle the return.
+        }
+    };
+
 
     // Reset session when question changes
     useEffect(() => {
@@ -155,60 +168,45 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
     };
 
 
- const startRecording = async () => {
-    resetTranscript();
-    transcriptRef.current = "";
-    setStatus('recording');
-    setTimeLeft(0);
-    setMaxTime(40);
-
-    // Ensure SpeechRecognition API is available
-    if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
-        console.error("Browser does not support Speech Recognition.");
-        alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
-        setStatus('idle');
-        return;
-    }
-
-    try {
-        // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("Microphone stream obtained:", stream);
-
-        const recorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = recorder;
-        audioChunks.current = [];
-
-        recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) {
-                audioChunks.current.push(e.data);
-            }
-        };
-        recorder.onstart = () => console.log("MediaRecorder started.");
-        recorder.onstop = () => console.log("MediaRecorder stopped.");
-        recorder.onerror = (e) => console.error("MediaRecorder error:", e.error); // Crucial for debugging recorder issues
-
-        recorder.start();
-        SpeechRecognition.startListening({ continuous: true });
-        console.log("SpeechRecognition listening started.");
-
-    } catch (err) {
-        console.error("Microphone access failed (getUserMedia error):", err);
-        console.error("Error name:", err.name); // NotAllowedError, AbortError, SecurityError etc.
-        console.error("Error message:", err.message);
-        // Provide user feedback based on error type if possible
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-            alert("Microphone access was denied. Please allow microphone permissions for this site in your browser settings.");
-        } else if (err.name === 'NotFoundError') {
-            alert("No microphone found. Please ensure a microphone is connected and working.");
-        } else if (err.name === 'SecurityError') {
-            alert("Microphone access blocked due to security restrictions (e.g., non-HTTPS or Permissions-Policy). Ensure your site is on HTTPS.");
-        } else {
-            alert("An unexpected error occurred while trying to access the microphone: " + err.message);
+   const startRecording = async () => {
+        if (!browserSupportsSpeechRecognition) {
+            alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+            setStatus('prep_record'); // Go back to prep state if browser not supported
+            return;
         }
-        setStatus('idle');
-    }
-};
+        await checkMic();
+
+        // Check mic permission first
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("Mic permission granted.");
+        } catch (err) {
+            alert("Microphone permission denied or unavailable. Please grant permission to record.");
+            console.error("Microphone access denied:", err);
+            setStatus('prep_record'); // Go back to prep state if mic denied
+            return;
+        }
+
+        resetTranscript();
+        transcriptRef.current = "";
+        setStatus('recording');
+        setTimeLeft(0); // Count Up
+        setMaxTime(40); // 40 seconds for Re-Tell lecture response
+
+        SpeechRecognition.startListening({ continuous: true });
+        try {
+            // Re-request stream here for MediaRecorder, as SpeechRecognition doesn't expose it
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = recorder;
+            audioChunks.current = [];
+            recorder.ondataavailable = (e) => audioChunks.current.push(e.data);
+            recorder.start();
+        } catch (err) {
+            console.error("MediaRecorder setup failed", err);
+            setStatus('prep_record'); // Fallback if MediaRecorder fails
+        }
+    };
 
     const stopRecording = () => {
         SpeechRecognition.stopListening();
@@ -217,6 +215,14 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
             setStatus('submitting');
             mediaRecorderRef.current.onstop = async () => {
                 const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
+                const finalTranscript = transcriptRef.current.trim();
+                const referenceText = question.transcript; // For Re-Tell, the transcript is the reference.
+
+                if (!finalTranscript) {
+                    alert("No speech detected. Please try again.");
+                    resetSession();
+                    return;
+                }
                 setTimeout(() => handleFinalSubmission(audioBlob), 300);
             };
         }
@@ -422,6 +428,10 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
                             >
                                 <Square size={18} /> Finish Recording
                             </button>
+
+                              {!browserSupportsSpeechRecognition && (
+                                    <div className="text-sm text-red-500 mt-2">Speech recognition not supported in this browser. Please use Google Chrome.</div>
+                                )}
                         </div>
                     )}
 

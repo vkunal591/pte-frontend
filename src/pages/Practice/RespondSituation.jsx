@@ -29,11 +29,22 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
     const audioChunks = useRef([]);
     const questionAudioRef = useRef(null);
 
-    const { transcript, resetTranscript } = useSpeechRecognition();
+  const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
     useEffect(() => {
         transcriptRef.current = transcript;
     }, [transcript]);
+
+     const checkMic = async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Mic permission granted");
+    } catch (err) {
+        alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
+        console.error("Microphone access denied or unavailable", err);
+        setStatus('prep'); // Revert to prep state if mic is denied
+    }
+};
 
     // Reset session when question changes
     useEffect(() => {
@@ -138,6 +149,13 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
 
 
     const startRecording = async () => {
+          if (!browserSupportsSpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+        setStatus('prep');
+        return;
+    }
+    await checkMic();
+
         resetTranscript();
         transcriptRef.current = "";
         setStatus('recording');
@@ -398,6 +416,9 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
                             >
                                 <Square size={18} /> Finish Recording
                             </button>
+                             {!browserSupportsSpeechRecognition && (
+                                <div className="text-sm text-red-500 mt-2">Speech recognition not supported in this browser. Please use Google Chrome.</div>
+                            )}
                         </div>
                     )}
 

@@ -214,7 +214,7 @@ function Practice() {
     const fetchSummarizeGroupQuestion = async () => {
         setLoading(true);
         try {
-            const { data } = await api.get(`/summarize-group/get/${user?._id}`);
+            const { data } = await api.get(`/summarize-group/get/${user._id}`);
             setSummarizeGroupQuestion(data?.data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }

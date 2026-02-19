@@ -252,6 +252,16 @@ const ReadAloudSession = () => {
   const [showToast, setShowToast] = useState(false);
 
 
+  const checkMic = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Mic permission granted");
+    } catch (err) {
+      alert("Microphone permission denied or unavailable");
+    }
+  };
+
+
   useEffect(() => {
     const fetchQuestion = async () => {
       setLoading(true);
@@ -380,7 +390,7 @@ const ReadAloudSession = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, timeLeft, isStarted, maxTime]);
 
-  const startRecording = () => {
+  const startRecording = async () => {
     // In one-line mode, only allow recording if text is selected
     if (isOneLineMode && !selectedText) {
       alert("Please select some text to start speaking in One-Line Mode.");
@@ -398,7 +408,8 @@ const ReadAloudSession = () => {
     setTimeLeft(0); // Start at 0 for count-up
     setMaxTime(isOneLineMode ? 40 : 40); // Shorter max time for one-line mode
     resetTranscript();
-    SpeechRecognition.startListening({ continuous: true });
+    await checkMic();
+    await SpeechRecognition.startListening({ continuous: true });
   };
 
   const stopRecording = async () => {
@@ -417,7 +428,7 @@ const ReadAloudSession = () => {
 
     try {
       // Calculate scores on the frontend
-      const { payload, resultData } = calculateFrontendScore(finalTranscript, referenceText);
+      const { payload, resultData } = await calculateFrontendScore(finalTranscript, referenceText);
 
       // Submit to backend
       const res = await savePracticeAttempt(payload);
@@ -432,7 +443,7 @@ const ReadAloudSession = () => {
     } catch (err) {
       console.error("Error during scoring or saving attempt:", err);
       // Fallback to displaying frontend calculated result if backend save fails
-      const { resultData } = calculateFrontendScore(finalTranscript, referenceText);
+      const { resultData } = await calculateFrontendScore(finalTranscript, referenceText);
       setResult(resultData);
       setSelectedAttempt(resultData);
       setIsResultOpen(true);
@@ -442,10 +453,10 @@ const ReadAloudSession = () => {
 
 
   // NEW: Frontend Scoring Logic (returns payload and local result data)
-const calculateFrontendScore = (userTranscript, referenceText) => {
+  const calculateFrontendScore = (userTranscript, referenceText) => {
     // 1. Clean and Normalize strings (remove punctuation and lowercase)
     const cleanText = (text) => text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").trim();
-    
+
     const userWords = cleanText(userTranscript).split(/\s+/).filter(Boolean);
     const refWords = cleanText(referenceText).split(/\s+/).filter(Boolean);
 
@@ -456,16 +467,16 @@ const calculateFrontendScore = (userTranscript, referenceText) => {
     // Instead of strict index matching, we check if the word exists 
     // within a small "window" of the user's speech to allow for pauses or extra words.
     refWords.forEach((refWord, index) => {
-        // Check if the word exists in the user transcript
-        // We look in a window (current index +/- 3 words) to handle stammers/extra words
-        const searchWindow = userWords.slice(Math.max(0, index - 3), index + 5);
-        
-        if (searchWindow.includes(refWord)) {
-            correctWords++;
-            wordAnalysis.push({ word: refWord, status: 'good' });
-        } else {
-            wordAnalysis.push({ word: refWord, status: 'bad' });
-        }
+      // Check if the word exists in the user transcript
+      // We look in a window (current index +/- 3 words) to handle stammers/extra words
+      const searchWindow = userWords.slice(Math.max(0, index - 3), index + 5);
+
+      if (searchWindow.includes(refWord)) {
+        correctWords++;
+        wordAnalysis.push({ word: refWord, status: 'good' });
+      } else {
+        wordAnalysis.push({ word: refWord, status: 'bad' });
+      }
     });
 
     // 3. PTE Scoring Simulation
@@ -483,7 +494,7 @@ const calculateFrontendScore = (userTranscript, referenceText) => {
 
     // Pronunciation: Based on accuracy + minor penalty for extra words
     let pronunciationScore = Math.max(1, Math.round(contentScore * 0.9));
-    
+
     // Fluency: Based on how close the user transcript length is to the reference
     // (If user speaks too many extra filler words or too few, fluency drops)
     const lengthRatio = userWords.length / totalWords;
@@ -496,27 +507,27 @@ const calculateFrontendScore = (userTranscript, referenceText) => {
     const totalScore = contentScore + pronunciationScore + fluencyScore;
 
     const resultData = {
-        score: totalScore,
-        fluency: fluencyScore,
-        pronunciation: pronunciationScore,
-        content: contentScore,
-        transcript: userTranscript,
-        _id: 'frontend_scored_' + Date.now(),
-        wordAnalysis: wordAnalysis,
-        aiFeedback: `Detected ${correctWords} out of ${totalWords} words. Your pronunciation is good, keep working on oral fluency!`
+      score: totalScore,
+      fluency: fluencyScore,
+      pronunciation: pronunciationScore,
+      content: contentScore,
+      transcript: userTranscript,
+      _id: 'frontend_scored_' + Date.now(),
+      wordAnalysis: wordAnalysis,
+      aiFeedback: `Detected ${correctWords} out of ${totalWords} words. Your pronunciation is good, keep working on oral fluency!`
     };
 
     const payload = {
-        ...resultData,
-        userId: user._id, // Ensure user object is accessible
-        paragraphId: question._id,
-        date: new Date().toISOString(),
+      ...resultData,
+      userId: user._id, // Ensure user object is accessible
+      paragraphId: question._id,
+      date: new Date().toISOString(),
     };
 
     return { payload, resultData };
-};
+  };
 
-  const handleSkipPrep = () => startRecording();
+  const handleSkipPrep = async () => await startRecording();
 
   // NEW: Handle text selection
   const handleTextSelection = () => {
@@ -720,15 +731,19 @@ const calculateFrontendScore = (userTranscript, referenceText) => {
                     <Square size={18} fill="currentColor" />
                     Click To Stop
                   </button>
+
+                  {!browserSupportsSpeechRecognition && (
+                    <div>Use Google Chrome for microphone support</div>
+                  )}
                 </div>
               )}
 
-                  {status === 'submitting' && (
-                        <div className="text-center space-y-4">
-                            <RefreshCw className="w-12 h-12 text-primary-600 animate-spin mx-auto" />
-                            <p className="font-bold text-slate-700 text-lg">Analyzing your response...</p>
-                        </div>
-                    )}
+              {status === 'submitting' && (
+                <div className="text-center space-y-4">
+                  <RefreshCw className="w-12 h-12 text-primary-600 animate-spin mx-auto" />
+                  <p className="font-bold text-slate-700 text-lg">Analyzing your response...</p>
+                </div>
+              )}
             </div>
 
           </div>

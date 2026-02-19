@@ -17,7 +17,7 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
     const { user } = useSelector((state) => state.auth)
     const mediaRecorderRef = useRef(null);
     const audioChunks = useRef([]);
-    const { transcript, resetTranscript } = useSpeechRecognition();
+   const { transcript, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
     // Reset session when question changes
     useEffect(() => {
@@ -48,12 +48,30 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
         setMaxTime(25);
     };
 
+     const checkMic = async () => {
+    try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("Mic permission granted");
+    } catch (err) {
+        alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
+        console.error("Microphone access denied or unavailable", err);
+        setStatus('prep'); // Revert to prep state if mic is denied
+    }
+};
+
     const handleSelectAttempt = (attempt) => {
         setResult(attempt);
         setStatus('result');
     };
 
     const startRecording = async () => {
+          if (!browserSupportsSpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Please use Google Chrome.");
+        setStatus('prep');
+        return;
+    }
+    await checkMic();
+
         resetTranscript();
         setStatus('recording');
         setTimeLeft(40);
@@ -189,6 +207,9 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                                     ) : (
                                         <button onClick={stopRecording} className="bg-red-600 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg"><Square size={16} fill="white" /> Finish</button>
                                     )}
+                                     {(status === 'recording' &&!browserSupportsSpeechRecognition) && (
+                                <div className="text-sm text-red-500 mt-2">Speech recognition not supported in this browser. Please use Google Chrome.</div>
+                            )}
                                 </div>
                             )}
                             {status === 'submitting' && (
