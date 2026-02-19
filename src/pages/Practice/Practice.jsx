@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-// import axios from 'axios'; // Removed direct axios import
-
-
-// Layout
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
 
 // Speaking Components

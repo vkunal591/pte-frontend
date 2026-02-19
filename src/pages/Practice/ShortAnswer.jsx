@@ -420,7 +420,7 @@ const ShortAnswer = ({ question, setActiveSpeechQuestion, nextButton, previousBu
                                 {/* AUDIO PLAYERS */}
                                 <div className="grid grid-rows-2 gap-6 col-span-12 md:col-span-8">
                                     <AudioPlayerCard label="Question" url={question.audioUrl} />
-                                    <AudioPlayerCard label="My Answer" url={result.studentAudio?.url} isAnswer />
+                                    {/* <AudioPlayerCard label="My Answer" url={result.studentAudio?.url} isAnswer /> */}
                                 </div>
                             </div>
 

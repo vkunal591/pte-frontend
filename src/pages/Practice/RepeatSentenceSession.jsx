@@ -10,7 +10,7 @@ import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
 
 const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
-    console.log(question)
+   
     const navigate = useNavigate();
     const transcriptRef = useRef("");
     const { user } = useSelector((state) => state.auth)
@@ -484,7 +484,7 @@ const stopRecording = () => {
                             {/* AUDIO PLAYERS */}
                             <div className="grid grid-cols-2 gap-6">
                                 <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
-                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
+                                {/* <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer /> */}
                             </div>
 
                             <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">

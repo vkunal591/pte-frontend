@@ -37,14 +37,19 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
 
      const checkMic = async () => {
     try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream immediately after checking to free up the mic for speech recognition.
+        // This just verifies permission and device existence.
+        stream.getTracks().forEach(track => track.stop());
         console.log("Mic permission granted");
+        return true; // Indicate success
     } catch (err) {
         alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
         console.error("Microphone access denied or unavailable", err);
-        setStatus('prep'); // Revert to prep state if mic is denied
+        return false; // Indicate failure
     }
 };
+
 
     // Reset session when question changes
     useEffect(() => {
@@ -154,7 +159,11 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         setStatus('prep');
         return;
     }
-    await checkMic();
+     const micGranted = await checkMic();
+    if (!micGranted) {
+        setStatus('prep_record'); // Go back to prep state if mic not available
+        return;
+    }
 
         resetTranscript();
         transcriptRef.current = "";
@@ -163,47 +172,83 @@ const RespondSituation = ({ question, setActiveSpeechQuestion, nextButton, previ
         setMaxTime(40);
 
         SpeechRecognition.startListening({ continuous: true });
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = recorder;
-            audioChunks.current = [];
-            recorder.ondataavailable = (e) => audioChunks.current.push(e.data);
-            recorder.start();
-        } catch (err) {
-            console.error("Microphone access denied", err);
-            setStatus('idle');
-        }
+    //     try {
+    //     // IMPORTANT: Re-request getUserMedia for MediaRecorder *after* SpeechRecognition has started
+    //     // This is a common point of failure. If the browser blocks a second request, MediaRecorder won't start.
+    //     const streamForMediaRecorder = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //     const recorder = new MediaRecorder(streamForMediaRecorder);
+    //     mediaRecorderRef.current = recorder;
+    //     audioChunks.current = [];
+    //     recorder.ondataavailable = (e) => audioChunks.current.push(e.data);
+    //     recorder.start();
+    //     // IMPORTANT: Store stream to stop its tracks later
+    //     mediaRecorderRef.current.stream = streamForMediaRecorder;
+    // } catch (err) {
+    //     console.error("MediaRecorder microphone access denied or failed to start", err);
+    //     // If MediaRecorder fails, we should still stop speech recognition
+    //     SpeechRecognition.stopListening();
+    //     setStatus('prep_record'); // Revert state
+    //     alert("Failed to start audio recording. Your response will only have transcript (if any speech detected by browser).");
+    // }
     };
 
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-            mediaRecorderRef.current.stop();
-            setStatus('submitting');
-            mediaRecorderRef.current.onstop = async () => {
-                const audioBlob = new Blob(audioChunks.current, { type: "audio/webm" });
-                setTimeout(() => handleFinalSubmission(audioBlob), 300);
-            };
-        }
-    };
+//    const stopRecording = () => {
+//     SpeechRecognition.stopListening();
+//     let audioBlobToSubmit = null;
 
-    const handleFinalSubmission = async (audioBlob) => {
-        const formData = new FormData();
-        const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
-        formData.append("questionId", question?._id);
-        formData.append("transcript", finalTranscript);
+//     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+//         mediaRecorderRef.current.stop();
+//         // Stop all tracks from the stream used by MediaRecorder
+//         if (mediaRecorderRef.current.stream) {
+//             mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+//         }
+
+//         // Set status to submitting and handle onstop event
+//         setStatus('submitting');
+//         mediaRecorderRef.current.onstop = async () => {
+//             audioBlobToSubmit = new Blob(audioChunks.current, { type: "audio/webm" });
+//             // Added a small delay to ensure transcript is fully updated.
+//             setTimeout(() => handleFinalSubmission(audioBlobToSubmit), 300);
+//         };
+//     } else {
+//         // If MediaRecorder didn't start successfully, directly submit with potentially no audio blob
+//         console.warn("MediaRecorder was not active or initialized. Submitting without audio blob.");
+//         handleFinalSubmission(audioBlobToSubmit); // audioBlobToSubmit will be null here
+//     }
+// };
+
+const stopRecording = () => {
+    SpeechRecognition.stopListening();
+    setStatus('submitting');
+
+    // --- Directly call handleFinalSubmission with null audioBlob ---
+    // Remove all MediaRecorder related checks and calls here
+    setTimeout(() => handleFinalSubmission(null), 300);
+};
+const handleFinalSubmission = async (audioBlob) => {
+    const formData = new FormData();
+    const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
+    formData.append("questionId", question?._id);
+    formData.append("transcript", finalTranscript);
+
+    // Only append audio if it exists
+    if (audioBlob) {
         formData.append("audio", audioBlob);
-        formData.append("userId", user?._id);
-        try {
-            const response = await submitRespondSituationAttempt(formData);
-            setResult(response.data);
-            setStatus("result");
-        } catch (err) {
-            console.error("Submission error", err);
-            setStatus("idle");
-        }
-    };
+    } else {
+        console.warn("No audio blob to submit for Respond to Situation.");
+    }
+
+    formData.append("userId", user?._id);
+    try {
+        const response = await submitRespondSituationAttempt(formData); // Use correct API call
+        setResult(response.data);
+        setStatus("result");
+    } catch (err) {
+        console.error("Submission error", err);
+        setStatus("prep_record"); // Revert to a state where user can retry
+        alert("Failed to submit response. Please try again.");
+    }
+};
 
     const resetSession = () => {
         setResult(null);

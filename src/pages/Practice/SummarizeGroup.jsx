@@ -80,12 +80,16 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
 
      const checkMic = async () => {
     try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream immediately after checking to free up the mic for speech recognition.
+        // This just verifies permission and device existence.
+        stream.getTracks().forEach(track => track.stop());
         console.log("Mic permission granted");
+        return true; // Indicate success
     } catch (err) {
         alert("Microphone permission denied or unavailable. Please ensure your microphone is connected and grant permission.");
         console.error("Microphone access denied or unavailable", err);
-        setStatus('prep'); // Revert to prep state if mic is denied
+        return false; // Indicate failure
     }
 };
 
@@ -161,37 +165,27 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
     };
 
 
-    const startRecording = async () => {
-          if (!browserSupportsSpeechRecognition) {
+// Inside SummarizeGroup (and RespondSituation) component
+
+const startRecording = async () => {
+    if (!browserSupportsSpeechRecognition) {
         alert("Speech recognition not supported in this browser. Please use Google Chrome.");
-        setStatus('prep');
+        setStatus('prep_record');
         return;
     }
+    transcriptRef.current = "";
+    setStatus('recording');
+    setTimeLeft(0);
+    setMaxTime(120);
+ resetTranscript();
     await checkMic();
+    SpeechRecognition.startListening({ continuous: true });
+};
 
-        resetTranscript();
-        transcriptRef.current = "";
-        setStatus('recording');
-        setTimeLeft(0); // Count Up
-        setMaxTime(120);
-
-        SpeechRecognition.startListening({ continuous: true });
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = recorder;
-            audioChunks.current = [];
-            recorder.ondataavailable = (e) => audioChunks.current.push(e.data);
-            recorder.start();
-        } catch (err) {
-            console.error("Microphone access denied", err);
-            setStatus('idle');
-        }
-    };
-
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+const stopRecording = () => {
+    SpeechRecognition.stopListening();
+    setStatus('submitting');
+ if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
             setStatus('submitting');
             mediaRecorderRef.current.onstop = async () => {
@@ -199,24 +193,36 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                 setTimeout(() => handleFinalSubmission(audioBlob), 300);
             };
         }
-    };
+};
 
-    const handleFinalSubmission = async (audioBlob) => {
-        const formData = new FormData();
-        const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
-        formData.append("questionId", question?._id);
-        formData.append("transcript", finalTranscript);
+// Ensure handleFinalSubmission handles null audioBlob properly as already discussed.
+
+// Update signature to remove frontendTranscript if you are solely relying on backend
+const handleFinalSubmission = async (audioBlob) => {
+    const formData = new FormData();
+    const finalTranscript = transcriptRef.current.trim() || "(No speech detected)";
+    formData.append("questionId", question?._id);
+    formData.append("transcript", finalTranscript);
+
+    // Only append audio if it exists (already correctly handled, but confirm)
+    if (audioBlob) {
         formData.append("audio", audioBlob);
-        formData.append("userId", user?._id);
-        try {
-            const response = await submitSummarizeGroupAttempt(formData);
-            setResult(response.data);
-            setStatus("result");
-        } catch (err) {
-            console.error("Submission error", err);
-            setStatus("idle");
-        }
-    };
+    } else {
+        console.warn("No audio blob submitted for Summarize Group Discussion (using transcript only).");
+    }
+
+    formData.append("userId", user?._id);
+    try {
+        const response = await submitSummarizeGroupAttempt(formData);
+        setResult(response.data);
+        setStatus("result");
+    } catch (err) {
+        console.error("Submission error", err);
+        setStatus("prep_record");
+        alert("Failed to submit summary. Please try again.");
+    }
+};
+
 
     const resetSession = () => {
         setResult(null);
@@ -438,7 +444,7 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
                             </div>
 
                             {/* Player for recorded audio (Interactive) */}
-                            <AudioPlayerCard label="My Answer" url={result.studentAudio?.url} isAnswer />
+                            {/* <AudioPlayerCard label="My Answer" url={result.studentAudio?.url} isAnswer /> */}
 
 
                             <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
