@@ -8,6 +8,7 @@ import {
 import { submitSummarizeGroupAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
+import { checkMic } from '../../services/tools';
 
 const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const navigate = useNavigate();
@@ -156,8 +157,8 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
         setStatus('recording');
         setTimeLeft(0); // Count Up
         setMaxTime(120);
-
-        SpeechRecognition.startListening({ continuous: true });
+        await checkMic()
+        await SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream);
@@ -171,8 +172,8 @@ const SummarizeGroup = ({ question, setActiveSpeechQuestion, nextButton, previou
         }
     };
 
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
+    const stopRecording = async () => {
+        await SpeechRecognition.stopListening();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
             setStatus('submitting');

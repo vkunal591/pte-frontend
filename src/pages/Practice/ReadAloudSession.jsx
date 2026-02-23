@@ -25,6 +25,7 @@ import {
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
 import api, { savePracticeAttempt, getReadAloudHistory } from '../../services/api'; // Not directly used but good to keep
 import { useSelector } from 'react-redux';
+import { checkMic } from '../../services/tools';
 
 
 
@@ -252,14 +253,7 @@ const ReadAloudSession = () => {
   const [showToast, setShowToast] = useState(false);
 
 
-  const checkMic = async () => {
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Mic permission granted");
-    } catch (err) {
-      alert("Microphone permission denied or unavailable");
-    }
-  };
+
 
 
   useEffect(() => {

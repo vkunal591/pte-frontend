@@ -7,6 +7,7 @@ import {
 import { submitDescribeImageAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
+import { checkMic } from '../../services/tools';
 
 const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     const [status, setStatus] = useState('prep_start');
@@ -58,7 +59,8 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
         setStatus('recording');
         setTimeLeft(40);
         setMaxTime(40);
-        SpeechRecognition.startListening({ continuous: true });
+        await checkMic()
+        await SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream);
@@ -69,8 +71,8 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
         } catch (err) { console.error("Mic error", err); }
     };
 
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
+    const stopRecording = async () => {
+        await SpeechRecognition.stopListening();
         if (mediaRecorderRef.current?.state !== 'inactive') {
             mediaRecorderRef.current.stop();
             setStatus('submitting');
@@ -174,10 +176,10 @@ const DescribeImageModule = ({ question, setActiveSpeechQuestion, nextButton, pr
                                             <circle cx="80" cy="80" r="70" stroke="#333" strokeWidth="6" fill="transparent" />
                                             <circle cx="80" cy="80" r="70" stroke={(status === 'prep' || status === 'prep_start') ? "#3b82f6" : "#ef4444"} strokeWidth="6" fill="transparent" strokeDasharray={440} strokeDashoffset={440 - (440 * timeLeft) / maxTime} className="transition-all duration-1000 ease-linear" strokeLinecap="round" />
                                         </svg>
-                                       <span className="absolute font-black text-black text-4xl">
-                                        {status === 'recording'
-                                            ? `${maxTime - timeLeft} / ${maxTime}`
-                                            : timeLeft}
+                                        <span className="absolute font-black text-black text-4xl">
+                                            {status === 'recording'
+                                                ? `${maxTime - timeLeft} / ${maxTime}`
+                                                : timeLeft}
                                         </span>
 
                                     </div>

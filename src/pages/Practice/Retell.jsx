@@ -8,6 +8,7 @@ import {
 import { submitReTellAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
+import { checkMic } from '../../services/tools';
 
 const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     console.log(question)
@@ -162,8 +163,8 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
         setStatus('recording');
         setTimeLeft(0); // Count Up
         setMaxTime(40);
-
-        SpeechRecognition.startListening({ continuous: true });
+        checkMic()
+        await SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream);
@@ -177,8 +178,8 @@ const ReTell = ({ question, setActiveSpeechQuestion, nextButton, previousButton,
         }
     };
 
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
+    const stopRecording = async () => {
+        await SpeechRecognition.stopListening();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
             setStatus('submitting');

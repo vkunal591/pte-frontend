@@ -8,6 +8,7 @@ import {
 import { submitRepeatAttempt } from '../../services/api';
 import ImageAttemptHistory from './ImageAttemptHistory';
 import { useSelector } from 'react-redux';
+import { checkMic } from '../../services/tools';
 
 const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, previousButton, shuffleButton }) => {
     console.log(question)
@@ -20,7 +21,7 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
     const [result, setResult] = useState(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [audioCurrentTime, setAudioCurrentTime] = useState(0);
-    
+
     const [loading, setLoading] = useState(false);
 
     const [isPlaying, setIsPlaying] = useState(false);
@@ -129,7 +130,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         setStatus('recording');
         setTimeLeft(0); // Start at 0 for count-up
         setMaxTime(15);
-        SpeechRecognition.startListening({ continuous: true });
+        await checkMic()
+        await SpeechRecognition.startListening({ continuous: true });
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream);
@@ -142,8 +144,8 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
         }
     };
 
-    const stopRecording = () => {
-        SpeechRecognition.stopListening();
+    const stopRecording = async () => {
+        await SpeechRecognition.stopListening();
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
             setStatus('submitting');
@@ -270,205 +272,205 @@ const RepeatSentenceSession = ({ question, setActiveSpeechQuestion, nextButton, 
 
                 </div>
 
-              {
-                loading ? (
-                    <div className="flex-1 p-8 flex flex-col items-center justify-center">
-                        <BarChart2 className="animate-spin text-slate-400" size={48} />
+                {
+                    loading ? (
+                        <div className="flex-1 p-8 flex flex-col items-center justify-center">
+                            <BarChart2 className="animate-spin text-slate-400" size={48} />
                         </div>)
-                        :  <div className="flex-1 p-8 flex flex-col items-center justify-center">
+                        : <div className="flex-1 p-8 flex flex-col items-center justify-center">
 
-                    {/* 1. IDLE STATE WITH HISTORY */}
-                    {/* Auto-start enabled */}
+                            {/* 1. IDLE STATE WITH HISTORY */}
+                            {/* Auto-start enabled */}
 
-                    {/* 2. PREP STATE */}
-                    {status === 'prep' && (
-                        <div className="text-center space-y-4">
-                            <div className="text-slate-400 font-semibold uppercase tracking-widest text-sm">Preparation</div>
-                            <div className="text-5xl font-black text-slate-800">{timeLeft}s</div>
-                            <div className="w-64 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto">
-                                <div className="h-full bg-primary-600 transition-all duration-1000 linear" style={{ width: `${progressPercent}%` }} />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 3. LISTENING STATE */}
-                    {(status === "listening" || status === "recording") && (
-                        <div className="relative w-full max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
-
-                            {/* Skip Audio */}
-                            {status !== "recording" && (
-                                <button
-                                    onClick={() => {
-                                        questionAudioRef.current?.pause();
-                                        setIsPlaying(false);
-                                        setStatus("recording");
-                                        startRecording();
-                                    }}
-                                    className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
-                                >
-                                    Skip Audio
-                                </button>
+                            {/* 2. PREP STATE */}
+                            {status === 'prep' && (
+                                <div className="text-center space-y-4">
+                                    <div className="text-slate-400 font-semibold uppercase tracking-widest text-sm">Preparation</div>
+                                    <div className="text-5xl font-black text-slate-800">{timeLeft}s</div>
+                                    <div className="w-64 h-2 bg-slate-100 rounded-full overflow-hidden mx-auto">
+                                        <div className="h-full bg-primary-600 transition-all duration-1000 linear" style={{ width: `${progressPercent}%` }} />
+                                    </div>
+                                </div>
                             )}
 
-                            {/* Transcript */}
-                            <div className="text-center text-slate-600 text-sm italic leading-relaxed max-h-24 overflow-y-auto px-4">
-                                {question.transcript}
-                            </div>
+                            {/* 3. LISTENING STATE */}
+                            {(status === "listening" || status === "recording") && (
+                                <div className="relative w-full max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-6">
 
-                            {/* Speaker Icon */}
-                            <div className="flex justify-center">
-                                <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center animate-pulse">
-                                    <Volume2 size={36} />
-                                </div>
-                            </div>
+                                    {/* Skip Audio */}
+                                    {status !== "recording" && (
+                                        <button
+                                            onClick={() => {
+                                                questionAudioRef.current?.pause();
+                                                setIsPlaying(false);
+                                                setStatus("recording");
+                                                startRecording();
+                                            }}
+                                            className="absolute top-4 right-4 text-xs font-semibold text-blue-600 hover:underline"
+                                        >
+                                            Skip Audio
+                                        </button>
+                                    )}
 
-                            {/* Play / Pause */}
-                            <div className="flex flex-col items-center gap-3">
-                                <button
-                                    onClick={handleTogglePlayPause}
-                                    className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition"
-                                >
-                                    {isPlaying ? <Square size={30} /> : <Play size={30} />}
-                                </button>
+                                    {/* Transcript */}
+                                    <div className="text-center text-slate-600 text-sm italic leading-relaxed max-h-24 overflow-y-auto px-4">
+                                        {question.transcript}
+                                    </div>
 
-                                <p className="text-sm font-medium text-slate-500">
-                                    {isPlaying ? "Playing speaker audio..." : "Audio paused"}
-                                </p>
-                            </div>
-
-                            {/* Progress */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-mono text-slate-500">
-                                    <span>{audioCurrentTime}s</span>
-                                    <span>{audioDuration}s</span>
-                                </div>
-
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max={audioDuration || 0}
-                                    step="0.1"
-                                    value={audioCurrentTime}
-                                    onChange={(e) => {
-                                        questionAudioRef.current.currentTime = e.target.value;
-                                        setAudioCurrentTime(e.target.value);
-                                    }}
-                                    className="w-full accent-blue-600 cursor-pointer"
-                                />
-
-                                <p className="text-center text-xs text-slate-400">
-                                    Listening to speaker...
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-
-                    {/* 4. RECORDING STATE */}
-                    {status === 'recording' && (
-                        <div className="flex flex-col items-center gap-6">
-                            <div className="flex items-center gap-3 text-red-600">
-                                <div className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
-                                <span className="font-bold text-2xl">Recording... {timeLeft < 10 ? `0${timeLeft}` : timeLeft} / {maxTime}</span>
-                            </div>
-                            <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
-                                <Square size={18} fill="currentColor" /> Finish Recording
-                            </button>
-                        </div>
-                    )}
-
-                    {/* 5. SUBMITTING STATE */}
-                    {status === 'submitting' && (
-                        <div className="text-center space-y-4">
-                            <RefreshCw className="w-12 h-12 text-primary-600 animate-spin mx-auto" />
-                            <p className="font-bold text-slate-700 text-lg">Analyzing your response...</p>
-                        </div>
-                    )}
-
-                    {/* 6. RESULT STATE */}
-                    {status === 'result' && result && (
-                        <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                            {/* Alert Banner */}
-                            {(() => {
-                                const suggestion = getAISuggestion(result.score);
-                                return (
-                                    <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
-                                        <div className="flex-shrink-0">{suggestion.icon}</div>
-                                        <div className="flex-1">
-                                            <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 opacity-70 italic">AI Analysis</span>
-                                            <p className="font-medium text-sm leading-relaxed">{suggestion.text}</p>
+                                    {/* Speaker Icon */}
+                                    <div className="flex justify-center">
+                                        <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center animate-pulse">
+                                            <Volume2 size={36} />
                                         </div>
                                     </div>
-                                );
-                            })()}
 
-                            {/* SCORE GAUGE AND PARAMETERS */}
-                            <div className="grid grid-cols-12 gap-6">
-                                <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border-4 border-purple-50 p-6 shadow-sm relative overflow-hidden">
-                                    <h3 className="text-center font-bold text-slate-700 mb-4">Your Score</h3>
-                                    <div className="relative flex justify-center items-center h-32">
-                                        <svg className="w-48 h-24">
-                                            <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
-                                            <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="url(#purpleGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="267" strokeDashoffset={267 - (267 * (result.score / 13))} className="transition-all duration-1000 ease-out" />
-                                            <defs>
-                                                <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#8b5cf6" />
-                                                    <stop offset="100%" stopColor="#ec4899" />
-                                                </linearGradient>
-                                            </defs>
-                                        </svg>
-                                        <div className="absolute bottom-2 flex flex-col items-center">
-                                            <span className="text-5xl font-black text-slate-800">{Math.round(result.score)}</span>
+                                    {/* Play / Pause */}
+                                    <div className="flex flex-col items-center gap-3">
+                                        <button
+                                            onClick={handleTogglePlayPause}
+                                            className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center hover:bg-blue-200 transition"
+                                        >
+                                            {isPlaying ? <Square size={30} /> : <Play size={30} />}
+                                        </button>
+
+                                        <p className="text-sm font-medium text-slate-500">
+                                            {isPlaying ? "Playing speaker audio..." : "Audio paused"}
+                                        </p>
+                                    </div>
+
+                                    {/* Progress */}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-mono text-slate-500">
+                                            <span>{audioCurrentTime}s</span>
+                                            <span>{audioDuration}s</span>
+                                        </div>
+
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max={audioDuration || 0}
+                                            step="0.1"
+                                            value={audioCurrentTime}
+                                            onChange={(e) => {
+                                                questionAudioRef.current.currentTime = e.target.value;
+                                                setAudioCurrentTime(e.target.value);
+                                            }}
+                                            className="w-full accent-blue-600 cursor-pointer"
+                                        />
+
+                                        <p className="text-center text-xs text-slate-400">
+                                            Listening to speaker...
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+
+                            {/* 4. RECORDING STATE */}
+                            {status === 'recording' && (
+                                <div className="flex flex-col items-center gap-6">
+                                    <div className="flex items-center gap-3 text-red-600">
+                                        <div className="w-3 h-3 bg-red-600 rounded-full animate-ping" />
+                                        <span className="font-bold text-2xl">Recording... {timeLeft < 10 ? `0${timeLeft}` : timeLeft} / {maxTime}</span>
+                                    </div>
+                                    <button onClick={stopRecording} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg transition-colors">
+                                        <Square size={18} fill="currentColor" /> Finish Recording
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* 5. SUBMITTING STATE */}
+                            {status === 'submitting' && (
+                                <div className="text-center space-y-4">
+                                    <RefreshCw className="w-12 h-12 text-primary-600 animate-spin mx-auto" />
+                                    <p className="font-bold text-slate-700 text-lg">Analyzing your response...</p>
+                                </div>
+                            )}
+
+                            {/* 6. RESULT STATE */}
+                            {status === 'result' && result && (
+                                <div className="w-full space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                                    {/* Alert Banner */}
+                                    {(() => {
+                                        const suggestion = getAISuggestion(result.score);
+                                        return (
+                                            <div className={`flex items-center gap-3 p-4 rounded-2xl border ${suggestion.color} transition-all duration-500`}>
+                                                <div className="flex-shrink-0">{suggestion.icon}</div>
+                                                <div className="flex-1">
+                                                    <span className="font-bold text-xs uppercase tracking-wider block mb-0.5 opacity-70 italic">AI Analysis</span>
+                                                    <p className="font-medium text-sm leading-relaxed">{suggestion.text}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* SCORE GAUGE AND PARAMETERS */}
+                                    <div className="grid grid-cols-12 gap-6">
+                                        <div className="col-span-12 md:col-span-4 bg-white rounded-3xl border-4 border-purple-50 p-6 shadow-sm relative overflow-hidden">
+                                            <h3 className="text-center font-bold text-slate-700 mb-4">Your Score</h3>
+                                            <div className="relative flex justify-center items-center h-32">
+                                                <svg className="w-48 h-24">
+                                                    <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="#f1f5f9" strokeWidth="12" strokeLinecap="round" />
+                                                    <path d="M 10 90 A 70 70 0 0 1 180 90" fill="none" stroke="url(#purpleGradient)" strokeWidth="12" strokeLinecap="round" strokeDasharray="267" strokeDashoffset={267 - (267 * (result.score / 13))} className="transition-all duration-1000 ease-out" />
+                                                    <defs>
+                                                        <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                            <stop offset="0%" stopColor="#8b5cf6" />
+                                                            <stop offset="100%" stopColor="#ec4899" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                                <div className="absolute bottom-2 flex flex-col items-center">
+                                                    <span className="text-5xl font-black text-slate-800">{Math.round(result.score)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 space-y-2">
+                                                <div className="flex justify-between items-center bg-blue-50/50 p-2 rounded-lg">
+                                                    <span className="text-sm font-medium text-slate-600">Speaking</span>
+                                                    <span className="font-bold text-slate-700">{result.score.toFixed(1)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
+                                            <div className="flex justify-between items-center mb-6">
+                                                <h3 className="flex items-center gap-2 font-bold text-slate-700">Scoring Parameters</h3>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <ParameterCard label="Content" score={result.content} max={5} />
+                                                <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} />
+                                                <ParameterCard label="Oral Fluency" score={result.fluency} max={5} />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="mt-4 space-y-2">
-                                        <div className="flex justify-between items-center bg-blue-50/50 p-2 rounded-lg">
-                                            <span className="text-sm font-medium text-slate-600">Speaking</span>
-                                            <span className="font-bold text-slate-700">{result.score.toFixed(1)}</span>
+
+                                    {/* AUDIO PLAYERS */}
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
+                                        <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
+                                    </div>
+
+                                    <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+                                        <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
+                                        <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
+                                            {question?.transcript}
+                                        </p>
+                                    </div>
+
+                                    {/* TRANSCRIPT AREA */}
+                                    <div className="bg-white rounded-3xl border border-slate-100 p-8">
+                                        <h3 className="font-bold text-slate-700 mb-4">Transcript Analysis</h3>
+                                        <div className="text-2xl leading-relaxed text-slate-400 font-medium">
+                                            {result.wordAnalysis?.length > 0 ? result.wordAnalysis.map((item, index) => (
+                                                <span key={index} className={`mx-1 ${item.status === 'correct' ? 'text-slate-700' : 'text-red-400'}`}>
+                                                    {item.word}
+                                                </span>
+                                            )) : <span className="text-slate-300 italic text-lg">No word analysis available for this attempt.</span>}
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="col-span-12 md:col-span-8 bg-white rounded-3xl border border-slate-100 p-6">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="flex items-center gap-2 font-bold text-slate-700">Scoring Parameters</h3>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <ParameterCard label="Content" score={result.content} max={5} />
-                                        <ParameterCard label="Pronunciation" score={result.pronunciation} max={5} />
-                                        <ParameterCard label="Oral Fluency" score={result.fluency} max={5} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* AUDIO PLAYERS */}
-                            <div className="grid grid-cols-2 gap-6">
-                                <AudioPlayerCard label="Question" duration="0:04" url={question.audioUrl} />
-                                <AudioPlayerCard label="My Answer" duration="00:06" url={result.studentAudio?.url} isAnswer />
-                            </div>
-
-                            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-                                <h3 className="font-bold text-slate-700 mb-4 uppercase tracking-widest text-[10px]">Correct Answer</h3>
-                                <p className="text-xl leading-relaxed text-slate-600 font-medium italic">
-                                    {question?.transcript}
-                                </p>
-                            </div>
-
-                            {/* TRANSCRIPT AREA */}
-                            <div className="bg-white rounded-3xl border border-slate-100 p-8">
-                                <h3 className="font-bold text-slate-700 mb-4">Transcript Analysis</h3>
-                                <div className="text-2xl leading-relaxed text-slate-400 font-medium">
-                                    {result.wordAnalysis?.length > 0 ? result.wordAnalysis.map((item, index) => (
-                                        <span key={index} className={`mx-1 ${item.status === 'correct' ? 'text-slate-700' : 'text-red-400'}`}>
-                                            {item.word}
-                                        </span>
-                                    )) : <span className="text-slate-300 italic text-lg">No word analysis available for this attempt.</span>}
-                                </div>
-                            </div>
+                            )}
                         </div>
-                    )}
-                </div>
-              }
+                }
             </div>
 
 
