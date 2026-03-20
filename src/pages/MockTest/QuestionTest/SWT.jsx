@@ -46,6 +46,7 @@ export default function SWT({ backendData }) {
         testId: backendData._id,
         answers: [{ questionId, content: summaryText }],
       });
+      console.log(data)
       setTestResult(data.data);
     } catch (err) {
       console.error("Scoring Error:", err);

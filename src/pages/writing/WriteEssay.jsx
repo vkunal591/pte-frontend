@@ -134,6 +134,8 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
         form: data.form || 0,
         structure: data.structure || 0,
         general: data.general || 0,
+        misspelledWords: data.misspelledWords || 0,
+        grammarIssues: data.grammarIssues || 0,
       });
 
       setStatus("result");
@@ -281,10 +283,34 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
               {/* My Answer */}
               <div className="border-t pt-4">
                 <h4 className="font-bold mb-2">My Answer</h4>
-                <p className="italic text-slate-600">{result.essayText}</p>
+
+                <p className="italic text-slate-600 flex flex-wrap gap-1">
+                  {result.essayText.split(/\s+/).map((word, idx) => {
+                    // Remove punctuation for accurate matching
+                    const cleanWord = word.replace(/[.,!?;:]/g, "").toLowerCase();
+
+                    const isGrammarMistake = result.grammarIssues.some(
+                      gw => gw.toLowerCase() === cleanWord
+                    );
+
+                    const isSpellingMistake = result.misspelledWords.some(
+                      sw => sw.toLowerCase() === cleanWord
+                    );
+
+                    let className = "px-1 py-0.5 rounded inline-block";
+                    if (isGrammarMistake) className += " underline decoration-red-500 text-red-700 bg-red-100";
+                    else if (isSpellingMistake) className += " underline decoration-blue-500 text-blue-700 bg-blue-100";
+
+                    return (
+                      <span key={idx} className={className} style={{ marginRight: "0.25rem" }}>
+                        {word}
+                      </span>
+                    );
+                  })}
+                </p>
                 <div className="flex gap-4 mt-3 text-sm">
                   <span>Total Words: {result.wordCount}</span>
-                  <span>Misspelled: {result.misspelled}</span>
+                  <span>Misspelled: {result.misspelledWords.length}</span>
                   <span>Grammar: {result.grammarErrors}</span>
                   <span>Structure: {result.structureIssues}</span>
                   <span>Style: {result.styleIssues}</span>

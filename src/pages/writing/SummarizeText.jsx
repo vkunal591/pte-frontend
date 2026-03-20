@@ -273,13 +273,34 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
               {/* MY ANSWER */}
               <div className="border-t pt-4">
                 <h4 className="font-bold mb-2">My Answer</h4>
-                <p className="italic text-slate-600">
-                  {result.summaryText}
+
+                <p className="italic w-full flex flex-wrap gap-1 text-slate-600">
+                  {result.summaryText.split(/\s+/).map((word, idx) => {
+                    // Remove punctuation from word for matching
+                    const cleanWord = word.replace(/[.,!?;:]/g, "").toLowerCase();
+                    const isMistake = result.grammarIssues.some(
+                      gw => gw.toLowerCase() === cleanWord
+                    );
+
+                    return (
+                      <span
+                        key={idx}
+                        style={{
+                          textDecoration: isMistake ? "underline" : "none",
+                          textDecorationColor: isMistake ? "red" : "transparent",
+                          color: isMistake ? "red" : "inherit",
+                          marginRight: "0.25rem"
+                        }}
+                      >
+                        {word}
+                      </span>
+                    );
+                  })}
                 </p>
 
                 <div className="flex gap-4 mt-3 text-sm">
                   <span>Total Words: {result.wordCount}</span>
-                  <span>Grammar: {result.structureErrors}</span>
+                  <span>Grammar: {result.grammarIssues.length}</span>
                   <span>Style: {result.styleIssues}</span>
                 </div>
               </div>
