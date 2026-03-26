@@ -283,26 +283,34 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
               {/* My Answer */}
               <div className="border-t pt-4">
                 <h4 className="font-bold mb-2">My Answer</h4>
-
                 <p className="italic text-slate-600 flex flex-wrap gap-1">
                   {result.essayText.split(/\s+/).map((word, idx) => {
                     // Remove punctuation for accurate matching
                     const cleanWord = word.replace(/[.,!?;:]/g, "").toLowerCase();
 
-                    const isGrammarMistake = result.grammarIssues.some(
-                      gw => gw.toLowerCase() === cleanWord
+                    // Check if the word is a grammar mistake
+                    const grammarObj = result.grammarIssues.find(
+                      (gw) => gw.incorrectText.toLowerCase() === cleanWord
                     );
 
-                    const isSpellingMistake = result.misspelledWords.some(
-                      sw => sw.toLowerCase() === cleanWord
+                    // Check if the word is a spelling mistake
+                    const spellingObj = result.misspelledWords.find(
+                      (sw) => sw.word.toLowerCase() === cleanWord
                     );
 
                     let className = "px-1 py-0.5 rounded inline-block";
-                    if (isGrammarMistake) className += " underline decoration-red-500 text-red-700 bg-red-100";
-                    else if (isSpellingMistake) className += " underline decoration-blue-500 text-blue-700 bg-blue-100";
+                    let title = "";
+
+                    if (grammarObj) {
+                      className += " underline decoration-red-500 text-red-700 bg-red-100";
+                      title = `Grammar suggestion: ${grammarObj.suggestions.join(", ")}`;
+                    } else if (spellingObj) {
+                      className += " underline decoration-blue-500 text-blue-700 bg-blue-100";
+                      title = `Spelling suggestion: ${spellingObj.suggestions.join(", ")}`;
+                    }
 
                     return (
-                      <span key={idx} className={className} style={{ marginRight: "0.25rem" }}>
+                      <span key={idx} className={className} style={{ marginRight: "0.25rem" }} title={title}>
                         {word}
                       </span>
                     );
@@ -311,12 +319,11 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
                 <div className="flex gap-4 mt-3 text-sm">
                   <span>Total Words: {result.wordCount}</span>
                   <span>Misspelled: {result.misspelledWords.length}</span>
-                  <span>Grammar: {result.grammarErrors}</span>
+                  <span>Grammar: {result.grammarIssues.length}</span>
                   <span>Structure: {result.structureIssues}</span>
                   <span>Style: {result.styleIssues}</span>
                 </div>
               </div>
-
               {/* Close Button */}
               <div className="flex justify-end pt-4 border-t">
                 <button

@@ -278,19 +278,21 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
                   {result.summaryText.split(/\s+/).map((word, idx) => {
                     // Remove punctuation from word for matching
                     const cleanWord = word.replace(/[.,!?;:]/g, "").toLowerCase();
-                    const isMistake = result.grammarIssues.some(
-                      gw => gw.toLowerCase() === cleanWord
+                    const grammarIssue = result.grammarIssues.find(
+                      gw => gw.incorrectText.toLowerCase() === cleanWord
                     );
 
                     return (
                       <span
                         key={idx}
                         style={{
-                          textDecoration: isMistake ? "underline" : "none",
-                          textDecorationColor: isMistake ? "red" : "transparent",
-                          color: isMistake ? "red" : "inherit",
-                          marginRight: "0.25rem"
+                          textDecoration: grammarIssue ? "underline" : "none",
+                          textDecorationColor: grammarIssue ? "red" : "transparent",
+                          color: grammarIssue ? "red" : "inherit",
+                          marginRight: "0.25rem",
+                          cursor: grammarIssue ? "pointer" : "default"
                         }}
+                        title={grammarIssue ? `Suggestions: ${grammarIssue.suggestions.join(", ")}` : ""}
                       >
                         {word}
                       </span>
