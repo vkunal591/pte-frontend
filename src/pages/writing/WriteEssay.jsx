@@ -285,29 +285,28 @@ const WriteEssay = ({ question, setActiveSpeechQuestion, nextButton, previousBut
                 <h4 className="font-bold mb-2">My Answer</h4>
                 <p className="italic text-slate-600 flex flex-wrap gap-1">
                   {result.essayText.split(/\s+/).map((word, idx) => {
-                    // Remove punctuation for accurate matching
                     const cleanWord = word.replace(/[.,!?;:]/g, "").toLowerCase();
 
-                    // Check if the word is a grammar mistake
                     const grammarObj = result.grammarIssues.find(
                       (gw) => gw.incorrectText.toLowerCase() === cleanWord
                     );
-
-                    // Check if the word is a spelling mistake
                     const spellingObj = result.misspelledWords.find(
                       (sw) => sw.word.toLowerCase() === cleanWord
                     );
 
                     let className = "px-1 py-0.5 rounded inline-block";
-                    let title = "";
+                    let titleParts = [];
 
                     if (grammarObj) {
                       className += " underline decoration-red-500 text-red-700 bg-red-100";
-                      title = `Grammar suggestion: ${grammarObj.suggestions.join(", ")}`;
-                    } else if (spellingObj) {
-                      className += " underline decoration-blue-500 text-blue-700 bg-blue-100";
-                      title = `Spelling suggestion: ${spellingObj.suggestions.join(", ")}`;
+                      titleParts.push(`Grammer:${grammarObj.message} | Grammar suggestion: ${grammarObj.suggestions.join(", ")}`);
                     }
+                    if (spellingObj) {
+                      className += " underline [text-shadow:0.5px_0.5px_0px_rgba(59,130,246,1)] shadow-blue-500 text-blue-700 bg-blue-100";
+                      titleParts.push(`Spelling suggestion: ${spellingObj.suggestions.join(", ")}`);
+                    }
+
+                    const title = titleParts.join(" | ");
 
                     return (
                       <span key={idx} className={className} style={{ marginRight: "0.25rem" }} title={title}>

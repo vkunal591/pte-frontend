@@ -292,7 +292,7 @@ const SummarizeWrittenText = ({ question, setActiveSpeechQuestion, nextButton, p
                           marginRight: "0.25rem",
                           cursor: grammarIssue ? "pointer" : "default"
                         }}
-                        title={grammarIssue ? `Suggestions: ${grammarIssue.suggestions.join(", ")}` : ""}
+                        title={grammarIssue ? `Grammar: ${grammarIssue.message ? grammarIssue.message : ""} | Suggestions: ${grammarIssue.suggestions.join(", ")}` : ""}
                       >
                         {word}
                       </span>
